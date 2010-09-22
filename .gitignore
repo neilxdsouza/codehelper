@@ -1,0 +1,9 @@
+*.o
+*.exe
+*.swp
+*\~
+make-build-dir
+bin
+err
+op
+Inputs

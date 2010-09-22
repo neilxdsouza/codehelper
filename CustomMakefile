@@ -1,0 +1,109 @@
+#CC=g++ -c
+LINK=g++
+SOURCE_DIR=src
+BUILD_DIR=make-build-dir
+
+CFLAGS = -c -g -I src -Wall -Wno-sign-compare -Weffc++
+
+CPP_SOURCES = $(wildcard $(SOURCE_DIR)/*.cpp)
+EXCLUDE_FILE= 
+CPP_SOURCES := $(filter-out $(EXCLUDE_FILE),$(CPP_SOURCES))
+OBJECTS = $(subst $(SOURCE_DIR),$(BUILD_DIR),$(CPP_SOURCES))
+OBJECTS := $(OBJECTS:.cpp=.o)
+DEPENDENCIES = $(OBJECTS:.o=.dep)
+
+YACC_SOURCES = $(wildcard $(SOURCE_DIR)/*.y)
+EXCLUDE_FILE = 
+YACC_SOURCES := $(filter-out $(EXCLUDE_FILE),$(YACC_SOURCES) )
+YACC_OUTPUTS  = $(YACC_SOURCES:.y=.cpp)
+YACC_OUTPUTS += $(YACC_SOURCES:.y=.h)
+
+YACC_OBJECTS = $(YACC_SOURCES)
+YACC_OBJECTS := $(subst $(SOURCE_DIR),$(BUILD_DIR),$(YACC_OBJECTS))
+YACC_OBJECTS := $(YACC_OBJECTS:.y=.o)
+OBJECTS += $(YACC_OBJECTS)
+
+
+LEX_SOURCES = $(wildcard $(SOURCE_DIR)/*.l)
+EXCLUDE_FILE= 
+LEX_SOURCES := $(filter-out $(EXCLUDE_FILE),$(LEX_SOURCES))
+LEX_OUTPUTS  = $(LEX_SOURCES:.l=.cpp)
+LEX_OBJECTS = $(LEX_SOURCES)
+LEX_OBJECTS := $(subst $(SOURCE_DIR),$(BUILD_DIR),$(LEX_OBJECTS))
+LEX_OBJECTS := $(LEX_OBJECTS:.l=.o)
+OBJECTS += $(LEX_OBJECTS)
+OBJECTS := $(sort $(OBJECTS) )
+
+
+CODE_HELPER_MAJOR_VERSION_NUMBER=0
+CODE_HELPER_MINOR_VERSION_NUMBER=1
+
+# SOURCES=scope.h scope.C scope.h tree.h tree.C gram.y
+# DEPS= y_tab.c  lex_yy.c tree.C scope.C
+# HEADER_DEPS= tree.h scope.h 
+HEADER_DEPS= $(wildcard $(SOURCE_DIR)/*.h)
+EXCLUDE_FILE= $(SOURCE_DIR)/gram.h
+HEADER_DEPS := $(filter-out $(EXCLUDE_FILE),$(HEADER_DEPS))
+
+#dummy:
+#	echo $(CPP_SOURCES)
+#	echo $(LEX_SOURCES)
+#	echo $(YACC_SOURCES)
+#	echo $(YACC_OUTPUTS)
+#	echo "LEX_OUTPUTS: $(LEX_OUTPUTS)"
+
+#$(BUILD_DIR)/csassist.exe:	$(OBJECTS) Makefile  $(HEADER_DEPS)
+$(BUILD_DIR)/csassist.exe:	$(OBJECTS) Makefile  $(CPP_SOURCES) $(LEX_OUTPUTS) $(YACC_OUTPUTS)
+	echo $(CPP_SOURCES)
+	$(LINK) -o $@ $(OBJECTS)
+	cp $@ bin
+
+
+# NxD: I have commented out this rule as you may not have bison/flex installed
+#lex_yy.cpp:	 lex.l y_tab.h tree.h 
+#	flex -B -i $<
+#	sed "s/#include <unistd.h>//" lex.yy.c > _tmp1
+#	mv _tmp1 lex_yy.cpp
+#	rm lex.yy.c 
+
+#$(SOURCE_DIR)/%.cpp : $(SOURCE_DIR)/%.l $(SOURCE_DIR)/y_tab.h $(SOURCE_DIR)/tree.h
+$(SOURCE_DIR)/%.cpp : $(SOURCE_DIR)/%.l 
+	echo $(LEX_OUTPUTS)
+	flex --case-insensitive --batch -o$@  $<
+
+#tree.o: tree.C tree.h 
+#	$(CC) -c   $<
+#
+#
+#lex_yy.o: lex_yy.c
+#	$(CC) -c   $<
+
+# Neil: I have commented out this rule as you may not have bison/flex installed
+#y_tab.h y_tab.cpp: gram.y tree.h symtab.h  stmt.h
+$(SOURCE_DIR)/%.h $(SOURCE_DIR)/%.cpp: $(SOURCE_DIR)/%.y $(HEADER_DEPS)
+	bison -v  -d $< -o $(basename $@).cpp
+#mv y.tab.c y_tab.cpp
+#mv y.tab.h y_tab.h
+	mv $(basename $@).hpp $(basename $@).h
+
+#y_tab.o: y_tab.c y_tab.h
+#	$(CC) -c   y_tab.c
+#
+#scope.o: scope.C scope.h
+#	$(CC) -c   scope.C
+
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp;
+	$(CXX) $(CFLAGS) -o $@ $<
+
+.PHONY: clean
+
+.SECONDARY: $(YACC_OUTPUTS) $(LEX_OUTPUTS)
+
+#.PRECIOUS: $(YACC_OUTPUTS) 
+#.PRECIOUS: $(LEX_OUTPUTS)
+
+clean:
+	-rm $(BUILD_DIR)/* bin/*
+
+etags: $(SOURCES)
+	etags $(SOURCES)

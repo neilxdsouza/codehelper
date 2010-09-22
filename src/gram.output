@@ -1,0 +1,587 @@
+Grammar
+
+    0 $accept: prog $end
+
+    1 prog: statement_list
+
+    2 statement_list: statement
+    3               | statement_list statement
+
+    4 statement: CREATE TABLE NAME '(' decl_comma_list ')' ';'
+
+    5 data_type: INT32_T
+    6          | FLOAT_T
+    7          | BIGINT_T
+    8          | DOUBLE_T
+    9          | VARCHAR_T
+   10          | NVARCHAR_T
+   11          | NCHAR_T
+   12          | NTEXT_T
+   13          | TEXT_T
+   14          | BIT_T
+   15          | DATETIME_T
+   16          | TINYINT_T
+   17          | IMAGE_T
+
+   18 decl_comma_list: var_decl_with_or_wo_options
+   19                | decl_comma_list ',' var_decl_with_or_wo_options
+
+   20 var_decl_with_or_wo_options: var_decl ':' options_list
+
+   21 options_list: options
+   22             | options_list options
+
+   23 options: REFERENCES NAME '(' NAME ')'
+   24        | REFERENCES MANY NAME '(' NAME ')'
+   25        | DBNULL
+   26        | NOT DBNULL
+   27        | UNIQUE
+   28        | VALIDATOR_REQ_FIELD
+   29        | VALIDATOR_RE_INTEGER
+   30        | VALIDATOR_RE_FLOAT
+   31        | VALIDATOR_RE_ALPHANUM
+   32        | VALIDATOR_RE_ALPHANUMWSP
+   33        | SEARCH_KEY
+
+   34 var_decl: NAME data_type
+   35         | NAME data_type '(' INUMBER ')'
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'(' (40) 4 23 24 35
+')' (41) 4 23 24 35
+',' (44) 19
+':' (58) 20
+';' (59) 4
+error (256)
+BIT_T (258) 14
+BIGINT_T (259) 7
+INT32_T (260) 5
+FLOAT_T (261) 6
+DOUBLE_T (262) 8
+VARCHAR_T (263) 9
+NVARCHAR_T (264) 10
+DATETIME_T (265) 15
+NTEXT_T (266) 12
+TEXT_T (267) 13
+TINYINT_T (268) 16
+IMAGE_T (269) 17
+NCHAR_T (270) 11
+CREATE (271) 4
+REFERENCES (272) 23 24
+MANY (273) 24
+NOT (274) 26
+DBNULL (275) 25 26
+UNIQUE (276) 27
+VALIDATOR_REQ_FIELD (277) 28
+VALIDATOR_RE_INTEGER (278) 29
+VALIDATOR_RE_FLOAT (279) 30
+VALIDATOR_RE_ALPHANUM (280) 31
+VALIDATOR_RE_ALPHANUMWSP (281) 32
+SEARCH_KEY (282) 33
+TABLE (283) 4
+NAME (284) 4 23 24 34 35
+INUMBER (285) 35
+
+
+Nonterminals, with rules where they appear
+
+$accept (36)
+    on left: 0
+prog (37)
+    on left: 1, on right: 0
+statement_list (38)
+    on left: 2 3, on right: 1 3
+statement (39)
+    on left: 4, on right: 2 3
+data_type (40)
+    on left: 5 6 7 8 9 10 11 12 13 14 15 16 17, on right: 34 35
+decl_comma_list (41)
+    on left: 18 19, on right: 4 19
+var_decl_with_or_wo_options (42)
+    on left: 20, on right: 18 19
+options_list (43)
+    on left: 21 22, on right: 20 22
+options (44)
+    on left: 23 24 25 26 27 28 29 30 31 32 33, on right: 21 22
+var_decl (45)
+    on left: 34 35, on right: 20
+
+
+state 0
+
+    0 $accept: . prog $end
+
+    CREATE  shift, and go to state 1
+
+    prog            go to state 2
+    statement_list  go to state 3
+    statement       go to state 4
+
+
+state 1
+
+    4 statement: CREATE . TABLE NAME '(' decl_comma_list ')' ';'
+
+    TABLE  shift, and go to state 5
+
+
+state 2
+
+    0 $accept: prog . $end
+
+    $end  shift, and go to state 6
+
+
+state 3
+
+    1 prog: statement_list .
+    3 statement_list: statement_list . statement
+
+    CREATE  shift, and go to state 1
+
+    $default  reduce using rule 1 (prog)
+
+    statement  go to state 7
+
+
+state 4
+
+    2 statement_list: statement .
+
+    $default  reduce using rule 2 (statement_list)
+
+
+state 5
+
+    4 statement: CREATE TABLE . NAME '(' decl_comma_list ')' ';'
+
+    NAME  shift, and go to state 8
+
+
+state 6
+
+    0 $accept: prog $end .
+
+    $default  accept
+
+
+state 7
+
+    3 statement_list: statement_list statement .
+
+    $default  reduce using rule 3 (statement_list)
+
+
+state 8
+
+    4 statement: CREATE TABLE NAME . '(' decl_comma_list ')' ';'
+
+    '('  shift, and go to state 9
+
+
+state 9
+
+    4 statement: CREATE TABLE NAME '(' . decl_comma_list ')' ';'
+
+    NAME  shift, and go to state 10
+
+    decl_comma_list              go to state 11
+    var_decl_with_or_wo_options  go to state 12
+    var_decl                     go to state 13
+
+
+state 10
+
+   34 var_decl: NAME . data_type
+   35         | NAME . data_type '(' INUMBER ')'
+
+    BIT_T       shift, and go to state 14
+    BIGINT_T    shift, and go to state 15
+    INT32_T     shift, and go to state 16
+    FLOAT_T     shift, and go to state 17
+    DOUBLE_T    shift, and go to state 18
+    VARCHAR_T   shift, and go to state 19
+    NVARCHAR_T  shift, and go to state 20
+    DATETIME_T  shift, and go to state 21
+    NTEXT_T     shift, and go to state 22
+    TEXT_T      shift, and go to state 23
+    TINYINT_T   shift, and go to state 24
+    IMAGE_T     shift, and go to state 25
+    NCHAR_T     shift, and go to state 26
+
+    data_type  go to state 27
+
+
+state 11
+
+    4 statement: CREATE TABLE NAME '(' decl_comma_list . ')' ';'
+   19 decl_comma_list: decl_comma_list . ',' var_decl_with_or_wo_options
+
+    ','  shift, and go to state 28
+    ')'  shift, and go to state 29
+
+
+state 12
+
+   18 decl_comma_list: var_decl_with_or_wo_options .
+
+    $default  reduce using rule 18 (decl_comma_list)
+
+
+state 13
+
+   20 var_decl_with_or_wo_options: var_decl . ':' options_list
+
+    ':'  shift, and go to state 30
+
+
+state 14
+
+   14 data_type: BIT_T .
+
+    $default  reduce using rule 14 (data_type)
+
+
+state 15
+
+    7 data_type: BIGINT_T .
+
+    $default  reduce using rule 7 (data_type)
+
+
+state 16
+
+    5 data_type: INT32_T .
+
+    $default  reduce using rule 5 (data_type)
+
+
+state 17
+
+    6 data_type: FLOAT_T .
+
+    $default  reduce using rule 6 (data_type)
+
+
+state 18
+
+    8 data_type: DOUBLE_T .
+
+    $default  reduce using rule 8 (data_type)
+
+
+state 19
+
+    9 data_type: VARCHAR_T .
+
+    $default  reduce using rule 9 (data_type)
+
+
+state 20
+
+   10 data_type: NVARCHAR_T .
+
+    $default  reduce using rule 10 (data_type)
+
+
+state 21
+
+   15 data_type: DATETIME_T .
+
+    $default  reduce using rule 15 (data_type)
+
+
+state 22
+
+   12 data_type: NTEXT_T .
+
+    $default  reduce using rule 12 (data_type)
+
+
+state 23
+
+   13 data_type: TEXT_T .
+
+    $default  reduce using rule 13 (data_type)
+
+
+state 24
+
+   16 data_type: TINYINT_T .
+
+    $default  reduce using rule 16 (data_type)
+
+
+state 25
+
+   17 data_type: IMAGE_T .
+
+    $default  reduce using rule 17 (data_type)
+
+
+state 26
+
+   11 data_type: NCHAR_T .
+
+    $default  reduce using rule 11 (data_type)
+
+
+state 27
+
+   34 var_decl: NAME data_type .
+   35         | NAME data_type . '(' INUMBER ')'
+
+    '('  shift, and go to state 31
+
+    $default  reduce using rule 34 (var_decl)
+
+
+state 28
+
+   19 decl_comma_list: decl_comma_list ',' . var_decl_with_or_wo_options
+
+    NAME  shift, and go to state 10
+
+    var_decl_with_or_wo_options  go to state 32
+    var_decl                     go to state 13
+
+
+state 29
+
+    4 statement: CREATE TABLE NAME '(' decl_comma_list ')' . ';'
+
+    ';'  shift, and go to state 33
+
+
+state 30
+
+   20 var_decl_with_or_wo_options: var_decl ':' . options_list
+
+    REFERENCES                shift, and go to state 34
+    NOT                       shift, and go to state 35
+    DBNULL                    shift, and go to state 36
+    UNIQUE                    shift, and go to state 37
+    VALIDATOR_REQ_FIELD       shift, and go to state 38
+    VALIDATOR_RE_INTEGER      shift, and go to state 39
+    VALIDATOR_RE_FLOAT        shift, and go to state 40
+    VALIDATOR_RE_ALPHANUM     shift, and go to state 41
+    VALIDATOR_RE_ALPHANUMWSP  shift, and go to state 42
+    SEARCH_KEY                shift, and go to state 43
+
+    options_list  go to state 44
+    options       go to state 45
+
+
+state 31
+
+   35 var_decl: NAME data_type '(' . INUMBER ')'
+
+    INUMBER  shift, and go to state 46
+
+
+state 32
+
+   19 decl_comma_list: decl_comma_list ',' var_decl_with_or_wo_options .
+
+    $default  reduce using rule 19 (decl_comma_list)
+
+
+state 33
+
+    4 statement: CREATE TABLE NAME '(' decl_comma_list ')' ';' .
+
+    $default  reduce using rule 4 (statement)
+
+
+state 34
+
+   23 options: REFERENCES . NAME '(' NAME ')'
+   24        | REFERENCES . MANY NAME '(' NAME ')'
+
+    MANY  shift, and go to state 47
+    NAME  shift, and go to state 48
+
+
+state 35
+
+   26 options: NOT . DBNULL
+
+    DBNULL  shift, and go to state 49
+
+
+state 36
+
+   25 options: DBNULL .
+
+    $default  reduce using rule 25 (options)
+
+
+state 37
+
+   27 options: UNIQUE .
+
+    $default  reduce using rule 27 (options)
+
+
+state 38
+
+   28 options: VALIDATOR_REQ_FIELD .
+
+    $default  reduce using rule 28 (options)
+
+
+state 39
+
+   29 options: VALIDATOR_RE_INTEGER .
+
+    $default  reduce using rule 29 (options)
+
+
+state 40
+
+   30 options: VALIDATOR_RE_FLOAT .
+
+    $default  reduce using rule 30 (options)
+
+
+state 41
+
+   31 options: VALIDATOR_RE_ALPHANUM .
+
+    $default  reduce using rule 31 (options)
+
+
+state 42
+
+   32 options: VALIDATOR_RE_ALPHANUMWSP .
+
+    $default  reduce using rule 32 (options)
+
+
+state 43
+
+   33 options: SEARCH_KEY .
+
+    $default  reduce using rule 33 (options)
+
+
+state 44
+
+   20 var_decl_with_or_wo_options: var_decl ':' options_list .
+   22 options_list: options_list . options
+
+    REFERENCES                shift, and go to state 34
+    NOT                       shift, and go to state 35
+    DBNULL                    shift, and go to state 36
+    UNIQUE                    shift, and go to state 37
+    VALIDATOR_REQ_FIELD       shift, and go to state 38
+    VALIDATOR_RE_INTEGER      shift, and go to state 39
+    VALIDATOR_RE_FLOAT        shift, and go to state 40
+    VALIDATOR_RE_ALPHANUM     shift, and go to state 41
+    VALIDATOR_RE_ALPHANUMWSP  shift, and go to state 42
+    SEARCH_KEY                shift, and go to state 43
+
+    $default  reduce using rule 20 (var_decl_with_or_wo_options)
+
+    options  go to state 50
+
+
+state 45
+
+   21 options_list: options .
+
+    $default  reduce using rule 21 (options_list)
+
+
+state 46
+
+   35 var_decl: NAME data_type '(' INUMBER . ')'
+
+    ')'  shift, and go to state 51
+
+
+state 47
+
+   24 options: REFERENCES MANY . NAME '(' NAME ')'
+
+    NAME  shift, and go to state 52
+
+
+state 48
+
+   23 options: REFERENCES NAME . '(' NAME ')'
+
+    '('  shift, and go to state 53
+
+
+state 49
+
+   26 options: NOT DBNULL .
+
+    $default  reduce using rule 26 (options)
+
+
+state 50
+
+   22 options_list: options_list options .
+
+    $default  reduce using rule 22 (options_list)
+
+
+state 51
+
+   35 var_decl: NAME data_type '(' INUMBER ')' .
+
+    $default  reduce using rule 35 (var_decl)
+
+
+state 52
+
+   24 options: REFERENCES MANY NAME . '(' NAME ')'
+
+    '('  shift, and go to state 54
+
+
+state 53
+
+   23 options: REFERENCES NAME '(' . NAME ')'
+
+    NAME  shift, and go to state 55
+
+
+state 54
+
+   24 options: REFERENCES MANY NAME '(' . NAME ')'
+
+    NAME  shift, and go to state 56
+
+
+state 55
+
+   23 options: REFERENCES NAME '(' NAME . ')'
+
+    ')'  shift, and go to state 57
+
+
+state 56
+
+   24 options: REFERENCES MANY NAME '(' NAME . ')'
+
+    ')'  shift, and go to state 58
+
+
+state 57
+
+   23 options: REFERENCES NAME '(' NAME ')' .
+
+    $default  reduce using rule 23 (options)
+
+
+state 58
+
+   24 options: REFERENCES MANY NAME '(' NAME ')' .
+
+    $default  reduce using rule 24 (options)
