@@ -55,7 +55,8 @@ struct options_list_type
 	{ }
 			   
 	public:
-	void reinit(){
+	void reinit()
+	{
 		ref_table_name="";
 		ref_field_name="";
 		many=false;

@@ -1,16 +1,47 @@
 
 #ifndef _xtcc_stmt_h
 #define _xtcc_stmt_h
-#include "scope.h"
-#include "symtab.h"
 
 #include <cstdio>
 #include <cstdlib>
+#include <vector>
+
+#include "scope.h"
+#include "symtab.h"
+#include "ForwardDecl.h"
 
 	int search_for_func(string& search_for);
 	extern scope* active_scope;
 	extern int no_errors;
-	extern vector <TableInfoType*> table_info_table;
+	//extern vector <TableInfoType*> table_info_table;
+
+//template <typename T>
+//class TablesSingleton;
+template <typename T>
+class TablesSingleton
+{
+public:
+	//static TablesSingleton<T>& Instance();
+	static TablesSingleton<T>& Instance()
+	{
+		static TablesSingleton<T> obj;
+		return obj;
+		//if (pInstance_==0) {
+		//	pInstance_ = new TablesSingleton;
+		//}
+	}
+	std::vector<T*> Tables;
+	//template <typename T>
+	T* my_find_table(std::string & p_table_name);
+private:
+	
+	TablesSingleton()
+		: Tables()
+	{ }
+	TablesSingleton(const TablesSingleton&);
+	//static TablesSingleton * pInstance_;
+
+};
 
 // Note : I may have to add file name we are compiling very soon
 struct stmt
@@ -53,41 +84,13 @@ struct err_stmt: public stmt{
 
 struct table_decl_stmt: public stmt
 {
-	struct TableInfoType * tableInfo_;
+	//struct TableInfoType * tableInfo_;
+	CSharpAspNetCodeGenerator * codeGenerator_;
 
-	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list):
-		stmt(dtype, lline_number), tableInfo_(0)
-	{
-		//cout << "load_func_into_symbol_table : " << "name: " << name << endl;
-		if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
-			//cout << "got func_decl" << endl;
-			struct TableInfoType* ti=new TableInfoType(name, v_list );
-			table_info_table.push_back(ti);
-			type=TABLE_TYPE;
-			struct symtab_ent* se=new struct symtab_ent;
-			if(! se) {
-				cerr << "memory allocation error: I will eventually crash :-(" << endl;
-			}
-			se->name = name;
-			string s(name);
-			active_scope->sym_tab[s] = se;
-			se->type=TABLE_TYPE;
-			tableInfo_=ti;
-		} else {
-			cerr << "Symbol : " << name << " already present in symbol table" << endl;
-			cout << "line_no: " << lline_number;
-			++no_errors;
-			type=ERROR_TYPE;
-		}
-	}
-	void GenerateCode(FILE * & fptr){
-		fflush(fptr);
+	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list);
 
-		if(fptr){
-			tableInfo_->print(fptr);
-			if(prev) prev->GenerateCode(fptr);
-		}
-	}
+	void GenerateCode(FILE * & fptr);
+
 	private:
 	table_decl_stmt& operator=(const table_decl_stmt&);	
 	table_decl_stmt(const table_decl_stmt&);	

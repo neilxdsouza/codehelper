@@ -5,10 +5,15 @@
 #include <cstring>
 #include <cstdlib>
 #include "tree.h"
+#include "AbstractCodeGenerator.h"
 
-struct CSharpAspNetCodeGenerator
+struct CSharpAspNetCodeGenerator: public AbstractCodeGenerator
 {
-	TableInfoType * tableInfo_;
+	public:
+	CSharpAspNetCodeGenerator(TableInfoType * p_TableInfoType_ptr)
+		: AbstractCodeGenerator(p_TableInfoType_ptr)
+	{ }
+
 	void print(FILE * fptr);
 
 	// helper functions used by main functions above
@@ -74,7 +79,10 @@ struct CSharpAspNetCodeGenerator
 
 	void print_bll_func_call_params(FILE* fptr);
 	public:
+	void print_ui(FILE * fptr);
 
+	private:
+	// The 3 functions below used to be public earlier
 	void print_aspx(FILE *fptr, bool called_recursively);
 	void print_aspx_multi_view(FILE *fptr);
 	void print_aspx_cs(FILE *fptr);
@@ -111,5 +119,7 @@ struct CSharpAspNetCodeGenerator
 	private:
 	CSharpAspNetCodeGenerator& operator=(const CSharpAspNetCodeGenerator&);
 	CSharpAspNetCodeGenerator(const CSharpAspNetCodeGenerator&);
+	protected:
+	~CSharpAspNetCodeGenerator() { }
 };
 #endif /* CSHARP_ASPNET_CODE_GENERATOR */

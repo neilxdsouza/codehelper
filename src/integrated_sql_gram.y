@@ -10,6 +10,7 @@
 #include "scope.h"
 #include "tree.h"
 #include "stmt.h"
+//#include "stmt.h"
 #include <vector>
 
 	extern int line_no;
@@ -196,11 +197,17 @@ var_decl: 	NAME data_type{
 
 %%
 
+#include <cstdio>
+#include "stmt.h"
+#include "ForwardDecl.h"
+
 #define MAX_NAMESPACE_WORD 1023
 char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
-#include <cstdio>
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
+//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
+//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
+void Init();
 
 int main(int argc, char* argv[], char* envp[])
 {
@@ -208,8 +215,7 @@ int main(int argc, char* argv[], char* envp[])
 		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
 		exit(0);
 	}
-	active_scope=new scope();
-	active_scope_list.push_back(active_scope);
+	Init();
 	rhs_name_space_name=argv[2];
 
 	FILE * yyin=fopen(argv[1],"r");
@@ -269,4 +275,13 @@ void print_code(FILE * & edit_out)
 
 	tree_root->GenerateCode(edit_out);
 
+}
+
+void Init()
+{
+	//CreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
+	//ptrCreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
+	TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
+	active_scope=new scope();
+	active_scope_list.push_back(active_scope);
 }
