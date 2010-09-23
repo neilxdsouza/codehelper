@@ -67,11 +67,11 @@ struct options_list_type
 };
 
 using namespace std;
-void print_csharp_types(FILE * fptr, datatype dt);
-void print_sp_types(FILE * fptr, datatype dt);
-void print_csharp_db_types(FILE * fptr, datatype dt);
-void print_aspx_types(FILE * fptr, datatype dt);
-bool isOfStringType( datatype dt);
+//void print_csharp_types(FILE * fptr, datatype dt);
+//void print_sp_types(FILE * fptr, datatype dt);
+//void print_csharp_db_types(FILE * fptr, datatype dt);
+//void print_aspx_types(FILE * fptr, datatype dt);
+//bool isOfStringType( datatype dt);
 struct var_list 
 {
 	datatype var_type;
@@ -153,25 +153,18 @@ struct var_list
  * if the flag is not set -> we need to allocate a new scope - else we will crash
  */
 #include "scope.h"
-struct table_info
+enum print_sp_params_mode { SELECT, INSERT, UPDATE, DELETE };
+struct TableInfoType
 {
 	public:
-	enum print_sp_params_mode { SELECT, INSERT, UPDATE, DELETE };
 	string tableName_;
 	struct var_list * param_list;
 	struct scope * table_scope;
 	int has_composite_objs;
 	int has_multi;
 	int has_search_key;
-	void print_lower_fname(FILE * fptr){
-		char buffer[MAX_VAR_LEN];
-		if(tableName_.length() < MAX_VAR_LEN-1){
-			strcpy(buffer, tableName_.c_str());
-			buffer[0]=tolower(buffer[0]);
-			fprintf(fptr, "%s", buffer);
-		}
-	}
-	table_info(string name, struct var_list*  elist): 
+	void print_lower_fname(FILE * fptr);
+	TableInfoType(string name, struct var_list*  elist): 
 		tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 		has_multi(0), has_search_key(0)
 	{
@@ -293,8 +286,9 @@ struct table_info
 	void print_popup_aspx_header( FILE * fptr);
 
 	private:
-	table_info& operator=(const table_info&);
-	table_info(const table_info&);
+	TableInfoType& operator=(const TableInfoType&);
+	TableInfoType(const TableInfoType&);
 };
+
 
 #endif /* __NxD_TREE_H */

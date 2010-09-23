@@ -10,7 +10,7 @@
 	int search_for_func(string& search_for);
 	extern scope* active_scope;
 	extern int no_errors;
-	extern vector <table_info*> table_info_table;
+	extern vector <TableInfoType*> table_info_table;
 
 // Note : I may have to add file name we are compiling very soon
 struct stmt
@@ -19,7 +19,7 @@ struct stmt
 	struct stmt * prev;
 	datatype type;
 	int line_number;
-	virtual void print_stmt_lst(FILE * & fptr)=0;
+	virtual void GenerateCode(FILE * & fptr)=0;
 	stmt(datatype dtype=ERROR_TYPE, int lline_number=0)
 		:next(0), prev(0), type(dtype), line_number(lline_number)
 	{}
@@ -35,12 +35,12 @@ struct stmt
 
 struct err_stmt: public stmt{
 	err_stmt( int lline_number): stmt(ERROR_TYPE, lline_number){}
-	void print_stmt_lst(FILE * & fptr){
+	void GenerateCode(FILE * & fptr){
 		fflush(fptr);
 
 		if(fptr){
 			fprintf(fptr, "error");
-			if(prev) prev->print_stmt_lst(fptr);
+			if(prev) prev->GenerateCode(fptr);
 		}
 	}
 	private:
@@ -53,15 +53,15 @@ struct err_stmt: public stmt{
 
 struct table_decl_stmt: public stmt
 {
-	struct table_info * t_ptr;
+	struct TableInfoType * tableInfo_;
 
 	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list):
-		stmt(dtype, lline_number), t_ptr(0)
+		stmt(dtype, lline_number), tableInfo_(0)
 	{
 		//cout << "load_func_into_symbol_table : " << "name: " << name << endl;
 		if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
 			//cout << "got func_decl" << endl;
-			struct table_info* ti=new table_info(name, v_list );
+			struct TableInfoType* ti=new TableInfoType(name, v_list );
 			table_info_table.push_back(ti);
 			type=TABLE_TYPE;
 			struct symtab_ent* se=new struct symtab_ent;
@@ -72,7 +72,7 @@ struct table_decl_stmt: public stmt
 			string s(name);
 			active_scope->sym_tab[s] = se;
 			se->type=TABLE_TYPE;
-			t_ptr=ti;
+			tableInfo_=ti;
 		} else {
 			cerr << "Symbol : " << name << " already present in symbol table" << endl;
 			cout << "line_no: " << lline_number;
@@ -80,12 +80,12 @@ struct table_decl_stmt: public stmt
 			type=ERROR_TYPE;
 		}
 	}
-	void print_stmt_lst(FILE * & fptr){
+	void GenerateCode(FILE * & fptr){
 		fflush(fptr);
 
 		if(fptr){
-			t_ptr->print(fptr);
-			if(prev) prev->print_stmt_lst(fptr);
+			tableInfo_->print(fptr);
+			if(prev) prev->GenerateCode(fptr);
 		}
 	}
 	private:
@@ -98,7 +98,7 @@ struct decl_stmt: public stmt{
 	struct symtab_ent* symp;
 	decl_stmt( datatype dtype, int lline_number):stmt(dtype, lline_number),symp(0)
 	{}
-	void print_stmt_lst(FILE * & fptr){
+	void GenerateCode(FILE * & fptr){
 		fflush(fptr);
 
 		if(fptr){
@@ -111,7 +111,7 @@ struct decl_stmt: public stmt{
 				datatype tdt=datatype(U_INT8_TYPE + type-U_INT8_REF_TYPE);
 				fprintf(fptr,"%s & %s;\n", noun_list[tdt].sym, symp->name);
 			}
-			if(prev) prev->print_stmt_lst(fptr);
+			if(prev) prev->GenerateCode(fptr);
 		}
 
 	}

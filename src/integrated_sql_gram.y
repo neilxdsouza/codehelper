@@ -20,7 +20,7 @@
 	template<class T> T* link_chain(T* & elem1, T* & elem2);
 	template<class T> T* trav_chain(T* & elem1);
 	int lookup_func(string func_name_index);
-	vector <table_info*> table_info_table;
+	vector <TableInfoType*> table_info_table;
 	int yylex();
 	void yyerror(char * s);
 	extern void yyrestart ( FILE *input_file );
@@ -111,11 +111,11 @@ data_type:	INT32_T
 
 decl_comma_list: var_decl_with_or_wo_options {
 		 $$=$1;
-		 cout << "got decl_comma_list : " << endl;
+		 //cout << "got decl_comma_list : " << endl;
 	}
 	| decl_comma_list ',' var_decl_with_or_wo_options {
 		$$=link_chain($1,$3);
-		cout << "chaining var_decl : " << endl;
+		//cout << "chaining var_decl : " << endl;
 	}
 	;
 
@@ -204,38 +204,38 @@ void print_code(FILE * &edit_out);
 
 int main(int argc, char* argv[], char* envp[])
 {
-		if(argc!=3) {
-			cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
-			exit(0);
-		}
-		active_scope=new scope();
-		active_scope_list.push_back(active_scope);
-		rhs_name_space_name=argv[2];
-
-		FILE * yyin=fopen(argv[1],"r");
-		yyrestart(yyin);
-		if(yyparse()){
-			cout << "Errors in parsing: " << no_errors << endl;
-			exit(1);
-		} else 
-		cout << "yyparse finished : now going to print tree: no_errors: "    
-			<< " should be 0 or we have a bug in the compiler"<< endl;
-		//print_stmt_lst(tree_root);
-		if(!no_errors){
-			FILE * edit_out= fopen("edit_out.c", "wb");
-			//fprintf(edit_out, "#include <cstdio>\n#include <iostream>\nusing namespace std;\n" );
-			if(edit_out==NULL){
-				printf("could not open edit_out.c for writing\n");
-				exit(1);
-			}
-			//tree_root->print_stmt_lst(edit_out);
-			print_code(edit_out);
-			fclose(edit_out);
-		} else {
-			cerr << "Errors in Parse:  Total errors: " << no_errors << endl;
-		}
-		return no_errors;
+	if(argc!=3) {
+		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
+		exit(0);
 	}
+	active_scope=new scope();
+	active_scope_list.push_back(active_scope);
+	rhs_name_space_name=argv[2];
+
+	FILE * yyin=fopen(argv[1],"r");
+	yyrestart(yyin);
+	if(yyparse()){
+		cout << "Errors in parsing: " << no_errors << endl;
+		exit(1);
+	} else 
+	cout << "yyparse finished : now going to print tree: no_errors: "    
+		<< " should be 0 or we have a bug in the compiler"<< endl;
+	//GenerateCode(tree_root);
+	if(!no_errors){
+		FILE * edit_out= fopen("edit_out.c", "wb");
+		//fprintf(edit_out, "#include <cstdio>\n#include <iostream>\nusing namespace std;\n" );
+		if(edit_out==NULL){
+			printf("could not open edit_out.c for writing\n");
+			exit(1);
+		}
+		//tree_root->GenerateCode(edit_out);
+		print_code(edit_out);
+		fclose(edit_out);
+	} else {
+		cerr << "Errors in Parse:  Total errors: " << no_errors << endl;
+	}
+	return no_errors;
+}
 
 
 
@@ -263,9 +263,10 @@ int lookup_func(string table_name_index)
 	return -1;
 }
 
-void print_code(FILE * & edit_out){
+void print_code(FILE * & edit_out)
+{
 	printf("ENTER print_code\n");
 
-	tree_root->print_stmt_lst(edit_out);
+	tree_root->GenerateCode(edit_out);
 
 }
