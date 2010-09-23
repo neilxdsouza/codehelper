@@ -1,10 +1,11 @@
 #include "CSharpAspNetCodeGenerator.h"
+#include "utils.h"
 
 extern char project_namespace[];
 extern int line_no;
 extern vector <CSharpAspNetCodeGenerator*> table_info_table;
 extern string rhs_name_space_name;
-struct CSharpAspNetCodeGenerator* my_find_table( string ref_table_name);
+static struct CSharpAspNetCodeGenerator* my_find_table( string ref_table_name);
 
 void CSharpAspNetCodeGenerator::print_sql_provider(FILE * fptr)
 {
@@ -1775,8 +1776,7 @@ void CSharpAspNetCodeGenerator::print_sp_params(FILE * fptr, print_sp_params_mod
 	}
 }
 
-/*
-struct CSharpAspNetCodeGenerator* my_find_table( string ref_table_name){
+static struct CSharpAspNetCodeGenerator* my_find_table( string ref_table_name){
 	for(int i=0; i< table_info_table.size(); ++i){
 		if(table_info_table[i]->tableInfo_->tableName_==ref_table_name){
 			return table_info_table[i];
@@ -1784,7 +1784,6 @@ struct CSharpAspNetCodeGenerator* my_find_table( string ref_table_name){
 	}
 	return 0;
 }
-*/
 
 /*
 void print_csharp_types(FILE * fptr, datatype dt)
@@ -2314,7 +2313,8 @@ void CSharpAspNetCodeGenerator::print_sp_select_params(FILE* fptr, bool with_pke
 			with_pkey, rename_vars, inner_join_tabname.c_str());
 }
 
-void CSharpAspNetCodeGenerator::print_reader(FILE * edit_out, bool with_pkey, bool rename_vars, string inner_join_tabname){
+void CSharpAspNetCodeGenerator::print_reader(FILE * edit_out, bool with_pkey, bool rename_vars, string inner_join_tabname)
+{
 	struct var_list * v_ptr=tableInfo_->param_list;
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;

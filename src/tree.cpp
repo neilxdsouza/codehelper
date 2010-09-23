@@ -5,6 +5,7 @@
  */
 
 #include "tree.h"
+#include "utils.h"
 
 
 /*
@@ -24,7 +25,7 @@ extern char project_namespace[];
 extern int line_no;
 extern vector <TableInfoType*> table_info_table;
 extern string rhs_name_space_name;
-struct TableInfoType* my_find_table( string ref_table_name);
+static struct TableInfoType* my_find_table( string ref_table_name);
 
 void TableInfoType::print_sql_provider(FILE * fptr)
 {
@@ -1795,8 +1796,7 @@ void TableInfoType::print_sp_params(FILE * fptr, print_sp_params_mode mode){
 	}
 }
 
-/*
-struct TableInfoType* my_find_table( string ref_table_name)
+static struct TableInfoType* my_find_table( string ref_table_name)
 {
 	for(int i=0; i< table_info_table.size(); ++i){
 		if(table_info_table[i]->tableName_==ref_table_name){
@@ -1805,7 +1805,6 @@ struct TableInfoType* my_find_table( string ref_table_name)
 	}
 	return 0;
 }
-*/
 
 
 /*

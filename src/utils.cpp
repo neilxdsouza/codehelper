@@ -119,7 +119,7 @@ void print_csharp_db_types(FILE * fptr, datatype dt)
 	}
 }
 
-
+/*
 extern vector <TableInfoType*> table_info_table;
 struct TableInfoType* my_find_table( string ref_table_name)
 {
@@ -130,6 +130,7 @@ struct TableInfoType* my_find_table( string ref_table_name)
 	}
 	return 0;
 }
+*/
 
 
 void print_sp_types(FILE * fptr, datatype dt)
