@@ -616,7 +616,7 @@ char *yytext;
 #define YY_NEVER_INTERACTIVE 1
 
 #include "symtab.h"
-#include "gram.h"
+#include "integrated_sql_gram.h"
 #include <iostream>
 	using std::cout;
 	using std::endl;

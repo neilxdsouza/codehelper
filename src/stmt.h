@@ -13,13 +13,16 @@
 	extern vector <table_info*> table_info_table;
 
 // Note : I may have to add file name we are compiling very soon
-struct stmt{
+struct stmt
+{
 	struct stmt * next;
 	struct stmt * prev;
 	datatype type;
 	int line_number;
 	virtual void print_stmt_lst(FILE * & fptr)=0;
-	stmt(datatype dtype=ERROR_TYPE, int lline_number=0):next(0), prev(0), type(dtype), line_number(lline_number){}
+	stmt(datatype dtype=ERROR_TYPE, int lline_number=0)
+		:next(0), prev(0), type(dtype), line_number(lline_number)
+	{}
 	virtual ~stmt(){}
 	private:
 		stmt(const stmt&);
@@ -48,7 +51,8 @@ struct err_stmt: public stmt{
 
 
 
-struct table_decl_stmt: public stmt{
+struct table_decl_stmt: public stmt
+{
 	struct table_info * t_ptr;
 
 	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list):

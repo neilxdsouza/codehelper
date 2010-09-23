@@ -26,8 +26,8 @@ extern vector <table_info*> table_info_table;
 extern string rhs_name_space_name;
 struct table_info* my_find_table( string ref_table_name);
 
-void table_info::print_sql_provider(FILE * fptr){
-
+void table_info::print_sql_provider(FILE * fptr)
+{
 	print_sql_provider_header(fptr);
 
 	print_sql_provider_get_index_size(fptr);
@@ -53,7 +53,7 @@ void table_info::print_sql_provider(FILE * fptr){
 			fprintf(fptr, " l_%s){\n", v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 			fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_UniqueCheck_%s\", cn);\n",
-				fname.c_str(), v_ptr->var_name.c_str());
+				tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 
 			fprintf(fptr, "\t\t\tcmd.Parameters.Add(\"@%s\", SqlDbType.", v_ptr->var_name.c_str());
@@ -91,36 +91,36 @@ void table_info::print_abstract_provider(FILE * fptr){
 		);
 
 	fprintf(fptr, "namespace %s.DAL.%s {\n", project_namespace, rhs_name_space_name.c_str());
-	fprintf(fptr, "public abstract class %sProvider: DataAccess{\n", fname.c_str());
-	fprintf(fptr, "\tstatic private %sProvider _Instance=null;\n", fname.c_str() );
-	fprintf(fptr, "\tstatic public %sProvider Instance{\n", fname.c_str() );
+	fprintf(fptr, "public abstract class %sProvider: DataAccess{\n", tableName_.c_str());
+	fprintf(fptr, "\tstatic private %sProvider _Instance=null;\n", tableName_.c_str() );
+	fprintf(fptr, "\tstatic public %sProvider Instance{\n", tableName_.c_str() );
 	fprintf(fptr, "\t\t/* get {\n\t\t\tif(_Instance==null) {\n\t\t\t\t _Instance=(%sProvider)Activator.CreateInstance(Type.GetType(Globals.Settings.%s.ProviderType));\n\t\t\t}\n\t\t\treturn _Instance;\n\t\t}*/\n", 
-			fname.c_str(),
-			fname.c_str()
+			tableName_.c_str(),
+			tableName_.c_str()
 			);
 	fprintf(fptr, "\t\t get {\n\t\t\tif(_Instance==null) {\n\t\t\t\t _Instance=(%sProvider)Activator.CreateInstance(Type.GetType(\"%s.DAL.SQLClient.Sql%sProvider\"));\n\t\t\t}\n\t\t\treturn _Instance;\n\t\t}\n", 
-			fname.c_str(), project_namespace,
-			fname.c_str()
+			tableName_.c_str(), project_namespace,
+			tableName_.c_str()
 			);
 
 	fprintf(fptr, "\t}\n");
 	fprintf(fptr, "\t/*\n");
-	fprintf(fptr, "\tpublic %sProvider()", fname.c_str());
+	fprintf(fptr, "\tpublic %sProvider()", tableName_.c_str());
 	fprintf(fptr, "\t{\n");
-	fprintf(fptr, "\t\tthis.ConnectionString = Globals.Settings.%s.ConnectionString;\n", fname.c_str());;
-	fprintf(fptr, "\t\tthis.EnableCaching = Globals.Settings.%s.EnableCaching;\n",fname.c_str());
-	fprintf(fptr, "\t\tthis.CacheDuration = Globals.Settings.%s.CacheDuration;\n",fname.c_str());
+	fprintf(fptr, "\t\tthis.ConnectionString = Globals.Settings.%s.ConnectionString;\n", tableName_.c_str());;
+	fprintf(fptr, "\t\tthis.EnableCaching = Globals.Settings.%s.EnableCaching;\n",tableName_.c_str());
+	fprintf(fptr, "\t\tthis.CacheDuration = Globals.Settings.%s.CacheDuration;\n",tableName_.c_str());
 	fprintf(fptr, "\t}\n");
 	fprintf(fptr, "\t\n");
 
-	fprintf(fptr, "\tpublic %sProvider()", fname.c_str());
+	fprintf(fptr, "\tpublic %sProvider()", tableName_.c_str());
 	fprintf(fptr, "\t{\n");
 	fprintf(fptr, "\t\tthis.ConnectionString = Globals.Settings.Commons.ConnectionString;\n");;
 	fprintf(fptr, "\t\tthis.EnableCaching = Globals.Settings.Commons.EnableCaching;\n");
 	fprintf(fptr, "\t\tthis.CacheDuration = Globals.Settings.Commons.CacheDuration;\n");
 	fprintf(fptr, "\t}*/\n");
 
-	fprintf(fptr, "\tpublic abstract List<Biz%s> Get%ss(int pageIndex, int pageSize\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic abstract List<Biz%s> Get%ss(int pageIndex, int pageSize\n", tableName_.c_str(), tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	bool comma_is_pending = false;
 	if(has_search_key>0){
@@ -143,8 +143,8 @@ void table_info::print_abstract_provider(FILE * fptr){
 
 
 
-	//fprintf(fptr, "\tpublic abstract int Get%ssCount();\n", fname.c_str());
-	fprintf(fptr, "\tpublic abstract int Get%ssCount(", fname.c_str());
+	//fprintf(fptr, "\tpublic abstract int Get%ssCount();\n", tableName_.c_str());
+	fprintf(fptr, "\tpublic abstract int Get%ssCount(", tableName_.c_str());
 	v_ptr=param_list;
 	comma_is_pending = false;
 	while(v_ptr){
@@ -162,16 +162,16 @@ void table_info::print_abstract_provider(FILE * fptr){
 	}
 	fprintf(fptr, ");\n");
 
-	fprintf(fptr, "\tpublic abstract Biz%s Get%sByCode( ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic abstract Biz%s Get%sByCode( ", tableName_.c_str(), tableName_.c_str());
 	print_csharp_types(fptr, param_list->var_type);
 	fprintf(fptr, " " );
 	print_lower_fname(fptr); fprintf(fptr, ");\n");
-	//fprintf(fptr, "\tpublic abstract bool Delete%s", fname.c_str());
+	//fprintf(fptr, "\tpublic abstract bool Delete%s", tableName_.c_str());
 	//fprintf(fptr, "(int "); param_list->print_1st_var(fptr); fprintf(fptr, ");\n");
-	fprintf(fptr, "\tpublic abstract int Insert%s(Biz%s ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic abstract int Insert%s(Biz%s ", tableName_.c_str(), tableName_.c_str());
 	print_lower_fname(fptr);
 	fprintf(fptr, "	);\n"); 
-	fprintf(fptr, "\tpublic abstract int Update%s(Biz%s ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic abstract int Update%s(Biz%s ", tableName_.c_str(), tableName_.c_str());
 	print_lower_fname(fptr);
 	fprintf(fptr, "	);\n");
 	v_ptr=param_list;
@@ -194,7 +194,7 @@ void table_info::print_abstract_provider(FILE * fptr){
 }
 
 void table_info:: print_get_single_record(FILE * fptr){
-	fprintf(fptr, "\tprotected virtual Biz%s Get%sFromReader(IDataReader reader)", fname.c_str(), fname.c_str()); 
+	fprintf(fptr, "\tprotected virtual Biz%s Get%sFromReader(IDataReader reader)", tableName_.c_str(), tableName_.c_str()); 
 	fprintf(fptr, "\t{\n");
 	if(param_list){
 		struct var_list* v_ptr=param_list;
@@ -216,7 +216,7 @@ void table_info:: print_get_single_record(FILE * fptr){
 				struct table_info* t_ptr = my_find_table(v_ptr->options.ref_table_name);
 				t_ptr->print_reader(fptr, false, true,  v_ptr->var_name.c_str());
 				fprintf(fptr, "\t\t\t);\n");
-				//fprintf(fptr, "\t\tl_%s.%s = l_%s;\n", fname.c_str(), v_ptr->var_name.c_str(), 
+				//fprintf(fptr, "\t\tl_%s.%s = l_%s;\n", tableName_.c_str(), v_ptr->var_name.c_str(), 
 				//		v_ptr->var_name.c_str() );
 			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
 				fprintf(fptr, "\t\tList<Biz%s> l_%s= new Biz%s();\n", v_ptr->options.ref_table_name.c_str(),
@@ -239,13 +239,13 @@ void table_info:: print_get_single_record(FILE * fptr){
 			}
 			v_ptr=v_ptr->prev;
 		}
-		fprintf(fptr, "\t\tBiz%s l_%s= new Biz%s(\n", fname.c_str(), fname.c_str(), fname.c_str());
+		fprintf(fptr, "\t\tBiz%s l_%s= new Biz%s(\n", tableName_.c_str(), tableName_.c_str(), tableName_.c_str());
 		//param_list->print(fptr);
 		print_reader(fptr, true, false,  "");
 
 		fprintf(fptr, "\t\t\t);\n");
 
-		fprintf(fptr, "\t\treturn l_%s;\n", fname.c_str());
+		fprintf(fptr, "\t\treturn l_%s;\n", tableName_.c_str());
 	}
 	fprintf(fptr, "\n\t}\n");
 }
@@ -254,13 +254,13 @@ void table_info:: print_get_collection(FILE * fptr){
 
 
 	fprintf(fptr, "\tprotected virtual List<Biz%s> Get%sCollectionFromReader(IDataReader reader)", 
-			fname.c_str(), fname.c_str()); 
+			tableName_.c_str(), tableName_.c_str()); 
 	fprintf(fptr, "\t{\n");
-	fprintf(fptr, "\t\tList <Biz%s> ", fname.c_str()); print_lower_fname(fptr);
-	fprintf(fptr, "=new List <Biz%s> ();\n", fname.c_str());
+	fprintf(fptr, "\t\tList <Biz%s> ", tableName_.c_str()); print_lower_fname(fptr);
+	fprintf(fptr, "=new List <Biz%s> ();\n", tableName_.c_str());
 	fprintf(fptr, "\t\twhile(reader.Read())\n");
 	fprintf(fptr, "\t\t\t"); print_lower_fname(fptr); 
-	fprintf(fptr, ".Add(Get%sFromReader(reader));\n", fname.c_str());	
+	fprintf(fptr, ".Add(Get%sFromReader(reader));\n", tableName_.c_str());	
 	//fprintf(fptr, "\t\treturn sector;");
 	fprintf(fptr, "\t\treturn "); print_lower_fname(fptr); fprintf(fptr, ";\n");
 
@@ -268,13 +268,14 @@ void table_info:: print_get_collection(FILE * fptr){
 }
 
 
-void table_info:: print(FILE * fptr){
+void table_info:: print(FILE * fptr)
+{
 #define FNAME_SZ 255
 	char myfname[FNAME_SZ];
 
 
 	/* ======= BLL ===========*/
-	sprintf(myfname, "output/%s_BLL.cs", fname.c_str());
+	sprintf(myfname, "output/%s_BLL.cs", tableName_.c_str());
 	FILE * bll=fopen(myfname, "wb");
 	if(!bll){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -286,7 +287,7 @@ void table_info:: print(FILE * fptr){
 
 
 	/*========= ABSTRACT PROVIDER =========*/
-	sprintf(myfname, "output/%s_abs.cs", fname.c_str());
+	sprintf(myfname, "output/%s_abs.cs", tableName_.c_str());
 	FILE * abs=fopen(myfname, "wb");
 	if(!abs){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -296,7 +297,7 @@ void table_info:: print(FILE * fptr){
 	print_abstract_provider(abs);
 	fclose(abs);
 
-	sprintf(myfname, "output/%s_sql.cs", fname.c_str());
+	sprintf(myfname, "output/%s_sql.cs", tableName_.c_str());
 	FILE * sql=fopen(myfname, "wb");
 	if(!sql){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -307,7 +308,7 @@ void table_info:: print(FILE * fptr){
 	
 	
 
-	sprintf(myfname, "output/%s_sp.sql", fname.c_str());
+	sprintf(myfname, "output/%s_sp.sql", tableName_.c_str());
 	FILE * sp=fopen(myfname, "wb");
 	if(!sp){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -316,7 +317,7 @@ void table_info:: print(FILE * fptr){
 	print_sp(sp);
 	fclose(sp);
 
-	sprintf(myfname, "output/Manage%s.aspx", fname.c_str());
+	sprintf(myfname, "output/Manage%s.aspx", tableName_.c_str());
 	FILE * aspx=fopen(myfname, "wb");
 	if(!aspx){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -326,7 +327,7 @@ void table_info:: print(FILE * fptr){
 	print_aspx(aspx, called_recursively);
 	fclose(aspx);
 
-	sprintf(myfname, "output/Manage%s.aspx.cs", fname.c_str());
+	sprintf(myfname, "output/Manage%s.aspx.cs", tableName_.c_str());
 	FILE * aspx_cs=fopen(myfname, "wb");
 	if(!aspx_cs){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -336,7 +337,7 @@ void table_info:: print(FILE * fptr){
 	fclose(aspx_cs);
 
 
-	sprintf(myfname, "output/%sList.ascx", fname.c_str());
+	sprintf(myfname, "output/%sList.ascx", tableName_.c_str());
 	FILE * ascx=fopen(myfname, "wb");
 	if(!ascx){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -345,7 +346,7 @@ void table_info:: print(FILE * fptr){
 	print_ascx(ascx);
 	fclose(ascx);
 
-	sprintf(myfname, "output/%sList.ascx.cs", fname.c_str());
+	sprintf(myfname, "output/%sList.ascx.cs", tableName_.c_str());
 	FILE * ascx_cs=fopen(myfname, "wb");
 	if(!ascx){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -355,7 +356,7 @@ void table_info:: print(FILE * fptr){
 	fclose(ascx_cs);
 
 	// ----------
-	sprintf(myfname, "output/%sPopup.aspx", fname.c_str());
+	sprintf(myfname, "output/%sPopup.aspx", tableName_.c_str());
 	FILE * popup_aspx =fopen(myfname, "wb");
 	if(!popup_aspx){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -364,7 +365,7 @@ void table_info:: print(FILE * fptr){
 	print_popup_aspx(popup_aspx);
 
 	// ----------
-	sprintf(myfname, "output/%sPopup.aspx.cs", fname.c_str());
+	sprintf(myfname, "output/%sPopup.aspx.cs", tableName_.c_str());
 	FILE * popup_aspx_cs =fopen(myfname, "wb");
 	if(!popup_aspx_cs){
 		fprintf(stderr, "Error opening file: %s for output ... exiting\n", myfname);
@@ -417,7 +418,7 @@ void table_info::print_dp_params(FILE *fptr){
 void table_info::print_sql_provider_get_index_size(FILE * fptr){
 
 	fprintf(fptr, "\t\tpublic override List<Biz%s> Get%ss(int pageIndex, int pageSize\n",
-				fname.c_str(), fname.c_str());
+				tableName_.c_str(), tableName_.c_str());
 	if(has_search_key){
 		struct var_list* v_ptr=param_list;
 		bool comma_is_pending = false;
@@ -444,7 +445,7 @@ void table_info::print_sql_provider_get_index_size(FILE * fptr){
 	fprintf(fptr, "\t\t){\n");
 	fprintf(fptr, "\t\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 	fprintf(fptr, "\t\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Get%ss\", cn);\n",
-					fname.c_str(), fname.c_str()
+					tableName_.c_str(), tableName_.c_str()
 			);
 	fprintf(fptr, "\t\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 	fprintf(fptr, "\t\t\t\tcmd.Parameters.Add(\"@PageIndex\", SqlDbType.Int).Value = pageIndex;\n");
@@ -466,14 +467,14 @@ void table_info::print_sql_provider_get_index_size(FILE * fptr){
 
 
 	fprintf(fptr, "\t\t\t\tcn.Open();\n");
-	fprintf(fptr, "\t\t\t\treturn Get%sCollectionFromReader(ExecuteReader(cmd));\n", fname.c_str());
+	fprintf(fptr, "\t\t\t\treturn Get%sCollectionFromReader(ExecuteReader(cmd));\n", tableName_.c_str());
 	fprintf(fptr, "\t\t\t}\n");
 	fprintf(fptr, "\t\t}\n");
 
 }
 
 void table_info::print_sql_provider_get_count (FILE * fptr){
-	fprintf(fptr, "\tpublic override int Get%ssCount(\n", fname.c_str());
+	fprintf(fptr, "\tpublic override int Get%ssCount(\n", tableName_.c_str());
 
 	struct var_list* v_ptr=param_list;
 	bool comma_is_pending = false;
@@ -494,7 +495,7 @@ void table_info::print_sql_provider_get_count (FILE * fptr){
 	fprintf(fptr, ") {\n");
 	fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Get%ssCount\", cn);\n",
-					fname.c_str(), fname.c_str());
+					tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 
 	if(has_search_key>0){
@@ -517,13 +518,13 @@ void table_info::print_sql_provider_get_count (FILE * fptr){
 }
 
 void table_info::print_sql_provider_get_by_code(FILE * fptr){
-	fprintf(fptr, "\tpublic override Biz%s Get%sByCode(", fname.c_str(), fname.c_str() );
+	fprintf(fptr, "\tpublic override Biz%s Get%sByCode(", tableName_.c_str(), tableName_.c_str() );
 	print_csharp_types(fptr, param_list->var_type);
 	fprintf(fptr, " ");
 	param_list->print_1st_var(fptr); fprintf(fptr, "){\n");
 	fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Get%sBy%s\", cn);\n",
-			fname.c_str(), fname.c_str(), param_list->var_name.c_str());
+			tableName_.c_str(), tableName_.c_str(), param_list->var_name.c_str());
 	fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 	fprintf(fptr, "\t\t\tcmd.Parameters.Add(\"@%s\", SqlDbType.", param_list->var_name.c_str());
 	print_csharp_db_types(fptr, param_list->var_type);
@@ -533,7 +534,7 @@ void table_info::print_sql_provider_get_by_code(FILE * fptr){
 	fprintf(fptr, "\t\t\tcn.Open();\n");
 	fprintf(fptr, "\t\t\tIDataReader reader = ExecuteReader(cmd, CommandBehavior.SingleRow);\n");
 	fprintf(fptr, "\t\t\tif (reader.Read())\n");
-	fprintf(fptr, "\t\t\t\treturn Get%sFromReader(reader);\n", fname.c_str());
+	fprintf(fptr, "\t\t\t\treturn Get%sFromReader(reader);\n", tableName_.c_str());
 	fprintf(fptr, "\t\t\telse\n");
 	fprintf(fptr, "\t\t\t\treturn null;\n");
 	fprintf(fptr, "\t\t}\n");
@@ -543,11 +544,11 @@ void table_info::print_sql_provider_get_by_code(FILE * fptr){
 void table_info::print_sql_provider_delete(FILE * fptr){
 
 	fprintf(fptr, "\t/*\n");
-	fprintf(fptr, "\tpublic override int Delete%s(int ", fname.c_str());
+	fprintf(fptr, "\tpublic override int Delete%s(int ", tableName_.c_str());
 	param_list->print_1st_var(fptr); fprintf(fptr, "){\n");
 	fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Delete%s\", cn);\n",
-				fname.c_str(), fname.c_str()
+				tableName_.c_str(), tableName_.c_str()
 			);
 	fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 	fprintf(fptr, "\t\t\tcmd.Parameters.Add(\"@%s\", SqlDbType.", param_list->var_name.c_str());
@@ -563,11 +564,11 @@ void table_info::print_sql_provider_delete(FILE * fptr){
 
 void table_info::print_sql_provider_insert(FILE * fptr){
 
-	fprintf(fptr, "\tpublic override int Insert%s(Biz%s ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic override int Insert%s(Biz%s ", tableName_.c_str(), tableName_.c_str());
 	print_lower_fname(fptr);
 	fprintf(fptr, "){\n");
 	fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
-	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Insert%s\", cn);\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Insert%s\", cn);\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 	fprintf(fptr, "\n");
 	print_insert_dp_params(fptr);
@@ -583,13 +584,13 @@ void table_info::print_sql_provider_insert(FILE * fptr){
 }
 
 void table_info::print_sql_provider_update(FILE * fptr){
-	fprintf(fptr, "\tpublic override int Update%s(Biz%s ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic override int Update%s(Biz%s ", tableName_.c_str(), tableName_.c_str());
 	//param_list->print_1st_var(fptr);
 	print_lower_fname(fptr);
 	fprintf(fptr, "){\n");
 	fprintf(fptr, "\t\tusing (SqlConnection cn = new SqlConnection(this.ConnectionString)){\n");
 	fprintf(fptr, "\t\t\tSqlCommand cmd = new SqlCommand(\"srp_%s_Update%s\", cn);\n",
-					fname.c_str(), fname.c_str());
+					tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t\tcmd.CommandType = CommandType.StoredProcedure;\n");
 	print_dp_params(fptr);
 	fprintf(fptr, "\n\n");
@@ -773,9 +774,9 @@ void table_info::print_sp_unique_checks(FILE* fptr){
 	while(v_ptr){
 		if(v_ptr->options.unique){
 			fprintf(fptr, "DROP PROCEDURE srp_%s_UniqueCheck_%s;\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "CREATE PROCEDURE srp_%s_UniqueCheck_%s(\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
 			print_sp_types(fptr,  v_ptr->var_type);
 			if(v_ptr->var_type==NVARCHAR_TYPE
@@ -786,7 +787,7 @@ void table_info::print_sp_unique_checks(FILE* fptr){
 			fprintf(fptr, ")\n");
 			fprintf(fptr, "\nAS\nBEGIN\n\n\tSET NOCOUNT ON;\n");
 			fprintf(fptr, "\tSELECT COUNT(*) FROM %s where %s like @%s;\n",
-				fname.c_str(), v_ptr->var_name.c_str(),
+				tableName_.c_str(), v_ptr->var_name.c_str(),
 				v_ptr->var_name.c_str());
 			fprintf(fptr, "END\n");
 			
@@ -798,9 +799,9 @@ void table_info::print_sp_unique_checks(FILE* fptr){
 
 void table_info::print_sp_insert(FILE * fptr){
 	print_sp_header(fptr);
-	//fprintf(fptr, "CREATE PROCEDURE [dbo].[srp_%s_insert%s](\n", fname.c_str(), fname.c_str());
-	fprintf(fptr, "DROP PROCEDURE srp_%s_Insert%s\n", fname.c_str(), fname.c_str());
-	fprintf(fptr, "CREATE PROCEDURE srp_%s_Insert%s(\n", fname.c_str(), fname.c_str());
+	//fprintf(fptr, "CREATE PROCEDURE [dbo].[srp_%s_insert%s](\n", tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "DROP PROCEDURE srp_%s_Insert%s\n", tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "CREATE PROCEDURE srp_%s_Insert%s(\n", tableName_.c_str(), tableName_.c_str());
 
 	print_sp_params(fptr,  INSERT);
 	fprintf(fptr, ")\n");
@@ -809,7 +810,7 @@ void table_info::print_sp_insert(FILE * fptr){
 	// This code is based on that primary key is int
 	if(param_list){
 		fprintf(fptr, "\nAS\nBEGIN\n\n\tSET NOCOUNT ON;\n");
-		fprintf(fptr, "\tINSERT INTO %s (\n", fname.c_str());
+		fprintf(fptr, "\tINSERT INTO %s (\n", tableName_.c_str());
 		struct var_list* v_ptr=param_list;
 		// Skip the 1st param - assume that it is the ouput parameter and print it out last
 		v_ptr=v_ptr->prev;
@@ -842,13 +843,13 @@ void table_info::print_sp_insert(FILE * fptr){
 
 void table_info::print_sp_update(FILE * fptr){
 	print_sp_header(fptr);
-	fprintf(fptr, "DROP PROCEDURE srp_%s_Update%s\n", fname.c_str(), fname.c_str());
-	fprintf(fptr, "CREATE PROCEDURE srp_%s_Update%s(\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "DROP PROCEDURE srp_%s_Update%s\n", tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "CREATE PROCEDURE srp_%s_Update%s(\n", tableName_.c_str(), tableName_.c_str());
 
 	print_sp_params(fptr, UPDATE);
 	fprintf(fptr, ")\n");
 	fprintf(fptr, "\nAS\nBEGIN\n\n\tSET NOCOUNT ON;\n");
-	fprintf(fptr, "\tUPDATE %s set \n", fname.c_str());
+	fprintf(fptr, "\tUPDATE %s set \n", tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	// for update skip the pkey - which we assume to be the first key
 	v_ptr=v_ptr->prev;
@@ -872,8 +873,8 @@ void table_info::print_sp_delete(FILE * fptr){
 void table_info::print_sp_select(FILE * fptr){
 	fflush(fptr);
 	print_sp_header(fptr);
-	fprintf(fptr, "DROP PROCEDURE srp_%s_Get%ss\n", fname.c_str(), fname.c_str());
-	fprintf(fptr, "CREATE PROCEDURE srp_%s_Get%ss(\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "DROP PROCEDURE srp_%s_Get%ss\n", tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "CREATE PROCEDURE srp_%s_Get%ss(\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "@PageIndex  int,\n");
 	fprintf(fptr, "@PageSize   int");
 	// search key params
@@ -898,7 +899,7 @@ void table_info::print_sp_select(FILE * fptr){
 	int loop_counter=0;
 	while(v_ptr){
 		if(loop_counter==0)
-			fprintf(fptr, "\t\tFROM %s\n", fname.c_str());
+			fprintf(fptr, "\t\tFROM %s\n", tableName_.c_str());
 		else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			string orig_varname = v_ptr->var_name.c_str();
 			int pos = orig_varname.find("_Code");
@@ -907,7 +908,7 @@ void table_info::print_sp_select(FILE * fptr){
 			fprintf(fptr, "\t\tINNER JOIN %s %s ON %s.%s=%s.%s \n",
 				v_ptr->options.ref_table_name.c_str(),
 				improved_name.c_str(),
-				fname.c_str(),
+				tableName_.c_str(),
 				v_ptr->var_name.c_str(),
 				improved_name.c_str(),
 				v_ptr->options.ref_field_name.c_str()
@@ -919,14 +920,14 @@ void table_info::print_sp_select(FILE * fptr){
 	// print out search keys
 	print_sp_search_key_whereclause(fptr);
 
-	fprintf(fptr, "\t) srp_%s\n", fname.c_str());
-	fprintf(fptr, "\tWHERE srp_%s.RowNum BETWEEN (@PageIndex*@PageSize+1) AND ((@PageIndex+1)*@PageSize)\n", fname.c_str());
+	fprintf(fptr, "\t) srp_%s\n", tableName_.c_str());
+	fprintf(fptr, "\tWHERE srp_%s.RowNum BETWEEN (@PageIndex*@PageSize+1) AND ((@PageIndex+1)*@PageSize)\n", tableName_.c_str());
 	fprintf(fptr, "END\n");
 }
 
 
 void table_info::print_sp_count(FILE* fptr){
-	fprintf(fptr, "CREATE PROCEDURE srp_%s_Get%ssCount (\n ", fname.c_str(), fname.c_str());
+	fprintf(fptr, "CREATE PROCEDURE srp_%s_Get%ssCount (\n ", tableName_.c_str(), tableName_.c_str());
 	if(has_search_key){
 		bool print_comma=false;
 		cout << "print_sp_count:: passing print_comma=" 
@@ -936,7 +937,7 @@ void table_info::print_sp_count(FILE* fptr){
 	}
 	fprintf(fptr, ")\n");
 	fprintf(fptr, "AS \nBEGIN\n");
-	fprintf(fptr, "\tSELECT COUNT(*) as %s_Count from %s\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tSELECT COUNT(*) as %s_Count from %s\n", tableName_.c_str(), tableName_.c_str());
 	print_sp_search_key_whereclause(fptr);
 	fprintf(fptr, "\nEND\n");
 }
@@ -944,9 +945,9 @@ void table_info::print_sp_count(FILE* fptr){
 void table_info::print_sp_select_by_pkey(FILE * fptr){
 	print_sp_header(fptr);
 	fprintf(fptr, "DROP PROCEDURE srp_%s_Get%sBy%s\n", 
-			fname.c_str(), fname.c_str(), param_list->var_name.c_str());
+			tableName_.c_str(), tableName_.c_str(), param_list->var_name.c_str());
 	fprintf(fptr, "CREATE PROCEDURE srp_%s_Get%sBy%s(\n", 
-			fname.c_str(), fname.c_str(), param_list->var_name.c_str());
+			tableName_.c_str(), tableName_.c_str(), param_list->var_name.c_str());
 	fprintf(fptr, "@%s  ", param_list->var_name.c_str());
 	print_sp_types(fptr, param_list->var_type);
 	if(param_list->var_type==NVARCHAR_TYPE||param_list->var_type==VARCHAR_TYPE ||
@@ -963,7 +964,7 @@ void table_info::print_sp_select_by_pkey(FILE * fptr){
 	int loop_counter=0;
 	while(v_ptr){
 		if(loop_counter==0)
-			fprintf(fptr, "\t\tFROM %s\n", fname.c_str());
+			fprintf(fptr, "\t\tFROM %s\n", tableName_.c_str());
 		else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			string orig_varname = v_ptr->var_name.c_str();
 			int pos = orig_varname.find("_Code");
@@ -971,7 +972,7 @@ void table_info::print_sp_select_by_pkey(FILE * fptr){
 			fprintf(fptr, "\t\tINNER JOIN %s %s ON %s.%s=%s.%s \n",
 				v_ptr->options.ref_table_name.c_str(),
 				improved_name.c_str(),
-				fname.c_str(),
+				tableName_.c_str(),
 				v_ptr->var_name.c_str(),
 				improved_name.c_str(),
 				v_ptr->options.ref_field_name.c_str()
@@ -1010,12 +1011,12 @@ void table_info::print_bll(FILE * fptr){
 	//fprintf(fptr,"using %s.BLL.%s;\n\n", project_namespace, rhs_name_space_name.c_str());
 	fprintf(fptr,"\n");
 	fprintf(fptr,"/// <summary>\n");
-	fprintf(fptr,"/// Summary description for %s\n", fname.c_str());
+	fprintf(fptr,"/// Summary description for %s\n", tableName_.c_str());
 	fprintf(fptr,"/// </summary>\n");
 	fprintf(fptr,"\n");
 	fprintf(fptr,"\n");
 	fprintf(fptr,"namespace %s.BLL.%s{\n", project_namespace, rhs_name_space_name.c_str());
-	fprintf(fptr, "\tpublic class Biz%s: BizObject{\n", fname.c_str());
+	fprintf(fptr, "\tpublic class Biz%s: BizObject{\n", tableName_.c_str());
 	print_bll_params(fptr);
 	print_bll_api(fptr);
 	fprintf(fptr, "\t}\n");
@@ -1032,9 +1033,9 @@ void table_info::print_bll_api(FILE * fptr){
 	fprintf(fptr,"\t}\n");
 	fprintf(fptr,"\n");
 	fprintf(fptr, "\t/*\n");
-	fprintf(fptr,"\tprotected static %sElement Settings\n", fname.c_str());
+	fprintf(fptr,"\tprotected static %sElement Settings\n", tableName_.c_str());
 	fprintf(fptr,"\t{\n");
-	fprintf(fptr,"\t\tget { return Globals.Settings.%s; }\n", fname.c_str());
+	fprintf(fptr,"\t\tget { return Globals.Settings.%s; }\n", tableName_.c_str());
 	fprintf(fptr,"\t}\n");
 	fprintf(fptr, "\t\n");
 	fprintf(fptr, "\tprotected static CommonsElement Settings\n");
@@ -1072,7 +1073,7 @@ void table_info::print_bll_constructors(FILE * fptr){
 }
 
 void table_info::print_bll_bizobj_constructor(FILE * fptr){
-	fprintf(fptr, "\tpublic Biz%s(", fname.c_str());
+	fprintf(fptr, "\tpublic Biz%s(", tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	while(v_ptr){
 		fprintf(fptr, "\n\t\t");
@@ -1116,7 +1117,7 @@ void table_info::print_bll_bizobj_constructor(FILE * fptr){
 }
 
 void table_info::print_bll_constructor(FILE * fptr){
-	fprintf(fptr, "\tpublic Biz%s(", fname.c_str());
+	fprintf(fptr, "\tpublic Biz%s(", tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	while(v_ptr){
 		fprintf(fptr, "\n\t\t");
@@ -1144,10 +1145,10 @@ void table_info::print_bll_constructor(FILE * fptr){
 void table_info::print_bll_getcount(FILE* fptr){
 
 	fprintf(fptr, "\t/// <summary>\n");
-	fprintf(fptr, "\t/// Returns the number of total %s\n", fname.c_str());
+	fprintf(fptr, "\t/// Returns the number of total %s\n", tableName_.c_str());
 	fprintf(fptr, "\t/// </summary>\n");
-	//fprintf(fptr, "\tpublic static int Get%ssCount()\n", fname.c_str());
-	fprintf(fptr, "\tpublic static int Get%ssCount(", fname.c_str());
+	//fprintf(fptr, "\tpublic static int Get%ssCount()\n", tableName_.c_str());
+	fprintf(fptr, "\tpublic static int Get%ssCount(", tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	bool comma_is_pending = false;
 	while(v_ptr){
@@ -1167,14 +1168,14 @@ void table_info::print_bll_getcount(FILE* fptr){
 
 	
 	fprintf(fptr, "\t{\n");
-	fprintf(fptr, "\t\tint %sCount = 0;\n", fname.c_str());
+	fprintf(fptr, "\t\tint %sCount = 0;\n", tableName_.c_str());
 	fprintf(fptr, "\t\t/*\n");
-	fprintf(fptr, "\t\tstring key = \"%s_%sCount\";\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\tstring key = \"%s_%sCount\";\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\tif (Settings.EnableCaching  && BizObject.Cache[key] != null) {\n");
-	fprintf(fptr, "\t\t\t%sCount = (int)BizObject.Cache[key];\n", fname.c_str());
+	fprintf(fptr, "\t\t\t%sCount = (int)BizObject.Cache[key];\n", tableName_.c_str());
 	fprintf(fptr, "\t\t} else {*/\n");
-	//fprintf(fptr, "\t\t\t%sCount = SiteProvider.%s.Get%ssCount();\n", fname.c_str(), fname.c_str(), fname.c_str());
-	fprintf(fptr, "\t\t\t%sCount = SiteProvider.%s.Get%ssCount(", fname.c_str(), fname.c_str(), fname.c_str());
+	//fprintf(fptr, "\t\t\t%sCount = SiteProvider.%s.Get%ssCount();\n", tableName_.c_str(), tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "\t\t\t%sCount = SiteProvider.%s.Get%ssCount(", tableName_.c_str(), tableName_.c_str(), tableName_.c_str());
 	comma_is_pending=false;
 	v_ptr=param_list;
 	while(v_ptr){
@@ -1190,9 +1191,9 @@ void table_info::print_bll_getcount(FILE* fptr){
 		v_ptr=v_ptr->prev;
 	}
 	fprintf(fptr, ");\n");
-	fprintf(fptr, "\t\t\t/*CacheData(key, %sCount);\n", fname.c_str());
+	fprintf(fptr, "\t\t\t/*CacheData(key, %sCount);\n", tableName_.c_str());
 	fprintf(fptr, "\t\t}*/\n");
-	fprintf(fptr, "\t\treturn %sCount;\n", fname.c_str());
+	fprintf(fptr, "\t\treturn %sCount;\n", tableName_.c_str());
 	fprintf(fptr, "\t}\n");
 
 }
@@ -1201,11 +1202,11 @@ void table_info::print_bll_getcount(FILE* fptr){
 void table_info::print_bll_get_collection(FILE* fptr){
 
 	fprintf(fptr, "\t/// <summary>\n");
-	fprintf(fptr, "\t/// Returns a collection of total %ss\n", fname.c_str());
+	fprintf(fptr, "\t/// Returns a collection of total %ss\n", tableName_.c_str());
 	fprintf(fptr, "\t/// </summary>\n");
-	fprintf(fptr, "\tpublic static List<Biz%s> Get%ss()\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic static List<Biz%s> Get%ss()\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t{\n");
-	fprintf(fptr, "\t\treturn Get%ss(0, BizObject.MAXROWS);\n", fname.c_str());
+	fprintf(fptr, "\t\treturn Get%ss(0, BizObject.MAXROWS);\n", tableName_.c_str());
 	fprintf(fptr, "\t}\n");
 
 }
@@ -1213,10 +1214,10 @@ void table_info::print_bll_get_collection(FILE* fptr){
 void table_info::print_bll_get_paged_collection(FILE* fptr){
 
 	//fprintf(fptr, "\n\tpublic static List<Biz%s> Get%ss(int startRowIndex, int maximumRows) {\n", 
-	//		fname.c_str(), fname.c_str());
+	//		tableName_.c_str(), tableName_.c_str());
 	
 	fprintf(fptr, "\n\tpublic static List<Biz%s> Get%ss(int startRowIndex, int maximumRows\n", 
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	bool comma_is_pending = false;
 	if(has_search_key>0){
@@ -1240,14 +1241,14 @@ void table_info::print_bll_get_paged_collection(FILE* fptr){
 
 
 	fprintf(fptr, "\n");
-	fprintf(fptr, "\t\tList<Biz%s> l_%s = new List<Biz%s>();\n", fname.c_str(), fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\tList<Biz%s> l_%s = new List<Biz%s>();\n", tableName_.c_str(), tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t/*\n");
 	fprintf(fptr, "\t\tstring key = \"%s_%s_\" + startRowIndex.ToString() + \"_\" + maximumRows.ToString();\n",
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\tif (Settings.EnableCaching && BizObject.Cache[key] != null) {\n");
-	fprintf(fptr, "\t\t\tl_%s = (List<Biz%s>)BizObject.Cache[key];\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\t\tl_%s = (List<Biz%s>)BizObject.Cache[key];\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t} else {*/\n");
-	fprintf(fptr, "\t\t\tl_%s = SiteProvider.%s.Get%ss(\n", fname.c_str(), fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\t\tl_%s = SiteProvider.%s.Get%ss(\n", tableName_.c_str(), tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\t\t\t\tGetPageIndex(startRowIndex, maximumRows), maximumRows\n");
 
 	comma_is_pending=false;
@@ -1268,22 +1269,22 @@ void table_info::print_bll_get_paged_collection(FILE* fptr){
 		v_ptr=v_ptr->prev;
 	}
 	fprintf(fptr, ");\n");
-	fprintf(fptr, "\t\t\t/*CacheData(key, l_%s);\n", fname.c_str());
+	fprintf(fptr, "\t\t\t/*CacheData(key, l_%s);\n", tableName_.c_str());
 	fprintf(fptr, "\t\t}*/\n");
 	fprintf(fptr, "\n");
-	fprintf(fptr, "\t\treturn l_%s;\n", fname.c_str());
+	fprintf(fptr, "\t\treturn l_%s;\n", tableName_.c_str());
 	fprintf(fptr, "\t}\n");
 
 }
 
 void table_info::print_bll_get_single_entity(FILE* fptr){
 
-	fprintf(fptr,"\n\tpublic static Biz%s GetSingle%s(", fname.c_str(), fname.c_str() );
+	fprintf(fptr,"\n\tpublic static Biz%s GetSingle%s(", tableName_.c_str(), tableName_.c_str() );
 	/* primary key used here */
 	print_csharp_types(fptr, param_list->var_type);
 	fprintf(fptr," pkey) {\n");
-	fprintf(fptr,"\t\tBiz%s single_rec = SiteProvider.%s.Get%sByCode(pkey);\n", fname.c_str(), fname.c_str(),
-				fname.c_str());
+	fprintf(fptr,"\t\tBiz%s single_rec = SiteProvider.%s.Get%sByCode(pkey);\n", tableName_.c_str(), tableName_.c_str(),
+				tableName_.c_str());
 	fprintf(fptr,"\t\treturn single_rec;\n");
 	fprintf(fptr,"\t}\n");
 
@@ -1293,9 +1294,9 @@ void table_info::print_bll_get_single_entity(FILE* fptr){
 void table_info::print_bll_insert_entity(FILE * fptr){
 
 	fprintf(fptr, "\t/// <summary>\n");
-	fprintf(fptr, "\t/// Creates a new %s\n", fname.c_str());
+	fprintf(fptr, "\t/// Creates a new %s\n", tableName_.c_str());
 	fprintf(fptr, "\t/// </summary>\n");
-	fprintf(fptr, "\tpublic static int Insert%s(", fname.c_str());
+	fprintf(fptr, "\tpublic static int Insert%s(", tableName_.c_str());
 	//print_func_params_without_pkey(fptr);
 	print_func_params_with_pkey(fptr);
 	fprintf(fptr, "){\n");
@@ -1308,7 +1309,7 @@ void table_info::print_bll_insert_entity(FILE * fptr){
 	while(v_ptr){
 		if(v_ptr->options.unique){
 			fprintf(fptr, "\t\tcount = SiteProvider.%s.UniqueCheck_%s(l_%s);\n",
-				fname.c_str(), v_ptr->var_name.c_str(), 
+				tableName_.c_str(), v_ptr->var_name.c_str(), 
 				v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\tif(count>0){\n");
 			fprintf(fptr, "\t\t\tthis.BrokenRules.Add(\"%s: \" + l_%s + \"already exists in Database\");\n",
@@ -1342,13 +1343,13 @@ void table_info::print_bll_insert_entity(FILE * fptr){
 	fprintf(fptr, "\t\tl_");
 	fprintf(fptr, "%s", v_ptr->var_name.c_str());
 	fprintf(fptr, "=0;\n");
-	fprintf(fptr, "\t\tBiz%s record = new Biz%s", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\tBiz%s record = new Biz%s", tableName_.c_str(), tableName_.c_str());
 	print_bll_func_call_params(fptr);
 	fprintf(fptr, ";\n");
 
 	
-	fprintf(fptr, "\t\tint ret = SiteProvider.%s.Insert%s(record);\n", fname.c_str(), fname.c_str());
-	fprintf(fptr, "\t\tBizObject.PurgeCacheItems(\"%s\");\n", fname.c_str());
+	fprintf(fptr, "\t\tint ret = SiteProvider.%s.Insert%s(record);\n", tableName_.c_str(), tableName_.c_str());
+	fprintf(fptr, "\t\tBizObject.PurgeCacheItems(\"%s\");\n", tableName_.c_str());
 	fprintf(fptr, "\t\treturn ret;\n");
 	fprintf(fptr, "\t}\n");
 	fprintf(fptr, "\n");
@@ -1360,9 +1361,9 @@ void table_info::print_bll_update_entity(FILE* fptr){
 	printf("came into print_bll_update_entity\n");
 
 	fprintf(fptr, "\t/// <summary>\n");
-	fprintf(fptr, "\t/// Updates a new %s\n", fname.c_str());
+	fprintf(fptr, "\t/// Updates a new %s\n", tableName_.c_str());
 	fprintf(fptr, "\t/// </summary>\n");
-	fprintf(fptr, "\tpublic static int Update%s(", fname.c_str());
+	fprintf(fptr, "\tpublic static int Update%s(", tableName_.c_str());
 	print_func_params_with_pkey(fptr);
 	fprintf(fptr, "){\n");
 	// First convert nulls to empty strings
@@ -1379,15 +1380,15 @@ void table_info::print_bll_update_entity(FILE* fptr){
 		v_ptr=v_ptr->prev;
 	}
 	// construct composite objects
-	fprintf(fptr, "\t\tBiz%s record = new Biz%s", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\tBiz%s record = new Biz%s", tableName_.c_str(), tableName_.c_str());
 	//
 	// local variable list of params
 	//
 	print_bll_func_call_params(fptr);
 	fprintf(fptr, ";\n");
-	fprintf(fptr, "\t\tint ret = SiteProvider.%s.Update%s(record);\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\t\tint ret = SiteProvider.%s.Update%s(record);\n", tableName_.c_str(), tableName_.c_str());
 
-	fprintf(fptr, "\t\tBizObject.PurgeCacheItems(\"%s\");\n", fname.c_str());
+	fprintf(fptr, "\t\tBizObject.PurgeCacheItems(\"%s\");\n", tableName_.c_str());
 	fprintf(fptr, "\t\treturn ret;\n");
 	fprintf(fptr, "\t}\n");
 	fprintf(fptr, "\n");
@@ -1453,11 +1454,11 @@ void table_info::print_sql_provider_header(FILE* fptr){
 	fprintf(fptr, "using %s.BLL.%s;\n", project_namespace, rhs_name_space_name.c_str());
 	fprintf(fptr, "\n\n");
 	fprintf(fptr, "/// <summary>\n");
-	fprintf(fptr, "/// Summary description for Sql%sProvider\n", fname.c_str());
+	fprintf(fptr, "/// Summary description for Sql%sProvider\n", tableName_.c_str());
 	fprintf(fptr, "/// </summary>\n");
 	fprintf(fptr, "namespace %s.DAL.SQLClient\n", project_namespace);
 	fprintf(fptr, "{\n");
-	fprintf(fptr, "\tpublic class Sql%sProvider : %sProvider{\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "\tpublic class Sql%sProvider : %sProvider{\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\n\n");
 }
 
@@ -1537,7 +1538,7 @@ void table_info::print_aspx_cs_header(FILE* fptr){
 	fprintf(fptr, "\n");
 	fprintf(fptr, "namespace %s.UI\n", project_namespace);
 	fprintf(fptr, "{\n");
-	fprintf(fptr, "    public partial class Manage%s : BasePage\n", fname.c_str());
+	fprintf(fptr, "    public partial class Manage%s : BasePage\n", tableName_.c_str());
 	fprintf(fptr, "    {\n");
 }
 
@@ -1550,18 +1551,18 @@ void table_info::print_aspx_cs_body(FILE *fptr, bool is_a_many_table){
 
 	fprintf(fptr, "        protected void Page_Load(object sender, EventArgs e)\n");
 	fprintf(fptr, "        {\n");
-	fprintf(fptr, "\t\t\tif (gv%s.Rows.Count == 0) {\n", fname.c_str());
-	fprintf(fptr, "\t\t\t\tfv%s.ChangeMode(FormViewMode.Insert);\n", fname.c_str());
+	fprintf(fptr, "\t\t\tif (gv%s.Rows.Count == 0) {\n", tableName_.c_str());
+	fprintf(fptr, "\t\t\t\tfv%s.ChangeMode(FormViewMode.Insert);\n", tableName_.c_str());
 	fprintf(fptr, "\t\t\t}\n");
-	fprintf(fptr, "\t\t\t//else fv%s.ChangeMode(FormViewMode.Edit);\n", fname.c_str());
+	fprintf(fptr, "\t\t\t//else fv%s.ChangeMode(FormViewMode.Edit);\n", tableName_.c_str());
 	print_uc_event_registrations(fptr, param_list);
 
 	fprintf(fptr, "\n");
 	fprintf(fptr, "        }\n");
 	fprintf(fptr, " protected void gv%s_SelectedIndexChanged(object sender, EventArgs e)\n",
-				fname.c_str());
+				tableName_.c_str());
 	fprintf(fptr, "        {\n");
-	fprintf(fptr, "            fv%s.DataBind();\n", fname.c_str());
+	fprintf(fptr, "            fv%s.DataBind();\n", tableName_.c_str());
 	fprintf(fptr, "            GridView gv = (GridView)sender;\n");
 	fprintf(fptr, "            GridViewRow gvr = gv.SelectedRow;\n");
 	struct var_list* v_ptr=param_list;
@@ -1569,7 +1570,7 @@ void table_info::print_aspx_cs_body(FILE *fptr, bool is_a_many_table){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==true){
 			fprintf(fptr, "            fv%s.Visible = true;\n", v_ptr->options.ref_table_name.c_str());
 			fprintf(fptr, "            TextBox tb = (TextBox) fv%s.FindControl(\"tb_%s_Code\");\n",
-						v_ptr->options.ref_field_name.c_str(), fname.c_str());
+						v_ptr->options.ref_field_name.c_str(), tableName_.c_str());
 			fprintf(fptr, "            if (tb != null)\n");
 			fprintf(fptr, "            {\n");
 			fprintf(fptr, "                tb.Text = gvr.Cells[0].Text;\n");
@@ -1584,21 +1585,21 @@ void table_info::print_aspx_cs_body(FILE *fptr, bool is_a_many_table){
 	fprintf(fptr, "        }\n");
 
 	fprintf(fptr, "        protected void fv%s_ItemInserted(object sender, FormViewInsertedEventArgs e)\n",
-		       	fname.c_str());
+		       	tableName_.c_str());
 	fprintf(fptr, "        {\n");
-	fprintf(fptr, "            gv%s.DataBind();\n", fname.c_str());
+	fprintf(fptr, "            gv%s.DataBind();\n", tableName_.c_str());
 	fprintf(fptr, "        }\n");
 
 	fprintf(fptr, "\t\t\tprotected void fv%s_ItemUpdated(object sender, FormViewUpdatedEventArgs e)\n",
-			fname.c_str()
+			tableName_.c_str()
 			);
 
 	fprintf(fptr, "\t\t\t{\n");
-	fprintf(fptr, "\t\t\tgv%s.DataBind();\n", fname.c_str());
+	fprintf(fptr, "\t\t\tgv%s.DataBind();\n", tableName_.c_str());
 	fprintf(fptr, "\t\t\t}\n");
 
 	fprintf(fptr, "\t\t\tprotected void obj_%s_updating(object sender, ObjectDataSourceMethodEventArgs e){\n",
-			fname.c_str());
+			tableName_.c_str());
 
 	fprintf(fptr, "\t\t\t\tIDictionary paramsFromPage = e.InputParameters;\n");
 	v_ptr=param_list;
@@ -1612,7 +1613,7 @@ void table_info::print_aspx_cs_body(FILE *fptr, bool is_a_many_table){
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!=""&&v_ptr->options.many==false){
 			fprintf(fptr, "\t\t\t\tHiddenField hf_%s = (HiddenField) fv%s.FindControl(\"ehf_%s%s\");\n",
-					v_ptr->var_name.c_str(), fname.c_str(), fname.c_str(), v_ptr->var_name.c_str()
+					v_ptr->var_name.c_str(), tableName_.c_str(), tableName_.c_str(), v_ptr->var_name.c_str()
 					);
 		} else {
 			switch(v_ptr->var_type){
@@ -1695,14 +1696,14 @@ void table_info::print_aspx_cs_body(FILE *fptr, bool is_a_many_table){
 
 	fprintf(fptr, "\t\t}\n");
 	fprintf(fptr, "        protected void obj_%s_inserting(object sender, ObjectDataSourceMethodEventArgs e)\n",
-			fname.c_str());
+			tableName_.c_str());
 	fprintf(fptr, "        {\n");
 	fprintf(fptr, "            IDictionary paramsFromPage = e.InputParameters;\n");
 	v_ptr=param_list;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			fprintf(fptr, "            HiddenField hf_%s = (HiddenField) fv%s.FindControl(\"ihf_%s%s\");\n",
-				v_ptr->var_name.c_str(), fname.c_str(), fname.c_str(), v_ptr->var_name.c_str()
+				v_ptr->var_name.c_str(), tableName_.c_str(), tableName_.c_str(), v_ptr->var_name.c_str()
 				);
 		}
 		v_ptr=v_ptr->prev;
@@ -1796,7 +1797,7 @@ void table_info::print_sp_params(FILE * fptr, print_sp_params_mode mode){
 
 struct table_info* my_find_table( string ref_table_name){
 	for(int i=0; i< table_info_table.size(); ++i){
-		if(table_info_table[i]->fname==ref_table_name){
+		if(table_info_table[i]->tableName_==ref_table_name){
 			return table_info_table[i];
 		}
 	}
@@ -2016,20 +2017,20 @@ void print_aspx_types(FILE * fptr, datatype dt){
 void table_info::print_ascx(FILE* fptr){
 
 	fprintf(fptr, "<%%@ Control Language=\"C#\" AutoEventWireup=\"true\" CodeFile=\"%sList.ascx.cs\" Inherits=\"%s.UI.Controls.%sList\" %%>\n",
-		fname.c_str(), project_namespace, fname.c_str()	
+		tableName_.c_str(), project_namespace, tableName_.c_str()	
 		);
-	fprintf(fptr, "<div id=\"%sList\" >\n", fname.c_str());
+	fprintf(fptr, "<div id=\"%sList\" >\n", tableName_.c_str());
 	fprintf(fptr, "<br />                   \n");
 	fprintf(fptr, "<br />\n");
 	fprintf(fptr, "<asp:ObjectDataSource ID=\"ds%s\" runat=\"server\" SelectMethod=\"Get%ss\"\n",
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "    TypeName=\"%s.BLL.%s.Biz%s\" SelectCountMethod=\"Get%ssCount\">    \n",
-			project_namespace, rhs_name_space_name.c_str(), fname.c_str(), fname.c_str());
+			project_namespace, rhs_name_space_name.c_str(), tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "</asp:ObjectDataSource>\n");
 	fprintf(fptr, "<asp:GridView ID=\"gv%s\" runat=\"server\" AllowPaging=\"True\" AutoGenerateColumns=\"False\" \n",
-				fname.c_str());
+				tableName_.c_str());
 	fprintf(fptr, "    DataSourceID=\"ds%s\" OnSelectedIndexChanged=\"gv%s_SelectedIndexChanged\" >\n", 
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "    <Columns>\n");
 	print_bound_fields(fptr, param_list);
 	fprintf(fptr, "    </Columns>\n");
@@ -2065,14 +2066,14 @@ void table_info::print_ascx_cs(FILE* fptr){
 	fprintf(fptr, "namespace %s.UI.Controls\n", project_namespace);
 	fprintf(fptr, "{\n");
 	fprintf(fptr, "    \n");
-	fprintf(fptr, "    public partial class %sList : System.Web.UI.UserControl\n", fname.c_str());
+	fprintf(fptr, "    public partial class %sList : System.Web.UI.UserControl\n", tableName_.c_str());
 	fprintf(fptr, "    {\n");
 	fprintf(fptr, "        public delegate void %sCodeSelectEventHandler(object sender, EventArgs e);\n",
-					fname.c_str());
+					tableName_.c_str());
 
 	fprintf(fptr, "\n");
 	fprintf(fptr, "        public event %sCodeSelectEventHandler %sCodeSelectCommand;\n", 
-				fname.c_str(), fname.c_str());
+				tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\n");
 	fprintf(fptr, "                \n");
 	fprintf(fptr, "        protected void Page_Load(object sender, EventArgs e)\n");
@@ -2081,10 +2082,10 @@ void table_info::print_ascx_cs(FILE* fptr){
 	fprintf(fptr, "        }\n");
 	fprintf(fptr, "\n");
 	fprintf(fptr, "        protected void  gv%s_SelectedIndexChanged(object sender, EventArgs e)\n",
-				fname.c_str());
+				tableName_.c_str());
 	fprintf(fptr, "        {\n");
 	fprintf(fptr, "            //RaiseEvent AccountSelectCommand(Me, objAccount.AccountId)\n");
-	fprintf(fptr, "            %sCodeSelectCommand(sender, e);\n", fname.c_str());
+	fprintf(fptr, "            %sCodeSelectCommand(sender, e);\n", tableName_.c_str());
 	fprintf(fptr, "            \n");
 	fprintf(fptr, "        }\n");
 	fprintf(fptr, "	    }\n");
@@ -2125,22 +2126,22 @@ void table_info::print_aspx_edit_fields(FILE* fptr, struct var_list* param_list)
 		} else {
 			fprintf(fptr, "\t\t<tr><td>\n");
 			fprintf(fptr, "\t\t<asp:UpdatePanel id=\"eup_%s%s\" runat=\"server\">\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t<contenttemplate>\n");
 			fprintf(fptr, "\t\t<table>\n");
 
 			fprintf(fptr, "\t\t<tr><td>%s: </td>\n\t\t<td> <asp:TextBox ID=\"etb_%s%s\" runat=\"server\" Text='<%%# Bind(\"",
-				v_ptr->var_name.c_str(),  fname.c_str(), v_ptr->var_name.c_str() );
+				v_ptr->var_name.c_str(),  tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "%s\") %%>'/></td>\n",  v_ptr->var_name.c_str()  );
 			fprintf(fptr, "\t\t<td> <asp:HiddenField ID=\"ehf_%s%s\" runat=\"server\" Value='<%%# Bind(\"",
-				fname.c_str(), v_ptr->var_name.c_str()  );
+				tableName_.c_str(), v_ptr->var_name.c_str()  );
 			fprintf(fptr, "%s\") %%>'/>\n",  v_ptr->var_name.c_str()  );
 
 			fprintf(fptr, "\t\t<asp:Button id=\"ebtshowgv%s%s\" onclick=\"ebtshowgv%s%s_Click\" runat=\"server\" Text=\"...\"></asp:Button>\n", 
-				fname.c_str(), v_ptr->var_name.c_str(), fname.c_str(), v_ptr->var_name.c_str());
+				tableName_.c_str(), v_ptr->var_name.c_str(), tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t</td></tr><tr><td colspan=\"3\">\n");
 			fprintf(fptr, "\t\t<sr:%sList id=\"euc%s%sList\" runat=\"server\" Visible=\"False\" />\n", 
-					v_ptr->options.ref_table_name.c_str(), fname.c_str(), v_ptr->var_name.c_str() );
+					v_ptr->options.ref_table_name.c_str(), tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t\t</td></tr>\n"); 
 			fprintf(fptr, "\t\t</table>\n");
 			fprintf(fptr, "\t\t</contenttemplate>\n");
@@ -2156,20 +2157,20 @@ void table_info::print_uc_event_registrations(FILE* fptr, struct var_list* param
 	struct var_list* v_ptr=param_list;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			fprintf(fptr, "\t\t\tif (iuc%s%sList !=null)\n", fname.c_str(), v_ptr->var_name.c_str());
+			fprintf(fptr, "\t\t\tif (iuc%s%sList !=null)\n", tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t\t\tiuc%s%sList.%sCodeSelectCommand += \n\t\t\t new %sList.%sCodeSelectEventHandler(this.i%s%sSelectClick);\n",
-			fname.c_str(),		
+			tableName_.c_str(),		
 			v_ptr->var_name.c_str(), v_ptr->options.ref_table_name.c_str(),
 			v_ptr->options.ref_table_name.c_str(), v_ptr->options.ref_table_name.c_str(),
-			fname.c_str(),
+			tableName_.c_str(),
 			v_ptr->var_name.c_str()
 			);
-			fprintf(fptr, "\t\t\tif (euc%s%sList !=null)\n", fname.c_str(), v_ptr->var_name.c_str());
+			fprintf(fptr, "\t\t\tif (euc%s%sList !=null)\n", tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t\t\teuc%s%sList.%sCodeSelectCommand += \n\t\t\t new %sList.%sCodeSelectEventHandler(this.e%s%sSelectClick);\n",
-			fname.c_str(),		
+			tableName_.c_str(),		
 			v_ptr->var_name.c_str(), v_ptr->options.ref_table_name.c_str(),
 			v_ptr->options.ref_table_name.c_str(), v_ptr->options.ref_table_name.c_str(),
-			fname.c_str(),
+			tableName_.c_str(),
 			v_ptr->var_name.c_str()
 			);
 				
@@ -2183,37 +2184,37 @@ void table_info::print_uc_event_handlers(FILE* fptr, struct var_list* param_list
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			fprintf(fptr, "\tprotected void e%s%sSelectClick(object sender, EventArgs e){\n",
-				fname.c_str(),	v_ptr->var_name.c_str());
+				tableName_.c_str(),	v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\tGridView mygrid=(GridView)sender;\n");
 			fprintf(fptr, "\t\tGridViewRow myrow=mygrid.SelectedRow;\n");
 			fprintf(fptr, "\t\tetb_%s%s.Text = myrow.Cells[1].Text;\n", 
-					fname.c_str(), v_ptr->var_name.c_str() );
+					tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t\tehf_%s%s.Value = myrow.Cells[0].Text;\n", 
-					fname.c_str(), v_ptr->var_name.c_str() );
+					tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t}\n");
 			fprintf(fptr, "\tprotected void i%s%sSelectClick(object sender, EventArgs e){\n",
-				fname.c_str(), v_ptr->var_name.c_str());
+				tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\tGridView mygrid=(GridView)sender;\n");
 			fprintf(fptr, "\t\tGridViewRow myrow=mygrid.SelectedRow;\n");
 			fprintf(fptr, "\t\titb_%s%s.Text = myrow.Cells[1].Text;\n", 
-					fname.c_str(), v_ptr->var_name.c_str() );
+					tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t\tihf_%s%s.Value = myrow.Cells[0].Text;\n", 
-					fname.c_str(), v_ptr->var_name.c_str() );
+					tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t}\n");
 
 			// now ouput the expose grid button event handler
 			// one for the insert template
 			fprintf(fptr, "\tprotected void ibtshowgv%s%s_Click(object sender, EventArgs e){\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\tiuc%s%sList.Visible=!iuc%s%sList.Visible;\n\t}\n",
-					fname.c_str(), v_ptr->var_name.c_str(), 
-					fname.c_str(), v_ptr->var_name.c_str()); 
+					tableName_.c_str(), v_ptr->var_name.c_str(), 
+					tableName_.c_str(), v_ptr->var_name.c_str()); 
 			// one for the edit template
 			fprintf(fptr, "\tprotected void ebtshowgv%s%s_Click(object sender, EventArgs e){\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\teuc%s%sList.Visible=!euc%s%sList.Visible;\n\t}\n",
-					fname.c_str(), v_ptr->var_name.c_str(), 
-					fname.c_str(), v_ptr->var_name.c_str()); 
+					tableName_.c_str(), v_ptr->var_name.c_str(), 
+					tableName_.c_str(), v_ptr->var_name.c_str()); 
 
 
 
@@ -2243,22 +2244,22 @@ void table_info::print_aspx_insert_fields(FILE* fptr, struct var_list* param_lis
 		} else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			fprintf(fptr, "\t\t<tr><td>\n");
 			fprintf(fptr, "\t\t<asp:UpdatePanel id=\"iup_%s%s\" runat=\"server\">\n", 
-					fname.c_str(), v_ptr->var_name.c_str());
+					tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t<contenttemplate>\n");
 			fprintf(fptr, "\t\t<table>\n");
 
 			fprintf(fptr, "\t\t<tr><td>%s: </td> <td> <asp:TextBox ID=\"itb_%s%s\" runat=\"server\" Text='<%%# Bind(\"l_",
-				v_ptr->var_name.c_str(),  fname.c_str(),v_ptr->var_name.c_str() );
+				v_ptr->var_name.c_str(),  tableName_.c_str(),v_ptr->var_name.c_str() );
 			fprintf(fptr, "%s\") %%>'/>\n",  v_ptr->var_name.c_str()  );
 			fprintf(fptr, "\t\t<td> <asp:HiddenField ID=\"ihf_%s%s\" runat=\"server\" Value='<%%# Bind(\"l_",
-				fname.c_str(), v_ptr->var_name.c_str()  );
+				tableName_.c_str(), v_ptr->var_name.c_str()  );
 			fprintf(fptr, "%s\") %%>'/>\n",  v_ptr->var_name.c_str()  );
 
 			fprintf(fptr, "\t\t<asp:Button id=\"btshowgv%s%s\" onclick=\"ibtshowgv%s%s_Click\" runat=\"server\" Text=\"...\"></asp:Button>\n", 
-				fname.c_str(), v_ptr->var_name.c_str(), fname.c_str(), v_ptr->var_name.c_str());
+				tableName_.c_str(), v_ptr->var_name.c_str(), tableName_.c_str(), v_ptr->var_name.c_str());
 			fprintf(fptr, "\t\t</td></tr><tr><td colspan=\"3\">\n");
 			fprintf(fptr, "\t\t<sr:%sList id=\"iuc%s%sList\" runat=\"server\" Visible=\"False\" />\n", 
-					v_ptr->options.ref_table_name.c_str(), fname.c_str(), v_ptr->var_name.c_str() );
+					v_ptr->options.ref_table_name.c_str(), tableName_.c_str(), v_ptr->var_name.c_str() );
 			fprintf(fptr, "\t\t</td></tr>\n"); 
 			fprintf(fptr, "\t\t</table>\n");
 			fprintf(fptr, "\t\t</contenttemplate>\n");
@@ -2293,7 +2294,7 @@ void table_info::print_sp_select_params(FILE* fptr, bool with_pkey, bool rename_
 			if(tbl_ptr){
 				fprintf(fptr, ",");
 			}
-			fprintf(fptr, "\t\t\t%s.%s,\n", fname.c_str(), v_ptr->var_name.c_str() );
+			fprintf(fptr, "\t\t\t%s.%s,\n", tableName_.c_str(), v_ptr->var_name.c_str() );
 			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		} else {
 			if(rename_vars){
@@ -2304,7 +2305,7 @@ void table_info::print_sp_select_params(FILE* fptr, bool with_pkey, bool rename_
 				fprintf(fptr, "\t\t\t%s.%s as %s_%s", improved_name.c_str(), v_ptr->var_name.c_str(),
 						improved_name.c_str(), v_ptr->var_name.c_str());
 			} else {
-				fprintf(fptr, "\t\t\t%s.%s", fname.c_str(), v_ptr->var_name.c_str());
+				fprintf(fptr, "\t\t\t%s.%s", tableName_.c_str(), v_ptr->var_name.c_str());
 			}
 		}
 		
@@ -2510,7 +2511,7 @@ void table_info::print_sp_select_fields(FILE *fptr){
 			if(tbl_ptr){
 				fprintf(fptr, ",");
 			}
-			fprintf(fptr, "\t\t\t%s.%s,\n", fname.c_str(), v_ptr->var_name.c_str() );
+			fprintf(fptr, "\t\t\t%s.%s,\n", tableName_.c_str(), v_ptr->var_name.c_str() );
 		} else {
 			fprintf(fptr, "\t\t\t%s,\n", v_ptr->var_name.c_str() );
 			fflush(fptr);
@@ -2521,12 +2522,12 @@ void table_info::print_sp_select_fields(FILE *fptr){
 
 void table_info::print_aspx_multi_view(FILE *fptr){
 	fprintf(fptr, "<asp:MultiView ID=\"mv%s\" runat=\"server\" ActiveViewIndex=\"0\">\n",
-		fname.c_str()	);
-	fprintf(fptr, "        <asp:View ID=\"vw%s\" runat=\"server\">\n", fname.c_str());
-	fprintf(fptr, "            <asp:Panel ID=\"pn_nav_%s\" runat=\"server\" \n", fname.c_str());
+		tableName_.c_str()	);
+	fprintf(fptr, "        <asp:View ID=\"vw%s\" runat=\"server\">\n", tableName_.c_str());
+	fprintf(fptr, "            <asp:Panel ID=\"pn_nav_%s\" runat=\"server\" \n", tableName_.c_str());
 	fprintf(fptr, "                 CssClass=\"TabContainer\">\n");
 	fprintf(fptr, "                <asp:Label ID=\"lb_nav_%s\" runat=\"server\" Text=\"%s\" CssClass=\"TabItemActive\" ></asp:Label>\n",
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	struct var_list* v_ptr=param_list;
 	while(v_ptr){
 		if(v_ptr->options.many){
@@ -2542,19 +2543,19 @@ void table_info::print_aspx_multi_view(FILE *fptr){
 	}
 
 	fprintf(fptr, "            </asp:Panel>  \n");
-	fprintf(fptr, "	<asp:Panel ID=\"pn_%s\" runat=\"server\"  CssClass=\"ContentPanel\" >\n", fname.c_str());
+	fprintf(fptr, "	<asp:Panel ID=\"pn_%s\" runat=\"server\"  CssClass=\"ContentPanel\" >\n", tableName_.c_str());
 	fprintf(fptr, "\n");
 	
 }
 
 void table_info::print_aspx_objds_many(FILE* fptr){
-	fprintf(fptr, "    <asp:ObjectDataSource ID=\"ds%s\" runat=\"server\" \n", fname.c_str());
-	fprintf(fptr, "        InsertMethod=\"Insert%s\" \n", fname.c_str());
-	fprintf(fptr, "        SelectMethod=\"Get%ss\" \n", fname.c_str());
-	fprintf(fptr, "        SelectCountMethod=\"Get%ssCount\"\n", fname.c_str());
+	fprintf(fptr, "    <asp:ObjectDataSource ID=\"ds%s\" runat=\"server\" \n", tableName_.c_str());
+	fprintf(fptr, "        InsertMethod=\"Insert%s\" \n", tableName_.c_str());
+	fprintf(fptr, "        SelectMethod=\"Get%ss\" \n", tableName_.c_str());
+	fprintf(fptr, "        SelectCountMethod=\"Get%ssCount\"\n", tableName_.c_str());
 	fprintf(fptr, "        EnablePaging=\"True\"  \n");
 	fprintf(fptr, "        TypeName=\"%s.BLL.%s.Biz%s\" UpdateMethod=\"Update%s\" \n",
-				project_namespace, rhs_name_space_name.c_str(), fname.c_str(), fname.c_str());
+				project_namespace, rhs_name_space_name.c_str(), tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "        >\n");
 	fprintf(fptr, "        <InsertParameters>\n");
 	print_aspx_params(fptr);
@@ -2568,17 +2569,17 @@ void table_info::print_aspx_objds_many(FILE* fptr){
 
 void table_info::print_aspx_objds_single(FILE* fptr){
 	fprintf(fptr, "    <asp:ObjectDataSource ID=\"dsSingle%s\" runat=\"server\"\n", 
-			fname.c_str());
-	fprintf(fptr, "        SelectMethod=\"GetSingle%s\"\n", fname.c_str());
-	fprintf(fptr, "        InsertMethod=\"Insert%s\" \n", fname.c_str());
-	fprintf(fptr, "        UpdateMethod=\"Update%s\" \n", fname.c_str());
-	fprintf(fptr, "        OnUpdating=\"obj_%s_updating\" \n", fname.c_str());
-	fprintf(fptr, "        OnInserting=\"obj_%s_inserting\" \n", fname.c_str());
+			tableName_.c_str());
+	fprintf(fptr, "        SelectMethod=\"GetSingle%s\"\n", tableName_.c_str());
+	fprintf(fptr, "        InsertMethod=\"Insert%s\" \n", tableName_.c_str());
+	fprintf(fptr, "        UpdateMethod=\"Update%s\" \n", tableName_.c_str());
+	fprintf(fptr, "        OnUpdating=\"obj_%s_updating\" \n", tableName_.c_str());
+	fprintf(fptr, "        OnInserting=\"obj_%s_inserting\" \n", tableName_.c_str());
 	fprintf(fptr, "        TypeName=\"%s.BLL.%s.Biz%s\">\n", 
-			project_namespace, rhs_name_space_name.c_str(), fname.c_str());
+			project_namespace, rhs_name_space_name.c_str(), tableName_.c_str());
 	fprintf(fptr, "        <SelectParameters>\n");
 	fprintf(fptr, "            <asp:ControlParameter ControlID=\"gv%s\" DefaultValue=\"1\" Name=\"pkey\"\n", 
-			fname.c_str());
+			tableName_.c_str());
 	fprintf(fptr, "                PropertyName=\"SelectedValue\" Type=\"Int32\" />\n");
 	fprintf(fptr, "        </SelectParameters>\n");
 	fprintf(fptr, "        <InsertParameters>\n");
@@ -2593,9 +2594,9 @@ void table_info::print_aspx_objds_single(FILE* fptr){
 void table_info::print_aspx_formview(FILE* fptr){
 
 	fprintf(fptr, "    <asp:FormView ID=\"fv%s\" runat=\"server\" DataSourceID=\"dsSingle%s\"  \n",
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "    OnItemInserted=\"fv%s_ItemInserted\"  OnItemUpdated=\"fv%s_ItemUpdated\"  \n",
-			fname.c_str(), fname.c_str());
+			tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "     >\n");
 	fprintf(fptr, "        <EditItemTemplate>        \n");
 	fprintf(fptr, "            <table>\n");
@@ -2653,8 +2654,8 @@ void table_info::print_aspx_formview(FILE* fptr){
 }
 void table_info::print_aspx_gridview(FILE* fptr){
 	fprintf(fptr, "    <asp:GridView SkinID=\"ListTable\" ID=\"gv%s\" runat=\"server\" \n\tDataSourceID=\"ds%s\" AutoGenerateColumns=\"False\" \n\tDataKeyNames=\"%s\" AllowPaging=\"True\"  \n\tOnSelectedIndexChanged=\"gv%s_SelectedIndexChanged\">\n",
-			fname.c_str(), fname.c_str(), param_list->var_name.c_str(),
-			fname.c_str());
+			tableName_.c_str(), tableName_.c_str(), param_list->var_name.c_str(),
+			tableName_.c_str());
 	fprintf(fptr, "        <Columns>\n");
 	/* Make this a function below */
 	print_bound_fields(fptr,param_list);
@@ -2664,7 +2665,7 @@ void table_info::print_aspx_gridview(FILE* fptr){
 
 void table_info::print_aspx_header(FILE* fptr){
 
-	fprintf(fptr, "<%%@ Page Language=\"C#\" MasterPageFile=\"~/LeftColMaster.master\" AutoEventWireup=\"true\" CodeFile=\"Manage%s.aspx.cs\" Inherits=\"%s.UI.Manage%s\" Title=\"Manage %s\" %%>\n", fname.c_str(), project_namespace, fname.c_str(), fname.c_str() );
+	fprintf(fptr, "<%%@ Page Language=\"C#\" MasterPageFile=\"~/LeftColMaster.master\" AutoEventWireup=\"true\" CodeFile=\"Manage%s.aspx.cs\" Inherits=\"%s.UI.Manage%s\" Title=\"Manage %s\" %%>\n", tableName_.c_str(), project_namespace, tableName_.c_str(), tableName_.c_str() );
 	fprintf(fptr, "<asp:Content ID=\"Content1\" ContentPlaceHolderID=\"MainContent\" Runat=\"Server\">\n");
 
 }
@@ -2740,7 +2741,7 @@ void table_info::print_sp_search_key_whereclause(FILE* fptr){
 		int count = 0;
 		while(v_ptr){
 			if(v_ptr->options.search_key){
-				fprintf(fptr, "%s.%s ", fname.c_str(), v_ptr->var_name.c_str());
+				fprintf(fptr, "%s.%s ", tableName_.c_str(), v_ptr->var_name.c_str());
 				if(isOfStringType(v_ptr->var_type)){
 					fprintf(fptr, "like @%s", v_ptr->var_name.c_str());
 				} else {
@@ -2765,14 +2766,14 @@ void table_info::print_popup_aspx(FILE * fptr)
 	fprintf(fptr, "    <form id=\"form1\" runat=\"server\">\n");
 	fprintf(fptr, "    <div>\n");
 	fprintf(fptr, "	<asp:ObjectDataSource ID=\"ds%s\" runat=\"server\" SelectMethod=\"Get%ss\"\n",
-				fname.c_str(), fname.c_str() );
+				tableName_.c_str(), tableName_.c_str() );
 	fprintf(fptr, "	    TypeName=\"%s.BLL.Common.Biz%s\" SelectCountMethod=\"Get%ssCount\">    \n",
-				project_namespace, fname.c_str(), fname.c_str() );
+				project_namespace, tableName_.c_str(), tableName_.c_str() );
 	fprintf(fptr, "	</asp:ObjectDataSource>\n");
 	fprintf(fptr, "	<asp:GridView ID=\"gv%s\" runat=\"server\" AllowPaging=\"True\" AutoGenerateColumns=\"False\" \n",
-				fname.c_str());
-	fprintf(fptr, "		 OnRowDataBound=\"gv%s_RowDataBound\"\n", fname.c_str());
-	fprintf(fptr, "	    DataSourceID=\"ds%s\"  >\n", fname.c_str());
+				tableName_.c_str());
+	fprintf(fptr, "		 OnRowDataBound=\"gv%s_RowDataBound\"\n", tableName_.c_str());
+	fprintf(fptr, "	    DataSourceID=\"ds%s\"  >\n", tableName_.c_str());
 	fprintf(fptr, "	    <Columns>\n");
 	struct var_list* v_ptr=param_list;
 	while(v_ptr){
@@ -2792,17 +2793,17 @@ void table_info::print_popup_aspx(FILE * fptr)
 
 void table_info::print_popup_aspx_header(FILE* fptr){
 
-	fprintf(fptr, "<%%@ Page Language=\"C#\" AutoEventWireup=\"true\" CodeFile=\"%sPopup.aspx.cs\" Inherits=\"Controls_%sPopup\" %%>\n", fname.c_str(), fname.c_str());
+	fprintf(fptr, "<%%@ Page Language=\"C#\" AutoEventWireup=\"true\" CodeFile=\"%sPopup.aspx.cs\" Inherits=\"Controls_%sPopup\" %%>\n", tableName_.c_str(), tableName_.c_str());
 	fprintf(fptr, "\n");
 	fprintf(fptr, "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">\n");
 	fprintf(fptr, "\n");
 	fprintf(fptr, "<html xmlns=\"http://www.w3.org/1999/xhtml\" >\n");
 	fprintf(fptr, "<head runat=\"server\">\n");
-	fprintf(fptr, "    <title>Choose %s</title>\n", fname.c_str());
+	fprintf(fptr, "    <title>Choose %s</title>\n", tableName_.c_str());
 	fprintf(fptr, "       <script type=\"text/javascript\" language=\"javascript\">\n");
 	fprintf(fptr, "     \n");
 	fprintf(fptr, "     \n");
-	fprintf(fptr, "    function Set%sName(Name,Code){\n", fname.c_str());
+	fprintf(fptr, "    function Set%sName(Name,Code){\n", tableName_.c_str());
 	fprintf(fptr, "  \n");
 	fprintf(fptr, "        next_query_param_start=window.location.search.indexOf(\"&\");\n");
 	fprintf(fptr, "        control1Name=window.location.search.substr(1).substring(9,next_query_param_start-1);\n");
@@ -2834,14 +2835,14 @@ void table_info::print_popup_aspx_cs(FILE * fptr){
 	fprintf(fptr, "using System.Web.UI.WebControls.WebParts;\n");
 	fprintf(fptr, "using System.Web.UI.HtmlControls;\n");
 	fprintf(fptr, "\n");
-	fprintf(fptr, "public partial class Controls_%sPopup : System.Web.UI.Page\n", fname.c_str());
+	fprintf(fptr, "public partial class Controls_%sPopup : System.Web.UI.Page\n", tableName_.c_str());
 	fprintf(fptr, "{\n");
 	fprintf(fptr, "	protected void Page_Load(object sender, EventArgs e)\n");
 	fprintf(fptr, "	{\n");
 	fprintf(fptr, "\n");
 	fprintf(fptr, "	}\n");
 	fprintf(fptr, "\n");
-	fprintf(fptr, "	protected void gv%s_RowDataBound(object sender, GridViewRowEventArgs e)\n", fname.c_str());
+	fprintf(fptr, "	protected void gv%s_RowDataBound(object sender, GridViewRowEventArgs e)\n", tableName_.c_str());
 	fprintf(fptr, "	{\n");
 	fprintf(fptr, "		int cell_count = e.Row.Cells.Count;\n");
 	fprintf(fptr, "		if (cell_count > 1)\n");
@@ -2851,7 +2852,7 @@ void table_info::print_popup_aspx_cs(FILE * fptr){
 	fprintf(fptr, "			link.Text = e.Row.Cells[0].Text;\n");
 	fprintf(fptr, "\n");
 	fprintf(fptr, "\n");
-	fprintf(fptr, "			link.NavigateUrl = \"javascript:Set%sName('\" +\n", fname.c_str());
+	fprintf(fptr, "			link.NavigateUrl = \"javascript:Set%sName('\" +\n", tableName_.c_str());
 	fprintf(fptr, "				e.Row.Cells[1].Text\n");
 	fprintf(fptr, "				+ \"','\" + e.Row.Cells[0].Text\n");
 	fprintf(fptr, "				+ \"');\";\n");

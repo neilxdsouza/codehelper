@@ -201,7 +201,9 @@ char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
 #include <cstdio>
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
-	int main(int argc, char* argv[], char* envp[]){
+
+int main(int argc, char* argv[], char* envp[])
+{
 		if(argc!=3) {
 			cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
 			exit(0);
@@ -237,21 +239,24 @@ void print_code(FILE * &edit_out);
 
 
 
-template<typename T> T* link_chain(T* &elem1, T* &elem2){
+template<typename T> T* link_chain(T* &elem1, T* &elem2)
+{
 	elem2->next=elem1;
 	elem1->prev=elem2;
 	return elem2;
 }
 
-template<typename T> T* trav_chain(T* & elem1){
+template<typename T> T* trav_chain(T* & elem1)
+{
 	while (elem1->next) elem1=elem1->next;
 	return elem1;
 }
 
 
-int lookup_func(string table_name_index){
+int lookup_func(string table_name_index)
+{
 	for(register unsigned int i=0; i<table_info_table.size(); ++i){
-		if(table_name_index==table_info_table[i]->fname){
+		if(table_name_index==table_info_table[i]->tableName_){
 			return i;
 		}
 	}

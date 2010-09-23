@@ -68,7 +68,7 @@
 /* Copy the first part of user declarations.  */
 
 /* Line 189 of yacc.c  */
-#line 7 "src/gram.y"
+#line 7 "src/integrated_sql_gram.y"
 
 #include <iostream>
 #include "symtab.h"
@@ -96,7 +96,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 
 
 /* Line 189 of yacc.c  */
-#line 100 "src/gram.cpp"
+#line 100 "src/integrated_sql_gram.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -161,7 +161,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 33 "src/gram.y"
+#line 33 "src/integrated_sql_gram.y"
 
 	double dval;
 	int ival ;
@@ -173,7 +173,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 177 "src/gram.cpp"
+#line 177 "src/integrated_sql_gram.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -185,7 +185,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 189 "src/gram.cpp"
+#line 189 "src/integrated_sql_gram.cpp"
 
 #ifdef short
 # undef short
@@ -1419,7 +1419,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 77 "src/gram.y"
+#line 77 "src/integrated_sql_gram.y"
     {
 		tree_root=trav_chain((yyvsp[(1) - (1)].stmt));
 	;}
@@ -1428,7 +1428,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 82 "src/gram.y"
+#line 82 "src/integrated_sql_gram.y"
     {
 		(yyval.stmt)=(yyvsp[(1) - (1)].stmt); 
 	;}
@@ -1437,7 +1437,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 85 "src/gram.y"
+#line 85 "src/integrated_sql_gram.y"
     {
 		(yyval.stmt)=link_chain((yyvsp[(1) - (2)].stmt),(yyvsp[(2) - (2)].stmt));
 	;}
@@ -1446,7 +1446,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 90 "src/gram.y"
+#line 90 "src/integrated_sql_gram.y"
     {
 		char *name=strdup((yyvsp[(3) - (7)].name));
 		struct var_list* v_list=trav_chain((yyvsp[(5) - (7)].v_list));
@@ -1457,7 +1457,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 112 "src/gram.y"
+#line 112 "src/integrated_sql_gram.y"
     {
 		 (yyval.v_list)=(yyvsp[(1) - (1)].v_list);
 		 cout << "got decl_comma_list : " << endl;
@@ -1467,7 +1467,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 116 "src/gram.y"
+#line 116 "src/integrated_sql_gram.y"
     {
 		(yyval.v_list)=link_chain((yyvsp[(1) - (3)].v_list),(yyvsp[(3) - (3)].v_list));
 		cout << "chaining var_decl : " << endl;
@@ -1477,7 +1477,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 122 "src/gram.y"
+#line 122 "src/integrated_sql_gram.y"
     {
 	(yyval.v_list) = (yyvsp[(1) - (3)].v_list);
 	//$1->ref_table_name = options_list.ref_table_name;
@@ -1495,7 +1495,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 140 "src/gram.y"
+#line 140 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(4) - (5)].name);
 		options_list.ref_table_name = (yyvsp[(2) - (5)].name);
@@ -1506,7 +1506,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 145 "src/gram.y"
+#line 145 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(5) - (6)].name);
 		options_list.ref_table_name = (yyvsp[(3) - (6)].name);
@@ -1517,7 +1517,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 150 "src/gram.y"
+#line 150 "src/integrated_sql_gram.y"
     {
 		options_list.null = true;
 		cout << "parsing option DBNULL" ;
@@ -1527,7 +1527,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 154 "src/gram.y"
+#line 154 "src/integrated_sql_gram.y"
     {
 		/*
 		$1->null=false;
@@ -1539,7 +1539,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 160 "src/gram.y"
+#line 160 "src/integrated_sql_gram.y"
     {
 		options_list.unique = true;
 	;}
@@ -1548,7 +1548,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 163 "src/gram.y"
+#line 163 "src/integrated_sql_gram.y"
     {
 		options_list.validator = req_field;
 	;}
@@ -1557,7 +1557,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 166 "src/gram.y"
+#line 166 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_int;
 	;}
@@ -1566,7 +1566,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 169 "src/gram.y"
+#line 169 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_float;
 	;}
@@ -1575,7 +1575,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 172 "src/gram.y"
+#line 172 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnum;
 	;}
@@ -1584,7 +1584,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 175 "src/gram.y"
+#line 175 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnumwsp;
 	;}
@@ -1593,7 +1593,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 178 "src/gram.y"
+#line 178 "src/integrated_sql_gram.y"
     {
 		options_list.search_key = true;
 	;}
@@ -1602,7 +1602,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 185 "src/gram.y"
+#line 185 "src/integrated_sql_gram.y"
     {
 		(yyval.v_list)=new var_list((yyvsp[(2) - (2)].dt), (yyvsp[(1) - (2)].name));
 	;}
@@ -1611,7 +1611,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 188 "src/gram.y"
+#line 188 "src/integrated_sql_gram.y"
     {
 		if(!((yyvsp[(2) - (5)].dt)==VARCHAR_TYPE||(yyvsp[(2) - (5)].dt)==NVARCHAR_TYPE ||(yyvsp[(2) - (5)].dt)==NCHAR_TYPE)){
 			cerr << "only varchar allowed : line: " << line_no << endl;
@@ -1624,7 +1624,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1628 "src/gram.cpp"
+#line 1628 "src/integrated_sql_gram.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1836,7 +1836,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 197 "src/gram.y"
+#line 197 "src/integrated_sql_gram.y"
 
 
 #define MAX_NAMESPACE_WORD 1023
@@ -1844,7 +1844,9 @@ char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
 #include <cstdio>
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
-	int main(int argc, char* argv[], char* envp[]){
+
+int main(int argc, char* argv[], char* envp[])
+{
 		if(argc!=3) {
 			cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
 			exit(0);
@@ -1880,21 +1882,24 @@ void print_code(FILE * &edit_out);
 
 
 
-template<typename T> T* link_chain(T* &elem1, T* &elem2){
+template<typename T> T* link_chain(T* &elem1, T* &elem2)
+{
 	elem2->next=elem1;
 	elem1->prev=elem2;
 	return elem2;
 }
 
-template<typename T> T* trav_chain(T* & elem1){
+template<typename T> T* trav_chain(T* & elem1)
+{
 	while (elem1->next) elem1=elem1->next;
 	return elem1;
 }
 
 
-int lookup_func(string table_name_index){
+int lookup_func(string table_name_index)
+{
 	for(register unsigned int i=0; i<table_info_table.size(); ++i){
-		if(table_name_index==table_info_table[i]->fname){
+		if(table_name_index==table_info_table[i]->tableName_){
 			return i;
 		}
 	}

@@ -31,7 +31,8 @@ using std::string;
 
 enum validator_types { none, req_field, re_int, re_float, re_alnum, re_alnumwsp };
 
-struct options_list_type {
+struct options_list_type 
+{
 	string ref_table_name;
 	string ref_field_name;
 	bool many;
@@ -71,7 +72,8 @@ void print_sp_types(FILE * fptr, datatype dt);
 void print_csharp_db_types(FILE * fptr, datatype dt);
 void print_aspx_types(FILE * fptr, datatype dt);
 bool isOfStringType( datatype dt);
-struct var_list {
+struct var_list 
+{
 	datatype var_type;
 	string var_name;
 	int arr_len;
@@ -151,10 +153,11 @@ struct var_list {
  * if the flag is not set -> we need to allocate a new scope - else we will crash
  */
 #include "scope.h"
-struct table_info{
+struct table_info
+{
 	public:
 	enum print_sp_params_mode { SELECT, INSERT, UPDATE, DELETE };
-	string fname;
+	string tableName_;
 	struct var_list * param_list;
 	struct scope * table_scope;
 	int has_composite_objs;
@@ -162,15 +165,17 @@ struct table_info{
 	int has_search_key;
 	void print_lower_fname(FILE * fptr){
 		char buffer[MAX_VAR_LEN];
-		if(fname.length() < MAX_VAR_LEN-1){
-			strcpy(buffer, fname.c_str());
+		if(tableName_.length() < MAX_VAR_LEN-1){
+			strcpy(buffer, tableName_.c_str());
 			buffer[0]=tolower(buffer[0]);
 			fprintf(fptr, "%s", buffer);
 		}
 	}
 	table_info(string name, struct var_list*  elist): 
-		fname(name), param_list(elist), table_scope(0), has_composite_objs(0),
-		has_multi(0), has_search_key(0){
+		tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
+		has_multi(0), has_search_key(0)
+	{
+		printf("%s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 		
 		struct var_list* v_ptr = param_list;
 		while(v_ptr){
