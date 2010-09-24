@@ -1,31 +1,22 @@
+#include "TableCollectionSingleton.hpp"
 #include "stmt.h"
 #include "tree.h"
 #include "CSharpAspNetCodeGenerator.h"
 
 using std::string;
 
-//template <typename T> TablesSingleton<T> * TablesSingleton::pInstance_=0;
+//template <typename T> TableCollectionSingleton<T> * TableCollectionSingleton::pInstance_=0;
 /*
 template <typename T>
-TablesSingleton<T>& TablesSingleton<T>::Instance()
+TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 {
-	static TablesSingleton<T> obj;
+	static TableCollectionSingleton<T> obj;
 	return obj;
 	//if (pInstance_==0) {
-	//	pInstance_ = new TablesSingleton;
+	//	pInstance_ = new TableCollectionSingleton;
 	//}
 }
 */
-
-template <typename T>
-T* TablesSingleton<T>::my_find_table(string & p_table_name)
-{
-	for (int i=0; i<Tables.size(); ++i) {
-		if(Tables[i]->tableInfo_->tableName_==p_table_name){
-			return Tables[i];
-		}
-	}
-}
 
 
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name
@@ -39,8 +30,8 @@ table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & nam
 		struct TableInfoType* ti=new TableInfoType(name, v_list );
 		CSharpAspNetCodeGenerator * ptr = new CSharpAspNetCodeGenerator(ti);
 		//table_info_table.push_back(ti);
-		//TablesSingleton<CSharpAspNetCodeGenerator>::Instance().Tables.push_back(ti);
-		TablesSingleton<CSharpAspNetCodeGenerator>::Instance().Tables.push_back(ptr);
+		//TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().Tables.push_back(ti);
+		(TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).Tables.push_back(ptr);
 		type=TABLE_TYPE;
 		struct symtab_ent* se=new struct symtab_ent;
 		if(! se) {

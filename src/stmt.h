@@ -15,34 +15,6 @@
 	extern int no_errors;
 	//extern vector <TableInfoType*> table_info_table;
 
-//template <typename T>
-//class TablesSingleton;
-template <typename T>
-class TablesSingleton
-{
-public:
-	//static TablesSingleton<T>& Instance();
-	static TablesSingleton<T>& Instance()
-	{
-		static TablesSingleton<T> obj;
-		return obj;
-		//if (pInstance_==0) {
-		//	pInstance_ = new TablesSingleton;
-		//}
-	}
-	std::vector<T*> Tables;
-	//template <typename T>
-	T* my_find_table(std::string & p_table_name);
-private:
-	
-	TablesSingleton()
-		: Tables()
-	{ }
-	TablesSingleton(const TablesSingleton&);
-	//static TablesSingleton * pInstance_;
-
-};
-
 // Note : I may have to add file name we are compiling very soon
 struct stmt
 {

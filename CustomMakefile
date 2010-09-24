@@ -1,11 +1,14 @@
+#Note *.hpp naming convention used for include files with "inclusion model" for templates
 #CC=g++ -c
 LINK=g++
 SOURCE_DIR=src
 BUILD_DIR=make-build-dir
 
+
 CFLAGS = -c -g -I src -Wall -Wno-sign-compare -Weffc++
 
 CPP_SOURCES = $(wildcard $(SOURCE_DIR)/*.cpp)
+#CPP_SOURCES += $(wildcard $(SOURCE_DIR)/*.hpp)
 EXCLUDE_FILE= 
 CPP_SOURCES := $(filter-out $(EXCLUDE_FILE),$(CPP_SOURCES))
 OBJECTS = $(subst $(SOURCE_DIR),$(BUILD_DIR),$(CPP_SOURCES))

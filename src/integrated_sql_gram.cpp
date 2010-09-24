@@ -71,18 +71,20 @@
 #line 7 "src/integrated_sql_gram.y"
 
 #include <iostream>
+#include <vector>
+
+#include "TableCollectionSingleton.hpp"
 #include "symtab.h"
 #include "scope.h"
 #include "tree.h"
 #include "stmt.h"
 //#include "stmt.h"
-#include <vector>
 
 	extern int line_no;
 	int no_errors=0;
-	scope* active_scope;
-	struct stmt * tree_root=0;
-	vector <scope*> active_scope_list;
+	extern scope* active_scope;
+	extern stmt * tree_root;
+	extern vector <scope*> active_scope_list;
 	template<class T> T* link_chain(T* & elem1, T* & elem2);
 	template<class T> T* trav_chain(T* & elem1);
 	int lookup_func(string func_name_index);
@@ -97,7 +99,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 
 
 /* Line 189 of yacc.c  */
-#line 101 "src/integrated_sql_gram.cpp"
+#line 103 "src/integrated_sql_gram.cpp"
 
 /* Enabling traces.  */
 #ifndef YYDEBUG
@@ -162,7 +164,7 @@ typedef union YYSTYPE
 {
 
 /* Line 214 of yacc.c  */
-#line 34 "src/integrated_sql_gram.y"
+#line 36 "src/integrated_sql_gram.y"
 
 	double dval;
 	int ival ;
@@ -174,7 +176,7 @@ typedef union YYSTYPE
 
 
 /* Line 214 of yacc.c  */
-#line 178 "src/integrated_sql_gram.cpp"
+#line 180 "src/integrated_sql_gram.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -186,7 +188,7 @@ typedef union YYSTYPE
 
 
 /* Line 264 of yacc.c  */
-#line 190 "src/integrated_sql_gram.cpp"
+#line 192 "src/integrated_sql_gram.cpp"
 
 #ifdef short
 # undef short
@@ -482,10 +484,10 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    78,    78,    83,    86,    91,    98,    99,   100,   101,
-     102,   103,   104,   105,   106,   107,   108,   109,   110,   113,
-     117,   123,   137,   138,   141,   146,   151,   155,   161,   164,
-     167,   170,   173,   176,   179,   186,   189
+       0,    80,    80,    85,    88,    93,   100,   101,   102,   103,
+     104,   105,   106,   107,   108,   109,   110,   111,   112,   115,
+     119,   125,   139,   140,   143,   148,   153,   157,   163,   166,
+     169,   172,   175,   178,   181,   188,   191
 };
 #endif
 
@@ -1420,7 +1422,7 @@ yyreduce:
         case 2:
 
 /* Line 1455 of yacc.c  */
-#line 78 "src/integrated_sql_gram.y"
+#line 80 "src/integrated_sql_gram.y"
     {
 		tree_root=trav_chain((yyvsp[(1) - (1)].stmt));
 	;}
@@ -1429,7 +1431,7 @@ yyreduce:
   case 3:
 
 /* Line 1455 of yacc.c  */
-#line 83 "src/integrated_sql_gram.y"
+#line 85 "src/integrated_sql_gram.y"
     {
 		(yyval.stmt)=(yyvsp[(1) - (1)].stmt); 
 	;}
@@ -1438,7 +1440,7 @@ yyreduce:
   case 4:
 
 /* Line 1455 of yacc.c  */
-#line 86 "src/integrated_sql_gram.y"
+#line 88 "src/integrated_sql_gram.y"
     {
 		(yyval.stmt)=link_chain((yyvsp[(1) - (2)].stmt),(yyvsp[(2) - (2)].stmt));
 	;}
@@ -1447,7 +1449,7 @@ yyreduce:
   case 5:
 
 /* Line 1455 of yacc.c  */
-#line 91 "src/integrated_sql_gram.y"
+#line 93 "src/integrated_sql_gram.y"
     {
 		char *name=strdup((yyvsp[(3) - (7)].name));
 		struct var_list* v_list=trav_chain((yyvsp[(5) - (7)].v_list));
@@ -1458,7 +1460,7 @@ yyreduce:
   case 19:
 
 /* Line 1455 of yacc.c  */
-#line 113 "src/integrated_sql_gram.y"
+#line 115 "src/integrated_sql_gram.y"
     {
 		 (yyval.v_list)=(yyvsp[(1) - (1)].v_list);
 		 //cout << "got decl_comma_list : " << endl;
@@ -1468,7 +1470,7 @@ yyreduce:
   case 20:
 
 /* Line 1455 of yacc.c  */
-#line 117 "src/integrated_sql_gram.y"
+#line 119 "src/integrated_sql_gram.y"
     {
 		(yyval.v_list)=link_chain((yyvsp[(1) - (3)].v_list),(yyvsp[(3) - (3)].v_list));
 		//cout << "chaining var_decl : " << endl;
@@ -1478,7 +1480,7 @@ yyreduce:
   case 21:
 
 /* Line 1455 of yacc.c  */
-#line 123 "src/integrated_sql_gram.y"
+#line 125 "src/integrated_sql_gram.y"
     {
 	(yyval.v_list) = (yyvsp[(1) - (3)].v_list);
 	//$1->ref_table_name = options_list.ref_table_name;
@@ -1496,7 +1498,7 @@ yyreduce:
   case 24:
 
 /* Line 1455 of yacc.c  */
-#line 141 "src/integrated_sql_gram.y"
+#line 143 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(4) - (5)].name);
 		options_list.ref_table_name = (yyvsp[(2) - (5)].name);
@@ -1507,7 +1509,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 146 "src/integrated_sql_gram.y"
+#line 148 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(5) - (6)].name);
 		options_list.ref_table_name = (yyvsp[(3) - (6)].name);
@@ -1518,7 +1520,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 151 "src/integrated_sql_gram.y"
+#line 153 "src/integrated_sql_gram.y"
     {
 		options_list.null = true;
 		cout << "parsing option DBNULL" ;
@@ -1528,7 +1530,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 155 "src/integrated_sql_gram.y"
+#line 157 "src/integrated_sql_gram.y"
     {
 		/*
 		$1->null=false;
@@ -1540,7 +1542,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 161 "src/integrated_sql_gram.y"
+#line 163 "src/integrated_sql_gram.y"
     {
 		options_list.unique = true;
 	;}
@@ -1549,7 +1551,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 164 "src/integrated_sql_gram.y"
+#line 166 "src/integrated_sql_gram.y"
     {
 		options_list.validator = req_field;
 	;}
@@ -1558,7 +1560,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 167 "src/integrated_sql_gram.y"
+#line 169 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_int;
 	;}
@@ -1567,7 +1569,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 170 "src/integrated_sql_gram.y"
+#line 172 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_float;
 	;}
@@ -1576,7 +1578,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 173 "src/integrated_sql_gram.y"
+#line 175 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnum;
 	;}
@@ -1585,7 +1587,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 176 "src/integrated_sql_gram.y"
+#line 178 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnumwsp;
 	;}
@@ -1594,7 +1596,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 179 "src/integrated_sql_gram.y"
+#line 181 "src/integrated_sql_gram.y"
     {
 		options_list.search_key = true;
 	;}
@@ -1603,7 +1605,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 186 "src/integrated_sql_gram.y"
+#line 188 "src/integrated_sql_gram.y"
     {
 		(yyval.v_list)=new var_list((yyvsp[(2) - (2)].dt), (yyvsp[(1) - (2)].name));
 	;}
@@ -1612,7 +1614,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 189 "src/integrated_sql_gram.y"
+#line 191 "src/integrated_sql_gram.y"
     {
 		if(!((yyvsp[(2) - (5)].dt)==VARCHAR_TYPE||(yyvsp[(2) - (5)].dt)==NVARCHAR_TYPE ||(yyvsp[(2) - (5)].dt)==NCHAR_TYPE)){
 			cerr << "only varchar allowed : line: " << line_no << endl;
@@ -1625,7 +1627,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1629 "src/integrated_sql_gram.cpp"
+#line 1631 "src/integrated_sql_gram.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1837,54 +1839,9 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 198 "src/integrated_sql_gram.y"
+#line 200 "src/integrated_sql_gram.y"
 
 
-#include <cstdio>
-#include "stmt.h"
-#include "ForwardDecl.h"
-
-#define MAX_NAMESPACE_WORD 1023
-char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
-string rhs_name_space_name;
-void print_code(FILE * &edit_out);
-//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
-//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
-void Init();
-
-int main(int argc, char* argv[], char* envp[])
-{
-	if(argc!=3) {
-		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
-		exit(0);
-	}
-	Init();
-	rhs_name_space_name=argv[2];
-
-	FILE * yyin=fopen(argv[1],"r");
-	yyrestart(yyin);
-	if(yyparse()){
-		cout << "Errors in parsing: " << no_errors << endl;
-		exit(1);
-	} else 
-	cout << "yyparse finished : now going to print tree: no_errors: "    
-		<< " should be 0 or we have a bug in the compiler"<< endl;
-	//GenerateCode(tree_root);
-	if(!no_errors){
-		FILE * edit_out= fopen("edit_out.c", "wb");
-		//fprintf(edit_out, "#include <cstdio>\n#include <iostream>\nusing namespace std;\n" );
-		if(edit_out==NULL){
-			printf("could not open edit_out.c for writing\n");
-			exit(1);
-		}
-		//tree_root->GenerateCode(edit_out);
-		print_code(edit_out);
-		fclose(edit_out);
-	} else {
-		cerr << "Errors in Parse:  Total errors: " << no_errors << endl;
-	}
-	return no_errors;
-}
 
 
 
@@ -1902,30 +1859,4 @@ template<typename T> T* trav_chain(T* & elem1)
 }
 
 
-int lookup_func(string table_name_index)
-{
-	for(register unsigned int i=0; i<table_info_table.size(); ++i){
-		if(table_name_index==table_info_table[i]->tableName_){
-			return i;
-		}
-	}
-	return -1;
-}
-
-void print_code(FILE * & edit_out)
-{
-	printf("ENTER print_code\n");
-
-	tree_root->GenerateCode(edit_out);
-
-}
-
-void Init()
-{
-	//CreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	//ptrCreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	active_scope=new scope();
-	active_scope_list.push_back(active_scope);
-}
 

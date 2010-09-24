@@ -6,18 +6,20 @@
 
 %{
 #include <iostream>
+#include <vector>
+
+#include "TableCollectionSingleton.hpp"
 #include "symtab.h"
 #include "scope.h"
 #include "tree.h"
 #include "stmt.h"
 //#include "stmt.h"
-#include <vector>
 
 	extern int line_no;
 	int no_errors=0;
-	scope* active_scope;
-	struct stmt * tree_root=0;
-	vector <scope*> active_scope_list;
+	extern scope* active_scope;
+	extern stmt * tree_root;
+	extern vector <scope*> active_scope_list;
 	template<class T> T* link_chain(T* & elem1, T* & elem2);
 	template<class T> T* trav_chain(T* & elem1);
 	int lookup_func(string func_name_index);
@@ -197,51 +199,6 @@ var_decl: 	NAME data_type{
 
 %%
 
-#include <cstdio>
-#include "stmt.h"
-#include "ForwardDecl.h"
-
-#define MAX_NAMESPACE_WORD 1023
-char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
-string rhs_name_space_name;
-void print_code(FILE * &edit_out);
-//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
-//TablesSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
-void Init();
-
-int main(int argc, char* argv[], char* envp[])
-{
-	if(argc!=3) {
-		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
-		exit(0);
-	}
-	Init();
-	rhs_name_space_name=argv[2];
-
-	FILE * yyin=fopen(argv[1],"r");
-	yyrestart(yyin);
-	if(yyparse()){
-		cout << "Errors in parsing: " << no_errors << endl;
-		exit(1);
-	} else 
-	cout << "yyparse finished : now going to print tree: no_errors: "    
-		<< " should be 0 or we have a bug in the compiler"<< endl;
-	//GenerateCode(tree_root);
-	if(!no_errors){
-		FILE * edit_out= fopen("edit_out.c", "wb");
-		//fprintf(edit_out, "#include <cstdio>\n#include <iostream>\nusing namespace std;\n" );
-		if(edit_out==NULL){
-			printf("could not open edit_out.c for writing\n");
-			exit(1);
-		}
-		//tree_root->GenerateCode(edit_out);
-		print_code(edit_out);
-		fclose(edit_out);
-	} else {
-		cerr << "Errors in Parse:  Total errors: " << no_errors << endl;
-	}
-	return no_errors;
-}
 
 
 
@@ -259,29 +216,3 @@ template<typename T> T* trav_chain(T* & elem1)
 }
 
 
-int lookup_func(string table_name_index)
-{
-	for(register unsigned int i=0; i<table_info_table.size(); ++i){
-		if(table_name_index==table_info_table[i]->tableName_){
-			return i;
-		}
-	}
-	return -1;
-}
-
-void print_code(FILE * & edit_out)
-{
-	printf("ENTER print_code\n");
-
-	tree_root->GenerateCode(edit_out);
-
-}
-
-void Init()
-{
-	//CreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	//ptrCreateTableStatementArray = TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	TablesSingleton<CSharpAspNetCodeGenerator>::Instance();
-	active_scope=new scope();
-	active_scope_list.push_back(active_scope);
-}
