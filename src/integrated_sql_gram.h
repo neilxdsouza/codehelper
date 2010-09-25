@@ -77,7 +77,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 36 "src/integrated_sql_gram.y"
+#line 38 "src/integrated_sql_gram.y"
 
 	double dval;
 	int ival ;

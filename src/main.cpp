@@ -4,6 +4,7 @@
 
 #include "std_using.h"
 #include "CSharpAspNetCodeGenerator.h"
+#include "CSharpAspNetCodeGeneratorFactory.h"
 #include "TableCollectionSingleton.hpp"
 #include "stmt.h"
 #include "ForwardDecl.h"
@@ -29,6 +30,7 @@ extern int no_errors;
 char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
+AbstractCodeGeneratorFactory * codeGeneratorFactory;
 //TableCollectionSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
 //TableCollectionSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
 void Init();
@@ -45,14 +47,16 @@ int main(int argc, char* argv[], char* envp[])
 	}
 	Init();
 	rhs_name_space_name=argv[2];
+	CSharpAspnetCodeGeneratorFactory  cSharpAspNetCodeGenerator; 
+	codeGeneratorFactory = &cSharpAspNetCodeGenerator;
 	
 	FILE * yyin=fopen(argv[1],"r");
 	yyrestart(yyin);
 	if(yyparse()){
 		cout << "Errors in parsing: " << no_errors << endl;
 		exit(1);
-	} else 
-	cout << "yyparse finished : now going to print tree: no_errors: "    
+	} else
+	cout << "yyparse finished : now going to print tree: no_errors: "
 		<< " should be 0 or we have a bug in the compiler"<< endl;
 	if(!no_errors){
 		FILE * edit_out= fopen("edit_out.c", "wb");
@@ -91,7 +95,8 @@ void Init()
 {
 	//CreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	//ptrCreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
-	TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
+	//TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
+	TableCollectionSingleton::Instance();
 	active_scope=new scope();
 	active_scope_list.push_back(active_scope);
 }

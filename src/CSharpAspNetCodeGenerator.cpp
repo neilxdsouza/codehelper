@@ -204,7 +204,11 @@ void CSharpAspNetCodeGenerator:: print_get_single_record(FILE * fptr)
 				fprintf(fptr, ",\n");
 				//struct CSharpAspNetCodeGenerator* t_ptr = my_find_table(v_ptr->options.ref_table_name);
 				//struct CSharpAspNetCodeGenerator* t_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-				struct CSharpAspNetCodeGenerator* t_ptr = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).my_find_table(v_ptr->options.ref_table_name);
+				//struct CSharpAspNetCodeGenerator* t_ptr = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).my_find_table(v_ptr->options.ref_table_name);
+				//struct CSharpAspNetCodeGenerator* t_ptr = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).my_find_table(v_ptr->options.ref_table_name);
+				struct CSharpAspNetCodeGenerator* t_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
 				t_ptr->print_reader(fptr, false, true,  v_ptr->var_name.c_str());
 				fprintf(fptr, "\t\t\t);\n");
 				//fprintf(fptr, "\t\tl_%s.%s = l_%s;\n", tableInfo_->tableName_.c_str(), v_ptr->var_name.c_str(), 
@@ -259,7 +263,7 @@ void CSharpAspNetCodeGenerator:: print_get_collection(FILE * fptr){
 }
 
 
-void CSharpAspNetCodeGenerator:: print(FILE * fptr)
+void CSharpAspNetCodeGenerator:: GenerateCode(FILE * fptr)
 {
 	fprintf(stderr, "ENTER: %s %s: %d\n", __FILE__
 			, __PRETTY_FUNCTION__, __LINE__);
@@ -728,7 +732,10 @@ void CSharpAspNetCodeGenerator::print_bll_params(FILE* fptr)
 			//struct CSharpAspNetCodeGenerator* t_ptr = my_find_table( v_ptr->options.ref_table_name);
 			//struct CSharpAspNetCodeGenerator* t_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
 			fprintf(stderr, "%s %s : %d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__);
-			struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			//struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			struct CSharpAspNetCodeGenerator* t_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
 			struct var_list* vv_ptr = t_ptr->tableInfo_->param_list;
 			while(vv_ptr){
 				fprintf(fptr, "\t\tpublic ");
@@ -1494,11 +1501,13 @@ void CSharpAspNetCodeGenerator::print_aspx(FILE *fptr, bool called_recursively)
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==true){
 			//struct CSharpAspNetCodeGenerator* t_ptr = my_find_table( v_ptr->options.ref_table_name);
 			//struct CSharpAspNetCodeGenerator* t_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-			TableCollectionSingleton<CSharpAspNetCodeGenerator>& aRef = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance());
-
-			string doesnt_exist = string("something that doesnt exist");
-			aRef.my_find_table(  doesnt_exist);
-			struct CSharpAspNetCodeGenerator* t_ptr = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).my_find_table(v_ptr->options.ref_table_name);
+			//TableCollectionSingleton<CSharpAspNetCodeGenerator>& aRef = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance());
+			//string doesnt_exist = string("something that doesnt exist");
+			//aRef.my_find_table(  doesnt_exist);
+			//struct CSharpAspNetCodeGenerator* t_ptr = (TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).my_find_table(v_ptr->options.ref_table_name);
+			struct CSharpAspNetCodeGenerator* t_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
 			fprintf(fptr, "<asp:View ID=\"vw%s\" runat=\"server\">\n", v_ptr->options.ref_table_name.c_str());
 			t_ptr->print_aspx(fptr, true);
 			fprintf(fptr, "<asp:View>\n");
@@ -1757,7 +1766,10 @@ void CSharpAspNetCodeGenerator::print_aspx_cs_body(FILE *fptr, bool is_a_many_ta
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==true){
 			//struct CSharpAspNetCodeGenerator* t_ptr = my_find_table( v_ptr->options.ref_table_name);
 			//struct CSharpAspNetCodeGenerator* t_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-			struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			//struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			struct CSharpAspNetCodeGenerator* t_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(t_ptr){
 				fprintf(fptr, " /* printing code for MANY relationship table: %s*/\n", 
 						v_ptr->options.ref_table_name.c_str());
@@ -2306,7 +2318,10 @@ void CSharpAspNetCodeGenerator::print_sp_select_params(FILE* fptr, bool with_pke
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			//CSharpAspNetCodeGenerator* tbl_ptr=my_find_table(v_ptr->options.ref_table_name);
 			//struct CSharpAspNetCodeGenerator* tbl_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-			struct CSharpAspNetCodeGenerator* tbl_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			//struct CSharpAspNetCodeGenerator* tbl_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			struct CSharpAspNetCodeGenerator* tbl_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
 				tbl_ptr->print_sp_select_params(fptr, false, true, v_ptr->options.ref_table_name.c_str());
 			} else {
@@ -2358,7 +2373,10 @@ void CSharpAspNetCodeGenerator::print_reader(FILE * edit_out, bool with_pkey, bo
 				//sprintf(buffer, "%s", v_ptr->var_name.c_str());
 				//struct CSharpAspNetCodeGenerator* t_ptr = my_find_table( v_ptr->options.ref_table_name);
 				//struct CSharpAspNetCodeGenerator* t_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-				struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+				//struct CSharpAspNetCodeGenerator* t_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+				struct CSharpAspNetCodeGenerator* t_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
 				if(t_ptr==0){
 					fprintf(edit_out, "table: %s not found: line: %d, file: %s\n",
 							v_ptr->options.ref_table_name.c_str(), __LINE__, __FILE__);
@@ -2528,7 +2546,9 @@ void CSharpAspNetCodeGenerator::print_sp_select_fields(FILE *fptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			//CSharpAspNetCodeGenerator* tbl_ptr=my_find_table(v_ptr->options.ref_table_name);
 			//struct CSharpAspNetCodeGenerator* tbl_ptr = ptrCreateTableStatementArray->my_find_table(v_ptr->options.ref_table_name);
-			struct CSharpAspNetCodeGenerator* tbl_ptr = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().my_find_table(v_ptr->options.ref_table_name);
+			struct CSharpAspNetCodeGenerator* tbl_ptr = (dynamic_cast<CSharpAspNetCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
 				tbl_ptr->print_sp_select_params(fptr, false, true, v_ptr->var_name.c_str());
 			} else {

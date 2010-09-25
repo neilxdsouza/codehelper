@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 
+#include "AbstractCodeGeneratorFactory.h"
 #include "TableCollectionSingleton.hpp"
 #include "symtab.h"
 #include "scope.h"
@@ -28,6 +29,7 @@
 	void yyerror(char * s);
 	extern void yyrestart ( FILE *input_file );
 	struct options_list_type options_list;
+	extern AbstractCodeGeneratorFactory * codeGeneratorFactory;
 
 struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v_list);
 
@@ -93,7 +95,7 @@ statement_list: statement {
 statement:	CREATE TABLE NAME '(' decl_comma_list ')'';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($5);
-		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list );
+		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory );
 	 }
 	 ;
 

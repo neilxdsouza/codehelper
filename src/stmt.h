@@ -9,6 +9,8 @@
 #include "scope.h"
 #include "symtab.h"
 #include "ForwardDecl.h"
+#include "AbstractCodeGenerator.h"
+#include "AbstractCodeGeneratorFactory.h"
 
 	int search_for_func(string& search_for);
 	extern scope* active_scope;
@@ -60,9 +62,11 @@ struct err_stmt: public stmt
 struct table_decl_stmt: public stmt
 {
 	//struct TableInfoType * tableInfo_;
-	CSharpAspNetCodeGenerator * codeGenerator_;
+	//CSharpAspNetCodeGenerator * codeGenerator_;
+	AbstractCodeGenerator * codeGenerator_;
 
-	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list);
+	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list,
+			 AbstractCodeGeneratorFactory * p_codeGeneratorFactory);
 
 	void GenerateCode(FILE * & fptr);
 

@@ -14,7 +14,7 @@ struct CSharpAspNetCodeGenerator: public AbstractCodeGenerator
 		: AbstractCodeGenerator(p_TableInfoType_ptr)
 	{ }
 
-	void print(FILE * fptr);
+	void GenerateCode(FILE * fptr);
 
 	// helper functions used by main functions above
 	void print_dp_params(FILE *fptr);
