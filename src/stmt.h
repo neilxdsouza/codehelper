@@ -25,8 +25,9 @@ struct stmt
 	virtual void GenerateCode(FILE * & fptr)=0;
 	stmt(datatype dtype=ERROR_TYPE, int lline_number=0)
 		:next(0), prev(0), type(dtype), line_number(lline_number)
-	{}
-	virtual ~stmt(){}
+	{ }
+	virtual ~stmt()
+	{ }
 	private:
 		stmt(const stmt&);
 		stmt& operator=(const stmt&);
@@ -36,9 +37,11 @@ struct stmt
 // Refinement3
 
 
-struct err_stmt: public stmt{
+struct err_stmt: public stmt
+{
 	err_stmt( int lline_number): stmt(ERROR_TYPE, lline_number){}
-	void GenerateCode(FILE * & fptr){
+	void GenerateCode(FILE * & fptr)
+	{
 		fflush(fptr);
 
 		if(fptr){

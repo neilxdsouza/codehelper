@@ -21,10 +21,8 @@ TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name
 		,  struct var_list* & v_list)
-	//: stmt(dtype, lline_number), tableInfo_(0)
 	: stmt(dtype, lline_number), codeGenerator_(0)
 {
-	//cout << "load_func_into_symbol_table : " << "name: " << name << endl;
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
 		//cout << "got func_decl" << endl;
 		struct TableInfoType* ti=new TableInfoType(name, v_list );

@@ -54,10 +54,8 @@ int main(int argc, char* argv[], char* envp[])
 	} else 
 	cout << "yyparse finished : now going to print tree: no_errors: "    
 		<< " should be 0 or we have a bug in the compiler"<< endl;
-	//GenerateCode(tree_root);
 	if(!no_errors){
 		FILE * edit_out= fopen("edit_out.c", "wb");
-		//fprintf(edit_out, "#include <cstdio>\n#include <iostream>\nusing namespace std;\n" );
 		if(edit_out==NULL){
 			printf("could not open edit_out.c for writing\n");
 			exit(1);
