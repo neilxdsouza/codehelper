@@ -60,7 +60,7 @@ void table_decl_stmt::GenerateCode(FILE * & fptr)
 	fflush(fptr);
 	if(fptr){
 		//tableInfo_->print(fptr);
-		codeGenerator_->print(fptr);
+		codeGenerator_->GenerateCode(fptr);
 		if(prev) prev->GenerateCode(fptr);
 	}
 }

@@ -8,11 +8,11 @@
 
 struct CSharpAspnetCodeGeneratorFactory: public AbstractCodeGeneratorFactory
 {
-	CSharpAspnetCodeGeneratorFactory()
-		: AbstractCodeGeneratorFactory()
+	CSharpAspnetCodeGeneratorFactory(AbstractDataBaseCodeGenerator * p_dbCodeGenerator)
+		: AbstractCodeGeneratorFactory(p_dbCodeGenerator)
 	{ }
 	AbstractCodeGenerator* CreateCodeGenerator(TableInfoType * p_TableInfoType_ptr)
-	{ return new CSharpAspNetCodeGenerator(p_TableInfoType_ptr); }
+	{ return new CSharpAspNetCodeGenerator(p_TableInfoType_ptr, dbCodeGenerator_); }
 };
 
 #endif /* CSHARPASPNET_CODE_GENERATOR_FACTORY_H */

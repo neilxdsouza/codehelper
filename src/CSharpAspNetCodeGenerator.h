@@ -6,12 +6,14 @@
 #include <cstdlib>
 #include "tree.h"
 #include "AbstractCodeGenerator.h"
+#include "AbstractDataBaseCodeGenerator.h"
 
 struct CSharpAspNetCodeGenerator: public AbstractCodeGenerator
 {
-	public:
-	CSharpAspNetCodeGenerator(TableInfoType * p_TableInfoType_ptr)
-		: AbstractCodeGenerator(p_TableInfoType_ptr)
+public:
+CSharpAspNetCodeGenerator(TableInfoType * p_TableInfoType_ptr,
+			  AbstractDataBaseCodeGenerator * p_dbCodeGenerator)
+	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator)
 	{ }
 
 	void GenerateCode(FILE * fptr);

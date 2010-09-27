@@ -5,6 +5,12 @@
 #include "std_using.h"
 #include "CSharpAspNetCodeGenerator.h"
 #include "CSharpAspNetCodeGeneratorFactory.h"
+
+#include "CppCodeGenerator.h"
+#include "CppCodeGeneratorFactory.h"
+
+#include "PostgreSQLCodeGeneratorFactory.h"
+#include "PostgreSQLCodeGenerator.h"
 #include "TableCollectionSingleton.hpp"
 #include "stmt.h"
 #include "ForwardDecl.h"
@@ -31,8 +37,7 @@ char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
 AbstractCodeGeneratorFactory * codeGeneratorFactory;
-//TableCollectionSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
-//TableCollectionSingleton<CSharpAspNetCodeGenerator> * ptrCreateTableStatementArray = 0;
+
 void Init();
 
 	vector <scope*> active_scope_list;
@@ -47,8 +52,11 @@ int main(int argc, char* argv[], char* envp[])
 	}
 	Init();
 	rhs_name_space_name=argv[2];
-	CSharpAspnetCodeGeneratorFactory  cSharpAspNetCodeGenerator; 
-	codeGeneratorFactory = &cSharpAspNetCodeGenerator;
+	PostgreSQLCodeGenerator psqlCodeGenerator; 
+	CSharpAspnetCodeGeneratorFactory cSharpAspNetCodeGeneratorFactory(&psqlCodeGenerator);
+	CppCodeGeneratorFactory cppCodeGeneratorFactory(&psqlCodeGenerator);
+	//codeGeneratorFactory = &cSharpAspNetCodeGeneratorFactory;
+	codeGeneratorFactory = &cppCodeGeneratorFactory;
 	
 	FILE * yyin=fopen(argv[1],"r");
 	yyrestart(yyin);
@@ -56,8 +64,8 @@ int main(int argc, char* argv[], char* envp[])
 		cout << "Errors in parsing: " << no_errors << endl;
 		exit(1);
 	} else
-	cout << "yyparse finished : now going to print tree: no_errors: "
-		<< " should be 0 or we have a bug in the compiler"<< endl;
+		cout << "yyparse finished : now going to print tree: no_errors: "
+			<< " should be 0 or we have a bug in the compiler"<< endl;
 	if(!no_errors){
 		FILE * edit_out= fopen("edit_out.c", "wb");
 		if(edit_out==NULL){
