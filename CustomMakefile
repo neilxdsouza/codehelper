@@ -1,6 +1,7 @@
 #Note *.hpp naming convention used for include files with "inclusion model" for templates
 #CC=g++ -c
 LINK=g++
+LINK_LIBS= -lboost_program_options-mt
 SOURCE_DIR=src
 BUILD_DIR=make-build-dir
 
@@ -58,7 +59,7 @@ HEADER_DEPS := $(filter-out $(EXCLUDE_FILE),$(HEADER_DEPS))
 #$(BUILD_DIR)/csassist.exe:	$(OBJECTS) Makefile  $(HEADER_DEPS)
 $(BUILD_DIR)/csassist.exe:	$(OBJECTS) Makefile  $(CPP_SOURCES) $(LEX_OUTPUTS) $(YACC_OUTPUTS)
 	echo $(CPP_SOURCES)
-	$(LINK) -o $@ $(OBJECTS)
+	$(LINK) -o $@ $(OBJECTS) $(LINK_LIBS)
 	cp $@ bin
 
 

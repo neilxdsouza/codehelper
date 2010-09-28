@@ -1,7 +1,9 @@
 #ifndef POSTGRESQL_DATABASE_CODEGENERATORFACTORY_H
 #define POSTGRESQL_DATABASE_CODEGENERATORFACTORY_H
 
+
 #include "AbstractDataBaseCodeGeneratorFactory.h"
+#include "AbstractDataBaseCodeGenerator.h"
 #include "PostgreSQLCodeGenerator.h"
 
 
@@ -9,9 +11,12 @@ struct PostgreSQLCodeGeneratorFactory: public AbstractDataBaseCodeGeneratorFacto
 {
 	PostgreSQLCodeGeneratorFactory()
 	{ }
-	virtual AbstractDataBaseCodeGenerator * CreateCodeGenerator()
+	virtual AbstractDataBaseCodeGenerator *
+		CreateCodeGenerator(TableInfoType * p_tabInfo,
+				    std::string & p_output_dir_path)
 	{
-		return new PostgreSQLCodeGenerator();
+		return new PostgreSQLCodeGenerator(p_tabInfo,
+						   p_output_dir_path);
 	}
 };
 

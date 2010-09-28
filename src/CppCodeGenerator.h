@@ -11,8 +11,10 @@ struct CppCodeGenerator: public AbstractCodeGenerator
 {
 public:
 CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
-		 AbstractDataBaseCodeGenerator * p_dbCodeGenerator)
-	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator)
+		 AbstractDataBaseCodeGenerator * p_dbCodeGenerator,
+		 std::string & p_outputDirPrefix)
+	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator,
+				p_outputDirPrefix)
 	{ }
 
 	void GenerateCode(FILE * fptr);

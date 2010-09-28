@@ -15,7 +15,9 @@ void CppCodeGenerator::GenerateCode(FILE * fptr)
 		% __PRETTY_FUNCTION__;
 
 	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
-	
+
+	//dbCodeGenerator_->SetOutputDirectory(output_code_directory_prefix);
+	//dbCodeGenerator_->SetTableInfo(tableInfo_);
 	dbCodeGenerator_->GenerateCode();
 
 

@@ -3,16 +3,28 @@
 
 #include "tree.h"
 #include "AbstractCodeGeneratorFactory.h"
+#include "AbstractDataBaseCodeGenerator.h"
 #include "CSharpAspNetCodeGenerator.h"
 
 
 struct CSharpAspnetCodeGeneratorFactory: public AbstractCodeGeneratorFactory
 {
-	CSharpAspnetCodeGeneratorFactory(AbstractDataBaseCodeGenerator * p_dbCodeGenerator)
-		: AbstractCodeGeneratorFactory(p_dbCodeGenerator)
+	CSharpAspnetCodeGeneratorFactory(AbstractDataBaseCodeGeneratorFactory *
+					 p_dbCodeGeneratorFactory, std::string&
+					 p_outputCodeDirectoryPrefix)
+		: AbstractCodeGeneratorFactory(p_dbCodeGeneratorFactory,
+			p_outputCodeDirectoryPrefix)
 	{ }
 	AbstractCodeGenerator* CreateCodeGenerator(TableInfoType * p_TableInfoType_ptr)
-	{ return new CSharpAspNetCodeGenerator(p_TableInfoType_ptr, dbCodeGenerator_); }
+	{
+		AbstractDataBaseCodeGenerator * db_code_generator=
+			dbCodeGeneratorFactory_->
+			CreateCodeGenerator(p_TableInfoType_ptr,
+					    outputCodeDirectoryPrefix_);
+		return new CSharpAspNetCodeGenerator(p_TableInfoType_ptr,
+						     db_code_generator,
+						     outputCodeDirectoryPrefix_);
+	}
 };
 
 #endif /* CSHARPASPNET_CODE_GENERATOR_FACTORY_H */

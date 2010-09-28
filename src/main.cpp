@@ -1,8 +1,9 @@
 #include "std_headers.h"
 #include <cstdio>
 #include <cstdlib>
+#include <boost/program_options.hpp>
 
-#include "std_using.h"
+
 #include "CSharpAspNetCodeGenerator.h"
 #include "CSharpAspNetCodeGeneratorFactory.h"
 
@@ -14,6 +15,7 @@
 #include "TableCollectionSingleton.hpp"
 #include "stmt.h"
 #include "ForwardDecl.h"
+#include "std_using.h"
 
 //AbstractCodeGenerator.h
 //ForwardDecl.h
@@ -44,19 +46,30 @@ void Init();
 	scope* active_scope;
 	struct stmt * tree_root=0;
 
+void ParseProgramOptions(int argc, char* argv[]);
+
 int main(int argc, char* argv[], char* envp[])
 {
+
+	ParseProgramOptions(argc, argv);
 	if(argc!=3) {
 		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
 		exit(0);
 	}
 	Init();
 	rhs_name_space_name=argv[2];
-	PostgreSQLCodeGenerator psqlCodeGenerator; 
-	CSharpAspnetCodeGeneratorFactory cSharpAspNetCodeGeneratorFactory(&psqlCodeGenerator);
-	CppCodeGeneratorFactory cppCodeGeneratorFactory(&psqlCodeGenerator);
+	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
+	//PostgreSQLCodeGenerator psqlCodeGenerator;
+	PostgreSQLCodeGeneratorFactory psqlFactory; 
+	CSharpAspnetCodeGeneratorFactory
+		cSharpAspNetCodeGeneratorFactory(&psqlFactory,
+						 output_code_directory_prefix);
+	CppCodeGeneratorFactory
+		cppCodeGeneratorFactory(&psqlFactory,
+					output_code_directory_prefix);
 	//codeGeneratorFactory = &cSharpAspNetCodeGeneratorFactory;
 	codeGeneratorFactory = &cppCodeGeneratorFactory;
+	
 	
 	FILE * yyin=fopen(argv[1],"r");
 	yyrestart(yyin);
@@ -109,3 +122,16 @@ void Init()
 	active_scope_list.push_back(active_scope);
 }
 
+
+void ParseProgramOptions(int argc, char * argv[])
+{
+	namespace po = boost::program_options;
+	po::options_description desc("Allowed options");
+	desc.add_options()
+		("help", "produce this help message")
+		("top-level-namespace", "Top level namespace of the project - for example MyProject");
+	po::variables_map vm;
+	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::notify(vm);
+	
+}
