@@ -7,7 +7,7 @@
 struct PostgreSQLCodeGenerator: public AbstractDataBaseCodeGenerator
 {
 public:
-	TableInfoType * tabInfo_;
+	TableInfoType * tableInfo_;
 	std::string outputDirPrefix_;
 
 public:
@@ -15,9 +15,20 @@ public:
 				std::string & p_output_dir_path);
 	virtual void GenerateCode();
 	virtual void GenerateStoredProcedures();
-	//virtual void SetOutputDirectory(std::string & output_code_directory_prefix);
+	void print_sp_param_decls(ofstream & ofile, print_sp_params_mode mode);
+	void print_sp_params(ofstream & ofile, print_sp_params_mode mode);
+	void print_sp_fields(ofstream & ofile, print_sp_params_mode mode);
+	void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
+	void print_lower_fname(ofstream & file);
+	void print_cpp_db_impl_header(ofstream & cpp_db_impl);
 public:
 	virtual void GenerateInsertSP();
+	void GenerateCppFuncs();
+	void PrintCppInsertFunc(ofstream & ofile);
+	void PrintGetConn(ofstream & cpp_db_impl);
+private:
+	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
+	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);
 };
 
 #endif /* POSTGRESQL_CODEGENERATOR_H */

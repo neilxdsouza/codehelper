@@ -8,9 +8,10 @@
 #include "utils.h"
 
 
-TableInfoType::TableInfoType(string name, struct var_list*  elist): 
+TableInfoType::TableInfoType(string name, struct var_list*  elist,
+		vector<var_list*> & p_vec_var_list): 
 		tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
-		has_multi(0), has_search_key(0)
+		has_multi(0), has_search_key(0), vec_var_list(p_vec_var_list)
 {
 	printf("%s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	

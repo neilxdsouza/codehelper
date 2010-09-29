@@ -22,12 +22,13 @@ TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 
 
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name
-		,  struct var_list* & v_list, AbstractCodeGeneratorFactory * p_codeGeneratorFactory)
+		,  struct var_list* & v_list, AbstractCodeGeneratorFactory * p_codeGeneratorFactory
+		,  vector<var_list*>& vec_var_list )
 	: stmt(dtype, lline_number), codeGenerator_(0)
 {
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
 		//cout << "got func_decl" << endl;
-		struct TableInfoType* ti=new TableInfoType(name, v_list );
+		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list );
 		//CSharpAspNetCodeGenerator * ptr = new CSharpAspNetCodeGenerator(ti);
 		codeGenerator_ = p_codeGeneratorFactory->CreateCodeGenerator(ti);
 		//table_info_table.push_back(ti);

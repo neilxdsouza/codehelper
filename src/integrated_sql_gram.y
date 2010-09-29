@@ -30,6 +30,7 @@
 	extern void yyrestart ( FILE *input_file );
 	struct options_list_type options_list;
 	extern AbstractCodeGeneratorFactory * codeGeneratorFactory;
+	std::vector<var_list *> vec_var_list;
 
 struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v_list);
 
@@ -95,7 +96,9 @@ statement_list: statement {
 statement:	CREATE TABLE NAME '(' decl_comma_list ')'';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($5);
-		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory );
+		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
+				vec_var_list);
+		vec_var_list.clear();
 	 }
 	 ;
 
@@ -116,10 +119,12 @@ data_type:	INT32_T
 
 decl_comma_list: var_decl_with_or_wo_options {
 		 $$=$1;
+		 vec_var_list.push_back($1);
 		 //cout << "got decl_comma_list : " << endl;
 	}
 	| decl_comma_list ',' var_decl_with_or_wo_options {
 		$$=link_chain($1,$3);
+		vec_var_list.push_back($3);
 		//cout << "chaining var_decl : " << endl;
 	}
 	;

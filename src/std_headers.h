@@ -3,3 +3,4 @@
 #include <string>
 #include <boost/format.hpp>
 #include <fstream>
+#include <sstream>

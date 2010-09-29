@@ -1,7 +1,9 @@
 #include "utils.h"
 
 #include <string>
-using std::string;
+//#include <fstream>
+#include "std_headers.h"
+#include "std_using.h"
 
 bool isOfStringType(datatype dt)
 {
@@ -59,6 +61,55 @@ void print_csharp_types(FILE * fptr, datatype dt)
 		break;
 		default:
 			fprintf(fptr, "Error in parsing type file: %s, line:%d\n", __FILE__, __LINE__);
+			fprintf(stderr, "case statement datatype not defined\nError in parsing type file: %s, line:%d\n", __FILE__, __LINE__);
+	}
+}
+
+void print_csharp_types(ofstream & file, datatype dt)
+{
+	switch (dt){
+		case IMAGE_TYPE:
+		file << "Image";
+		break;
+		case TINYINT_TYPE:
+		file << "byte";
+		break;
+			
+		case BIGINT_TYPE:{
+		file << "Int64";
+		}
+		break;		
+		case INT32_TYPE:{
+		file << "int";
+		}
+		break;		
+		case VARCHAR_TYPE:
+		case NVARCHAR_TYPE:
+		case NCHAR_TYPE:
+		case NTEXT_TYPE:
+		case TEXT_TYPE:
+			file << "string";
+		break;		
+		case FLOAT_TYPE:{
+		file << "float";
+		}
+		break;		
+		case DOUBLE_TYPE:{
+		file << "double";
+		}
+		break;
+		case BIT_TYPE:{
+		file << "bool";
+		}
+		break;
+		case DATETIME_TYPE:{
+		file << "DateTime";
+		}
+		break;
+		default:
+			//fprintf(fptr, "Error in parsing type file: %s, line:%d\n", __FILE__, __LINE__);
+			file << boost::format("Error in parsing type file: %s, line:%d\n")
+				% __FILE__% __LINE__;
 			fprintf(stderr, "case statement datatype not defined\nError in parsing type file: %s, line:%d\n", __FILE__, __LINE__);
 	}
 }
@@ -228,5 +279,60 @@ void print_aspx_types(FILE * fptr, datatype dt)
 		break;
 		default:
 			fprintf(fptr, "Unknown Type: Error: File:%s, Line: %d\n", __FILE__, __LINE__);
+	}
+}
+
+void print_sp_types(ofstream& file, datatype dt)
+{
+	switch (dt){
+		case INT32_TYPE:{
+		file << "int";
+		}
+		break;		
+		case NCHAR_TYPE:
+		file << "nchar";
+		break;		
+		case VARCHAR_TYPE:
+		file << "varchar";
+		break;		
+		case NVARCHAR_TYPE:
+		file << "nvarchar";
+		break;		
+		case FLOAT_TYPE:{
+		file << "float";
+		}
+		break;		
+		case DOUBLE_TYPE:{
+		file << "double";
+		}
+		break;
+		case BIT_TYPE:{
+		file << "bit";
+		}
+		break;
+		case DATETIME_TYPE:{
+		file << "datetime";
+		}
+		break;
+		case TINYINT_TYPE:
+		file << "tinyint";
+		break;
+		case TEXT_TYPE:
+		file << "text";
+		break;
+		case NTEXT_TYPE:
+		file << "ntext";
+		break;
+		case BIGINT_TYPE:
+		file << "bigint";
+		break;
+		case IMAGE_TYPE:
+		file << "image";
+		break;
+		default:
+		//fprintf(fptr, "Invalid data type: file: %s, line: %d\n", __FILE__, __LINE__  );
+		file << "Invalid data type: file: " << __FILE__ 
+			<< ", line: " << __LINE__
+			<< ", function: " << __PRETTY_FUNCTION__ << endl;
 	}
 }

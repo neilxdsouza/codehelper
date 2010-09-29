@@ -35,7 +35,7 @@ int yyparse();
 extern int no_errors;
 
 #define MAX_NAMESPACE_WORD 1023
-char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel.Namespace"};
+char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel_Namespace"};
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
 AbstractCodeGeneratorFactory * codeGeneratorFactory;

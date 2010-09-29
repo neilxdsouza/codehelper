@@ -66,7 +66,8 @@ struct table_decl_stmt: public stmt
 	AbstractCodeGenerator * codeGenerator_;
 
 	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list,
-			 AbstractCodeGeneratorFactory * p_codeGeneratorFactory);
+			 AbstractCodeGeneratorFactory * p_codeGeneratorFactory,
+			 vector<var_list*>& vec_var_list);
 
 	void GenerateCode(FILE * & fptr);
 
