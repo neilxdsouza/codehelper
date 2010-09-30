@@ -10,11 +10,15 @@
 struct CppCodeGenerator: public AbstractCodeGenerator
 {
 public:
+	stringstream h_header, h_body, h_footer;
+
+public:
 CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 		 AbstractDataBaseCodeGenerator * p_dbCodeGenerator,
 		 std::string & p_outputDirPrefix)
 	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator,
-				p_outputDirPrefix)
+				p_outputDirPrefix),
+	  h_header(), h_body(), h_footer()
 	{ }
 
 	void GenerateCode(FILE * fptr);
@@ -27,6 +31,8 @@ public:
 	void print_bll_h_footer(std::ofstream & bll_h);
 	void print_bll_params(std::ofstream & bll_h);
 	void print_bll_api(std::ofstream & bll_cpp);
+public:
+	void print_bll_Insert();
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);

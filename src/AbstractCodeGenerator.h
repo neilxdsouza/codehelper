@@ -25,7 +25,8 @@ struct AbstractCodeGenerator
 
  
 	protected:
-	~AbstractCodeGenerator();
+	~AbstractCodeGenerator()
+	{}
 private:
 	AbstractCodeGenerator(const AbstractCodeGenerator&);
 	AbstractCodeGenerator& operator=(const AbstractCodeGenerator&);

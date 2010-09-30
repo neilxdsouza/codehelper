@@ -46,7 +46,9 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 {
 	cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
 	string sp_insert_fname (string(outputDirPrefix_.c_str()
-				       +string("/sp_insert_postgres.sql"))); 
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_insert_postgres.sql"))); 
 	std::ofstream insert_sp(sp_insert_fname.c_str(), ios_base::out|ios_base::trunc);
 	if(!insert_sp){
 		string err_msg="unable to open " + sp_insert_fname + "for writing";
@@ -81,6 +83,10 @@ void PostgreSQLCodeGenerator::print_sp_param_decls(ofstream & ofile, print_sp_pa
 	}
 	while(v_ptr){
 		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
+		if(v_ptr->var_type == COMPOSITE_TYPE) {
+			v_ptr=v_ptr->prev;
+			continue;
+		}
 		ofile << boost::format("\tp_%1% ") % v_ptr->var_name;
 		print_sp_types(ofile,  v_ptr->var_type);
 		if(v_ptr->var_type==NVARCHAR_TYPE||v_ptr->var_type==VARCHAR_TYPE
@@ -153,15 +159,16 @@ void PostgreSQLCodeGenerator::print_sp_1st_param(ofstream & ofile, print_sp_para
 void PostgreSQLCodeGenerator::GenerateCppFuncs()
 {
 	string cpp_db_impl_fname(string(outputDirPrefix_.c_str()
-				       +string("/PSqlDbImplementation.cpp"))); 
+					+ tableInfo_->tableName_ 
+					+ string("_db_postgres.cpp"))); 
 	std::ofstream cpp_db_impl(cpp_db_impl_fname.c_str(), ios_base::out|ios_base::trunc);
 
 	if(!cpp_db_impl){
 		string err_msg="unable to open " + cpp_db_impl_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-
 	print_cpp_db_impl_header(cpp_db_impl);
+	PrintConnCloser(cpp_db_impl);
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
 
@@ -183,6 +190,8 @@ void PostgreSQLCodeGenerator::print_lower_fname(ofstream & file)
 void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 {
 	cpp_db_impl << boost::format("#include <postgresql/libpq-fe.h>\n");
+	cpp_db_impl << boost::format("#include <boost/shared_ptr.hpp>\n");
+	cpp_db_impl << boost::format("#include <boost/scoped_ptr.hpp>\n");
 	cpp_db_impl << boost::format("#include \"%1%_bll.h\">\n") % tableInfo_->tableName_;
 }
 
@@ -191,8 +200,7 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("int Insert%1%(Biz%1% & ") % tableInfo_->tableName_;
 	print_lower_fname(cpp_db_impl);
 	cpp_db_impl << ")\n{\n";
-
-	cpp_db_impl << "\tPGconn      *conn=GetPGConn();\n";
+	cpp_db_impl << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
 	cpp_db_impl << "\n}\n";
 }
 
@@ -214,4 +222,16 @@ void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 	cpp_db_impl << "\treturn conn;\n";
 
 	cpp_db_impl << "\n}\n";
+}
+
+void PostgreSQLCodeGenerator::PrintConnCloser(ofstream & cpp_db_impl)
+{
+	cpp_db_impl << "class ConnCloser\n"
+		<< "{\n"
+		<< "public:\n"
+		<< "\tvoid operator() (PGconn * conn)\n"
+		<< "\t{\n"
+		<< "\t\tPQfinish(conn);\n"
+		<< "\t}\n"
+		<< "};\n";
 }

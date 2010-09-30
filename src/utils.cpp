@@ -65,7 +65,7 @@ void print_csharp_types(FILE * fptr, datatype dt)
 	}
 }
 
-void print_csharp_types(ofstream & file, datatype dt)
+void print_csharp_types(stringstream & file, datatype dt)
 {
 	switch (dt){
 		case IMAGE_TYPE:
