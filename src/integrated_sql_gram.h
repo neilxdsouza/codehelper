@@ -52,21 +52,23 @@
      TINYINT_T = 268,
      IMAGE_T = 269,
      NCHAR_T = 270,
-     CREATE = 271,
-     REFERENCES = 272,
-     MANY = 273,
-     NOT = 274,
-     DBNULL = 275,
-     UNIQUE = 276,
-     VALIDATOR_REQ_FIELD = 277,
-     VALIDATOR_RE_INTEGER = 278,
-     VALIDATOR_RE_FLOAT = 279,
-     VALIDATOR_RE_ALPHANUM = 280,
-     VALIDATOR_RE_ALPHANUMWSP = 281,
-     SEARCH_KEY = 282,
-     TABLE = 283,
-     NAME = 284,
-     INUMBER = 285
+     COMPOSITE_T = 271,
+     CREATE = 272,
+     REFERENCES = 273,
+     MANY = 274,
+     NOT = 275,
+     DBNULL = 276,
+     UNIQUE = 277,
+     VALIDATOR_REQ_FIELD = 278,
+     VALIDATOR_RE_INTEGER = 279,
+     VALIDATOR_RE_FLOAT = 280,
+     VALIDATOR_RE_ALPHANUM = 281,
+     VALIDATOR_RE_ALPHANUMWSP = 282,
+     SEARCH_KEY = 283,
+     PRIMARY_KEY = 284,
+     TABLE = 285,
+     NAME = 286,
+     INUMBER = 287
    };
 #endif
 
@@ -89,7 +91,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 93 "src/integrated_sql_gram.hpp"
+#line 95 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

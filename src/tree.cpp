@@ -13,7 +13,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 		has_multi(0), has_search_key(0), vec_var_list(p_vec_var_list)
 {
-	printf("%s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
+	printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
 	struct var_list* v_ptr = param_list;
 	while(v_ptr){
@@ -28,4 +28,5 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		v_ptr=v_ptr->prev;
 	}
+	printf("EXIT %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 }

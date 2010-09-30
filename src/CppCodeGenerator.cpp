@@ -102,30 +102,39 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 {
 	struct var_list* v_ptr=tableInfo_->param_list;
 #define LARGE_BUFF 1024
-	char buff1[LARGE_BUFF];
-	char buff2[LARGE_BUFF];
-	int nwrite1=0, nwrite2=0;
+	//char buff1[LARGE_BUFF];
+	//char buff2[LARGE_BUFF];
+	//int nwrite1=0, nwrite2=0;
+	//variables << "private:\n";
+	stringstream variables, functions;
+	stringstream var_type;
+	variables << "public:\n";
+	functions << "public:\n";
 
 	while(v_ptr){
-		char * bufptr1=buff1, *bufptr2=buff2;
-		nwrite1=sprintf(bufptr1, "\t\tprivate ");
-		nwrite2=sprintf(bufptr2, "\t\tpublic ");
-		bufptr1 += nwrite1;
-		bufptr2 += nwrite2;
+		//char * bufptr1=buff1, *bufptr2=buff2;
+		//nwrite1=sprintf(bufptr1, "\t\tprivate ");
+		//nwrite2=sprintf(bufptr2, "\t\tpublic ");
+		//bufptr1 += nwrite1;
+		//bufptr2 += nwrite2;
 		if(v_ptr->options.ref_table_name!=""){
 			if(v_ptr->options.many==false){
-				nwrite1=sprintf(bufptr1, "Biz%s", v_ptr->options.ref_table_name.c_str());
-				nwrite2=sprintf(bufptr2, "Biz%s", v_ptr->options.ref_table_name.c_str());
+				//nwrite1=sprintf(bufptr1, "Biz%s", v_ptr->options.ref_table_name.c_str());
+				//nwrite2=sprintf(bufptr2, "Biz%s", v_ptr->options.ref_table_name.c_str());
+				var_type << boost::format("Biz%1%") % v_ptr->options.ref_table_name;
 			} else {
-				nwrite1=sprintf(bufptr1, "vector<boost::shared_ptr<Biz%s> >", v_ptr->options.ref_table_name.c_str());
-				nwrite2=sprintf(bufptr2, "vector<boost::shared_ptr<Biz%s> >", v_ptr->options.ref_table_name.c_str());
+				//nwrite1=sprintf(bufptr1, "vector<boost::shared_ptr<Biz%s> >", v_ptr->options.ref_table_name.c_str());
+				//nwrite2=sprintf(bufptr2, "vector<boost::shared_ptr<Biz%s> >", v_ptr->options.ref_table_name.c_str());
+				var_type << boost::format("vector<boost::shared_ptr<Biz%1%> >") 
+					%v_ptr->options.ref_table_name;
 			}
 
 		} else {
 			switch (v_ptr->var_type){
 				case INT32_TYPE:{
-				nwrite1=sprintf(bufptr1, "int");
-				nwrite2=sprintf(bufptr2, "int");
+				//nwrite1=sprintf(bufptr1, "int");
+				//nwrite2=sprintf(bufptr2, "int");
+				var_type << "int32_t";
 
 				}
 				break;		
@@ -134,89 +143,109 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 				case NVARCHAR_TYPE:
 				case NCHAR_TYPE:
 				case NTEXT_TYPE:
-				nwrite1=sprintf(bufptr1, "string");
-				nwrite2=sprintf(bufptr2, "string");
-
+				//nwrite1=sprintf(bufptr1, "string");
+				//nwrite2=sprintf(bufptr2, "string");
+				var_type << "string";
 				
 				break;		
 				case FLOAT_TYPE:{
-				nwrite1=sprintf(bufptr1, "float");
-				nwrite2=sprintf(bufptr2, "float");
+				//nwrite1=sprintf(bufptr1, "float");
+				//nwrite2=sprintf(bufptr2, "float");
+				var_type << "float";
 
 				}
 				break;		
 				case DOUBLE_TYPE:{
-				nwrite1=sprintf(bufptr1, "double");
-				nwrite2=sprintf(bufptr2, "double");
+				//nwrite1=sprintf(bufptr1, "double");
+				//nwrite2=sprintf(bufptr2, "double");
+				var_type << "double";
 
 				}
 				break;
 				case BIT_TYPE:{
-				nwrite1=sprintf(bufptr1, "bool");
-				nwrite2=sprintf(bufptr2, "bool");
+				//nwrite1=sprintf(bufptr1, "bool");
+				//nwrite2=sprintf(bufptr2, "bool");
+				var_type << "bool";
 
 				}
 				break;
 				case DATETIME_TYPE:{
-				nwrite1=sprintf(bufptr1, "date");
-				nwrite2=sprintf(bufptr2, "date");
+				//nwrite1=sprintf(bufptr1, "date");
+				//nwrite2=sprintf(bufptr2, "date");
+				var_type << "date";
 
 				}
 				break;
 				case BIGINT_TYPE:
-				nwrite1=sprintf(bufptr1, "Int64");
-				nwrite2=sprintf(bufptr2, "Int64");
+				//nwrite1=sprintf(bufptr1, "Int64");
+				//nwrite2=sprintf(bufptr2, "Int64");
+				var_type << "int64_t";
 				break;
 				case TINYINT_TYPE:
 				//fprintf(fptr, "byte");
-				nwrite1=sprintf(bufptr1, "byte");
-				nwrite2=sprintf(bufptr2, "byte");
+				//nwrite1=sprintf(bufptr1, "byte");
+				//nwrite2=sprintf(bufptr2, "byte");
+				var_type << "byte";
 				break;
 				case IMAGE_TYPE:
 				//fprintf(fptr, "Image");
-				nwrite1=sprintf(bufptr1, "Image");
-				nwrite2=sprintf(bufptr2, "Image");
+				//nwrite1=sprintf(bufptr1, "Image");
+				//nwrite2=sprintf(bufptr2, "Image");
+				var_type << "Image";
 				break;
 
 				default:
-				nwrite1=sprintf(bufptr1, "Unknown type : error ");
-				nwrite2=sprintf(bufptr2, "Unknown type : error ");
+				//nwrite1=sprintf(bufptr1, "Unknown type : error ");
+				//nwrite2=sprintf(bufptr2, "Unknown type : error ");
+				var_type << "Unknown type: error";
 
 			}
 		}
-		bufptr1 += nwrite1;
-		bufptr2 += nwrite2;
+		//bufptr1 += nwrite1;
+		//bufptr2 += nwrite2;
 			//nwrite1=sprintf(bufptr1, " <_%s>;\n", v_ptr->var_name.c_str());
 		if(v_ptr->var_type==DATETIME_TYPE){
-			nwrite1=sprintf(bufptr1, " %s_;\n", v_ptr->var_name.c_str());
-			nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
-					v_ptr->var_name.c_str(), 
-					v_ptr->var_name.c_str(), 
-					v_ptr->var_name.c_str());
+			//nwrite1=sprintf(bufptr1, " %s_;\n", v_ptr->var_name.c_str());
+			variables << var_type.str() << format(" %1%_;") % v_ptr->var_name << "// came here\n";
+			//nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
+			//		v_ptr->var_name.c_str(), 
+			//		v_ptr->var_name.c_str(), 
+			//		v_ptr->var_name.c_str());
 		} else {
 			if(v_ptr->options.ref_table_name!=""){
 				string orig_varname = v_ptr->var_name.c_str();
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
-				nwrite1=sprintf(bufptr1, " %s_;\n", improved_name.c_str());
-				nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
-						improved_name.c_str(), 
-						improved_name.c_str(), 
-						improved_name.c_str());
+				//nwrite1=sprintf(bufptr1, " %s_;\n", improved_name.c_str());
+				variables << boost::format("%1%_;\n") % improved_name;
+				//nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
+				//		improved_name.c_str(), 
+				//		improved_name.c_str(), 
+				//		improved_name.c_str());
+				functions << boost::format("\t%2% Get_%1%() { return %1%_;}\n") 
+					% improved_name % var_type.str() ;
+				functions << boost::format("\tvoid Set_%1%(%2% value) { %1%_= value;}\n") 
+					% improved_name % var_type.str();
 			} else {
-				nwrite1=sprintf(bufptr1, " _%s;\n", v_ptr->var_name.c_str());
-				nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
-						v_ptr->var_name.c_str(), 
-						v_ptr->var_name.c_str(), 
-						v_ptr->var_name.c_str());
+				//nwrite1=sprintf(bufptr1, " _%s;\n", v_ptr->var_name.c_str());
+				variables << var_type.str() << boost::format(" %1%_;\n") % v_ptr->var_name;
+				//nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
+				//		v_ptr->var_name.c_str(), 
+				//		v_ptr->var_name.c_str(), 
+				//		v_ptr->var_name.c_str());
+				functions << var_type.str() << boost::format(" Get_%1%() { return %1%_;}\n") % v_ptr->var_name;
+				functions << boost::format("\tvoid Set_%1%(%2% value) { %1%_= value;}\n") 
+					% v_ptr->var_name % var_type.str();
 			}
 		}
 		//nwrite2=sprintf(bufptr2, " %s{\n\t\t\tget{ return _%s;}\n\t\t\tset{ _%s=value;}\n\t\t}\n", 
 		//		v_ptr->var_name.c_str(), v_ptr->var_name.c_str(), v_ptr->var_name.c_str());
 		///fprintf(fptr, "%s", buff1);
 		///fprintf(fptr, "%s", buff2);
-		bll_h << buff1;
-		bll_h << buff2;
+		//bll_h << buff1;
+		//bll_h << buff2;
+		bll_h << "\t" << functions.str();
+		bll_h << "\t" << variables.str();
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			//fprintf(fptr, "\t\tpublic ");
 			bll_h << "\t\tpublic ";
@@ -226,6 +255,12 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 		}
 
 		v_ptr=v_ptr->prev;
+		variables.str("");
+		functions.str("");
+		var_type.str("");
+		variables.clear();
+		functions.clear();
+		var_type.clear();
 	}
 	v_ptr=tableInfo_->param_list;
 	// print the properties of Fields which are inside a composite object

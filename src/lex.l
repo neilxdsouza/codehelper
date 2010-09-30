@@ -81,6 +81,10 @@ SEARCH_KEY {
 	return SEARCH_KEY;
 }
 
+PRIMARY_KEY {
+	return PRIMARY_KEY;
+}
+
 
 ")"	{
 	return ')';
@@ -126,6 +130,7 @@ VARCHAR	{ yylval.dt=VARCHAR_TYPE; return VARCHAR_T; }
 NVARCHAR	{ yylval.dt=NVARCHAR_TYPE; return NVARCHAR_T; }
 NCHAR	{ yylval.dt=NCHAR_TYPE; printf("got token nchar\n"); return NCHAR_T; }
 IMAGE	{ yylval.dt=IMAGE_TYPE; return IMAGE_T; }
+COMPOSITE	{ yylval.dt=COMPOSITE_TYPE; return COMPOSITE_T; }
 
 
 [A-Za-z_][A-Za-z0-9_]*	{

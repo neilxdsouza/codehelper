@@ -66,8 +66,9 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %token <dt> TINYINT_T
 %token <dt> IMAGE_T
 %token <dt> NCHAR_T
+%token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
-%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY
+%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY
 
 %token TABLE
 %token ','
@@ -115,6 +116,7 @@ data_type:	INT32_T
 	|	DATETIME_T
 	|	TINYINT_T
 	|	IMAGE_T
+	|	COMPOSITE_T
 	;
 
 decl_comma_list: var_decl_with_or_wo_options {
@@ -187,6 +189,9 @@ options: REFERENCES NAME '(' NAME ')' {
 	}
 	|	SEARCH_KEY {
 		options_list.search_key = true;
+	}
+	|	PRIMARY_KEY {
+		options_list.primary_key = true;
 	}
 	;
 

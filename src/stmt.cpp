@@ -26,6 +26,7 @@ table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & nam
 		,  vector<var_list*>& vec_var_list )
 	: stmt(dtype, lline_number), codeGenerator_(0)
 {
+	cout << __PRETTY_FUNCTION__ << "," << __FILE__ << "," << __LINE__ << endl;
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
 		//cout << "got func_decl" << endl;
 		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list );
