@@ -11,6 +11,7 @@ struct CppCodeGenerator: public AbstractCodeGenerator
 {
 public:
 	stringstream h_header, h_body, h_footer;
+	stringstream cpp_body;
 
 public:
 CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
@@ -18,7 +19,8 @@ CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 		 std::string & p_outputDirPrefix)
 	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator,
 				p_outputDirPrefix),
-	  h_header(), h_body(), h_footer()
+	  h_header(), h_body(), h_footer(),
+	  cpp_body()
 	{ }
 
 	void GenerateCode(FILE * fptr);
@@ -31,8 +33,9 @@ public:
 	void print_bll_h_footer(std::ofstream & bll_h);
 	void print_bll_params(std::ofstream & bll_h);
 	void print_bll_api(std::ofstream & bll_cpp);
+	void print_bll_api_functions_decl(std::ofstream & bll_h);
 public:
-	void print_bll_Insert();
+	void print_bll_Insert_defn();
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);

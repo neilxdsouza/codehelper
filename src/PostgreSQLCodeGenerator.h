@@ -20,13 +20,16 @@ public:
 	void print_sp_fields(ofstream & ofile, print_sp_params_mode mode);
 	void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
 	void print_lower_fname(ofstream & file);
+	string print_lower_table_name();
 	void print_cpp_db_impl_header(ofstream & cpp_db_impl);
+	void GenerateDB_h();
 public:
 	virtual void GenerateInsertSP();
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
 	void PrintGetConn(ofstream & cpp_db_impl);
 	void PrintConnCloser(ofstream & cpp_db_impl);
+	void print_exit_nicely(ofstream & cpp_db_impl);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

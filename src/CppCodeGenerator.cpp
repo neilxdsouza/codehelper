@@ -71,6 +71,8 @@ void CppCodeGenerator::GenerateBLLDefn_cpp(ofstream & bll_cpp)
 {
 	bll_cpp << boost::format("#include \"%1%_bll.h\"\n") 
 		% tableInfo_->tableName_;
+	bll_cpp << boost::format("#include \"%1%_db_postgres.h\"\n") 
+		% tableInfo_->tableName_;
 }
 
 void CppCodeGenerator::print_bll_h_header(ofstream & bll_h)
@@ -90,6 +92,7 @@ void CppCodeGenerator::print_bll_api_decls(ofstream & bll_h)
 {
 	h_body << format("struct Biz%1%\n{\n") % tableInfo_->tableName_;
 	print_bll_params(bll_h);
+	print_bll_api_functions_decl(bll_h);
 	h_body << "};\n\n";
 }
 
@@ -242,6 +245,14 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 	}
 }
 
-void CppCodeGenerator::print_bll_api(std::ofstream & bll_cpp)
+void CppCodeGenerator::print_bll_api_functions_decl(std::ofstream & bll_h)
+{
+	h_body << "\t//bool ValidateForInsert();\n";
+	h_body << "\tint Insert();\n";
+	h_body << "\t//bool ValidateForUpdate();\n";
+	h_body << "\t//int Update();\n";
+}
+
+void CppCodeGenerator::print_bll_Insert_defn()
 {
 }

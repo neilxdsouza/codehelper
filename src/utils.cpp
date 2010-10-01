@@ -184,6 +184,7 @@ struct TableInfoType* my_find_table( string ref_table_name)
 */
 
 
+// this is used for ms sql server
 void print_sp_types(FILE * fptr, datatype dt)
 {
 	switch (dt){
@@ -282,6 +283,7 @@ void print_aspx_types(FILE * fptr, datatype dt)
 	}
 }
 
+// this is used for postgres
 void print_sp_types(ofstream& file, datatype dt)
 {
 	switch (dt){
@@ -290,24 +292,24 @@ void print_sp_types(ofstream& file, datatype dt)
 		}
 		break;		
 		case NCHAR_TYPE:
-		file << "nchar";
+		file << "char";
 		break;		
 		case VARCHAR_TYPE:
 		file << "varchar";
 		break;		
 		case NVARCHAR_TYPE:
-		file << "nvarchar";
+		file << "varchar";
 		break;		
 		case FLOAT_TYPE:{
-		file << "float";
+		file << "real";
 		}
 		break;		
 		case DOUBLE_TYPE:{
-		file << "double";
+		file << "double precision";
 		}
 		break;
 		case BIT_TYPE:{
-		file << "bit";
+		file << "boolean";
 		}
 		break;
 		case DATETIME_TYPE:{
@@ -315,18 +317,21 @@ void print_sp_types(ofstream& file, datatype dt)
 		}
 		break;
 		case TINYINT_TYPE:
-		file << "tinyint";
+		file << "smallint";
 		break;
 		case TEXT_TYPE:
 		file << "text";
 		break;
 		case NTEXT_TYPE:
-		file << "ntext";
+		file << "text";
 		break;
 		case BIGINT_TYPE:
 		file << "bigint";
 		break;
 		case IMAGE_TYPE:
+		file << "Image type Invalid data type in postgres: file: " << __FILE__ 
+			<< ", line: " << __LINE__
+			<< ", function: " << __PRETTY_FUNCTION__ << endl;
 		file << "image";
 		break;
 		default:
