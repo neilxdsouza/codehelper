@@ -34,8 +34,10 @@ public:
 	void print_bll_params(std::ofstream & bll_h);
 	void print_bll_api(std::ofstream & bll_cpp);
 	void print_bll_api_functions_decl(std::ofstream & bll_h);
+	void print_bll_api_defns(std::ofstream & bll_cpp);
+	void print_bll_api_test_stubs(std::ofstream & bll_cpp);
 public:
-	void print_bll_Insert_defn();
+	void print_bll_Insert_defn(std::ofstream & bll_cpp);
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);

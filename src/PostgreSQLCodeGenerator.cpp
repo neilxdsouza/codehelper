@@ -116,6 +116,10 @@ void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_
 	}
 	while(v_ptr){
 		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
+		if(v_ptr->var_type == COMPOSITE_TYPE) {
+			v_ptr=v_ptr->prev;
+			continue;
+		}
 		ofile << boost::format("\tp_%1% ") % v_ptr->var_name;
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
@@ -138,6 +142,10 @@ void PostgreSQLCodeGenerator::print_sp_fields(ofstream & ofile, print_sp_params_
 	}
 	while(v_ptr){
 		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
+		if(v_ptr->var_type == COMPOSITE_TYPE) {
+			v_ptr=v_ptr->prev;
+			continue;
+		}
 		ofile << boost::format("\t%1% ") % v_ptr->var_name;
 
 		v_ptr=v_ptr->prev;
@@ -174,6 +182,10 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	print_exit_nicely(cpp_db_impl);
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
+
+	cpp_db_impl << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
+			% tableInfo_->tableName_
+			% project_namespace ;
 
 }
 
@@ -212,6 +224,10 @@ void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("#include <cstdio>\n");
 	cpp_db_impl << boost::format("#include <sstream>\n");
 	cpp_db_impl << boost::format("#include \"%1%_bll.h\"\n") % tableInfo_->tableName_;
+
+	cpp_db_impl << boost::format("namespace %1% { namespace db { namespace %2% {\n")
+			% project_namespace % tableInfo_->tableName_;
+
 }
 
 void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
@@ -229,20 +245,23 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 			"\tstd::stringstream ss_param_values[%1%];\n") % 
 		tableInfo_->vec_var_list.size();
 
-	for (int i=0; i<tableInfo_->vec_var_list.size(); ++i) {
+	// skip 1st param - assume to be primary key
+	int nActualParams=0;
+	for (int i=1 ; i<tableInfo_->vec_var_list.size(); ++i) {
 		if(tableInfo_->vec_var_list[i]->var_type==COMPOSITE_TYPE)
 			continue;
 		if(tableInfo_->vec_var_list[i]->var_type==DATETIME_TYPE){
 			cpp_db_impl << format("\tss_param_values[%1%] << to_simple_string(%2%.Get_%3%());\n")
-				% i % print_lower_table_name()
+				% nActualParams % print_lower_table_name()
 				% tableInfo_->vec_var_list[i]->var_name;
 		} else {
 			cpp_db_impl << format("\tss_param_values[%1%] << %2%.Get_%3%();\n")
-				% i % print_lower_table_name()
+				% nActualParams % print_lower_table_name()
 				% tableInfo_->vec_var_list[i]->var_name;
 		}
 		cpp_db_impl << boost::format("\tparamValues[%1%]=ss_param_values[%1%].str().c_str();\n")
-				% i;
+				% nActualParams;
+		++nActualParams;
 	}
 
 	cpp_db_impl << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_insert_%1%(\"\n") %
@@ -250,24 +269,29 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 
 	bool print_comma=true;
 	cpp_db_impl << "\t\t\t\"";
-	for (int i=0; i<tableInfo_->vec_var_list.size(); ++i) {
+	// skip 1st param - assume to be primary key
+	for (int i=1, j=0; i<tableInfo_->vec_var_list.size(); ++i) {
+		if(tableInfo_->vec_var_list[i]->var_type==COMPOSITE_TYPE)
+			continue;
 		if (i==tableInfo_->vec_var_list.size()-1){
 			print_comma=false;
 		}
-		cpp_db_impl << format("$%1%") % (i+1);
+		cpp_db_impl << format("$%1%") % (++j);
+		cpp_db_impl << "::";
+		print_sp_types(cpp_db_impl, tableInfo_->vec_var_list[i]->var_type);
 		if (print_comma) {
 			cpp_db_impl << ",";
 		}
 	}
-	cpp_db_impl << boost::format("\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
-			tableInfo_->vec_var_list.size();
+	cpp_db_impl << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+			nActualParams;
 	
 	cpp_db_impl << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
 	cpp_db_impl << "\t\tint res_status = PQresultStatus(res);\n";
-	cpp_db_impl << "\t\tprintf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\",\n"
+	cpp_db_impl << "\t\tprintf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\\n\",\n"
 				 << "\t\t\tres_status, PGRES_COMMAND_OK, PGRES_TUPLES_OK);\n";
 
-	cpp_db_impl << "\t\tfprintf(stderr, \"insert employee failed: %%s\", PQerrorMessage(conn.get()));\n";
+	cpp_db_impl << "\t\tfprintf(stderr, \"insert employee failed: %s\", PQerrorMessage(conn.get()));\n";
 	cpp_db_impl << "\t\tPQclear(res);\n";
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
 		string("Fix me : exit_nicely may not be requires since the PGconn has a custom deleter which closes the connection\n"));
@@ -284,7 +308,7 @@ void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 
 	cpp_db_impl << "\tconst char  *conninfo;\n";
 	cpp_db_impl << "\tPGconn      *conn;\n";
-	cpp_db_impl << "\tconninfo = \"dbname = nxd\";\n";
+	cpp_db_impl << "\tconninfo = \"dbname=nxd port=5433\";\n";
 
 	cpp_db_impl << "\tconn = PQconnectdb(conninfo);\n";
 	cpp_db_impl << "\tif (PQstatus(conn) != CONNECTION_OK)\n";

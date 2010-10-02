@@ -313,7 +313,7 @@ void print_sp_types(ofstream& file, datatype dt)
 		}
 		break;
 		case DATETIME_TYPE:{
-		file << "datetime";
+		file << "timestamp";
 		}
 		break;
 		case TINYINT_TYPE:

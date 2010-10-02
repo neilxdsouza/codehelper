@@ -69,10 +69,15 @@ void CppCodeGenerator::GenerateBLLDefn_h(ofstream & bll_h)
 
 void CppCodeGenerator::GenerateBLLDefn_cpp(ofstream & bll_cpp)
 {
+	bll_cpp << format("#include <boost/date_time/gregorian/gregorian.hpp>\n");
+	bll_cpp << format("#include <boost/shared_ptr.hpp>\n");
+	bll_cpp << format("#include <string>\n");
 	bll_cpp << boost::format("#include \"%1%_bll.h\"\n") 
 		% tableInfo_->tableName_;
 	bll_cpp << boost::format("#include \"%1%_db_postgres.h\"\n") 
 		% tableInfo_->tableName_;
+
+	print_bll_api_defns(bll_cpp);
 }
 
 void CppCodeGenerator::print_bll_h_header(ofstream & bll_h)
@@ -253,6 +258,70 @@ void CppCodeGenerator::print_bll_api_functions_decl(std::ofstream & bll_h)
 	h_body << "\t//int Update();\n";
 }
 
-void CppCodeGenerator::print_bll_Insert_defn()
+void CppCodeGenerator::print_bll_Insert_defn(std::ofstream & bll_cpp)
 {
+	cpp_body << boost::format("int Biz%1%::Insert()\n")
+		% tableInfo_->tableName_;
+	cpp_body << "{\n";
+	cpp_body << boost::format("\tint ret=%1%::db::%2%::Insert%2%(*this);\n")
+			% project_namespace % tableInfo_->tableName_;
+	cpp_body << "}\n";
+}
+
+void CppCodeGenerator::print_bll_api_defns(std::ofstream & bll_cpp)
+{
+	print_bll_Insert_defn(bll_cpp);
+	print_bll_api_test_stubs(bll_cpp);
+	bll_cpp << cpp_body.str();
+}
+
+void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
+{
+	cpp_body << "int main()\n";
+	cpp_body << "{\n";
+	cpp_body << boost::format("\tBiz%1% test_%1%;\n")
+			% tableInfo_->tableName_;
+	for(int i=0; i<tableInfo_->vec_var_list.size(); ++i){
+		if (tableInfo_->vec_var_list[i]->var_type==COMPOSITE_TYPE) {
+			continue;
+		}
+		cpp_body << boost::format("\ttest_%1%.Set_%2%(")
+				% tableInfo_->tableName_ 
+				% tableInfo_->vec_var_list[i]->var_name;
+		switch(tableInfo_->vec_var_list[i]->var_type){
+		case IMAGE_TYPE:
+			cpp_body << "ERROR: dummy default value not implemented IMAGE_TYPE";
+			break;
+		case BIGINT_TYPE:
+			cpp_body << "12345678910111213";
+			break;
+		case TINYINT_TYPE:
+			cpp_body << "128";
+			break;
+		case INT32_TYPE:
+			cpp_body << "1234567";
+			break;
+		case VARCHAR_TYPE:
+		case NVARCHAR_TYPE:
+		case NCHAR_TYPE:
+		case NTEXT_TYPE:
+		case TEXT_TYPE:
+			cpp_body << "std::string(\"test_string\")";
+			break;
+		case BIT_TYPE:
+			cpp_body << "true";
+			break;
+		case DATETIME_TYPE:
+			cpp_body << "boost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+			break;
+		default:
+			cpp_body << "unknown type:\n";
+			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
+				string("Fix me : exit_nicely may not be requires since the PGconn has a custom deleter which closes the connection\n"));
+		}
+		cpp_body << ");\n";
+	}
+	cpp_body << boost::format("test_%1%.Insert();\n")
+		% tableInfo_->tableName_;
+	cpp_body << "}\n";
 }
