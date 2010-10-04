@@ -179,6 +179,7 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	}
 	print_cpp_db_impl_header(cpp_db_impl);
 	PrintConnCloser(cpp_db_impl);
+	PrintMallocDeleter(cpp_db_impl);
 	print_exit_nicely(cpp_db_impl);
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
@@ -222,6 +223,7 @@ void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("#include <boost/scoped_ptr.hpp>\n");
 	cpp_db_impl << boost::format("#include <boost/date_time/gregorian/gregorian.hpp>\n");
 	cpp_db_impl << boost::format("#include <cstdio>\n");
+	cpp_db_impl << boost::format("#include <cstring>\n");
 	cpp_db_impl << boost::format("#include <sstream>\n");
 	cpp_db_impl << boost::format("#include \"%1%_bll.h\"\n") % tableInfo_->tableName_;
 
@@ -237,6 +239,8 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	//print_lower_fname(cpp_db_impl);
 	//cpp_db_impl << ")\n{\n";
 	cpp_db_impl << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
+	cpp_db_impl << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
+		% tableInfo_->vec_var_list.size() ;
 
 	//const char *paramValues[2];
 	//int			paramLengths[2];
@@ -259,7 +263,10 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 				% nActualParams % print_lower_table_name()
 				% tableInfo_->vec_var_list[i]->var_name;
 		}
-		cpp_db_impl << boost::format("\tparamValues[%1%]=ss_param_values[%1%].str().c_str();\n")
+		cpp_db_impl << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+				% nActualParams;
+		cpp_db_impl << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+		cpp_db_impl << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
 				% nActualParams;
 		++nActualParams;
 	}
@@ -294,9 +301,21 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	cpp_db_impl << "\t\tfprintf(stderr, \"insert employee failed: %s\", PQerrorMessage(conn.get()));\n";
 	cpp_db_impl << "\t\tPQclear(res);\n";
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
-		string("Fix me : exit_nicely may not be requires since the PGconn has a custom deleter which closes the connection\n"));
+		string("Fix me : exit_nicely may not be required since the PGconn has a custom deleter which closes the connection\n"));
 	cpp_db_impl << "\t\texit_nicely(conn.get());\n";
+	cpp_db_impl << "\t} else {\n";
+	cpp_db_impl << "\t	int nTuples = PQntuples(res);\n";
+	cpp_db_impl << "\t	int nFields = PQnfields(res);\n";
+	cpp_db_impl << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
+	cpp_db_impl << "\t	for(int i=0; i<nFields; ++i){\n";
+	cpp_db_impl << "\t		char * fname=PQfname(res, i);\n";
+	cpp_db_impl << "\t		printf(\"fname: %s\\n\", fname);\n";
+	cpp_db_impl << "\t	}\n";
+	cpp_db_impl << "\t	char * value=PQgetvalue(res, 0, 0);\n";
+	cpp_db_impl << "\t	printf(\"value: %s\\n\", value);\n";
 	cpp_db_impl << "\t}\n";
+
+
 
 
 	cpp_db_impl << "\n}\n";
@@ -330,6 +349,19 @@ void PostgreSQLCodeGenerator::PrintConnCloser(ofstream & cpp_db_impl)
 		<< "\tvoid operator() (PGconn * conn)\n"
 		<< "\t{\n"
 		<< "\t\tPQfinish(conn);\n"
+		<< "\t}\n"
+		<< "};\n";
+}
+
+
+void PostgreSQLCodeGenerator::PrintMallocDeleter(ofstream & cpp_db_impl)
+{
+	cpp_db_impl << "class MallocDeleter\n"
+		<< "{\n"
+		<< "public:\n"
+		<< "\tvoid operator() (char * ptr)\n"
+		<< "\t{\n"
+		<< "\t\tfree(ptr);\n"
 		<< "\t}\n"
 		<< "};\n";
 }

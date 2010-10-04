@@ -29,6 +29,7 @@ public:
 	void PrintCppInsertFunc(ofstream & ofile);
 	void PrintGetConn(ofstream & cpp_db_impl);
 	void PrintConnCloser(ofstream & cpp_db_impl);
+	void PrintMallocDeleter(ofstream & cpp_db_impl);
 	void print_exit_nicely(ofstream & cpp_db_impl);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
