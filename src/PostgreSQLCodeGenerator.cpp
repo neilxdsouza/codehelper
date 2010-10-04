@@ -59,17 +59,19 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 	insert_sp << boost::format("create or replace function sp_%1%_insert_%1%(")
 		% tableInfo_->tableName_;
 	print_sp_param_decls(insert_sp, INSERT);
-	insert_sp << ") RETURNS INT AS $$ \n";
+	insert_sp << ") AS $$\n";
 	insert_sp << "BEGIN\n";
 	insert_sp << "\tINSERT INTO " << tableInfo_->tableName_ 
 		<< "(";
 	print_sp_fields( insert_sp, INSERT);
-	insert_sp << ")";
-	insert_sp << " values (";
+	insert_sp << "\t\t) values (";
 	print_sp_params( insert_sp, INSERT);
-	insert_sp << ") RETURNING ";
+	insert_sp << "\t\t);\n";
+	insert_sp << "\tselect last_value into ";
 	print_sp_1st_param( insert_sp, INSERT);
-	insert_sp << ";" << endl << "END\n$$ LANGUAGE plpgsql;\n";
+	insert_sp << boost::format(" from %1%_%2%_seq;\n")
+		% tableInfo_->tableName_ % print_sp_pkey_field();
+	insert_sp << endl << "END\n$$ LANGUAGE plpgsql;\n";
 	if(insert_sp)
 		insert_sp.close();
 			
@@ -97,21 +99,28 @@ void PostgreSQLCodeGenerator::print_sp_param_decls(ofstream & ofile, print_sp_pa
 			ofile << "(" << v_ptr->arr_len << ")";
 		}
 		v_ptr=v_ptr->prev;
-		if(v_ptr){
-			//fprintf(fptr, ",\n");
-			ofile << ",\n";
+		if(mode==INSERT){
+				ofile << ",\n";
 		} else {
-			//fprintf(fptr, "\n");
-			ofile << "\n";
+			if(v_ptr){
+				ofile << ",\n";
+			} else {
+				ofile << "\n";
+			}
 		}
 	}
+	ofile	<< "\tout " 
+		<< print_sp_pkey_param() << " int\n";
 }
 
 void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_mode mode)
 {
 	struct var_list * v_ptr=tableInfo_->param_list;
+	string tab_indent("\t\t\t");
+	ofile << endl;
 	if(mode==INSERT){
 	// Skip the 1st param - assume that it is the ouput parameter and print it out last
+		ofile << tab_indent << "DEFAULT,\n";
 		v_ptr=v_ptr->prev;
 	}
 	while(v_ptr){
@@ -120,7 +129,7 @@ void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_
 			v_ptr=v_ptr->prev;
 			continue;
 		}
-		ofile << boost::format("\tp_%1% ") % v_ptr->var_name;
+		ofile << tab_indent << boost::format("p_%1%") % v_ptr->var_name;
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			//fprintf(fptr, ",\n");
@@ -136,17 +145,19 @@ void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_
 void PostgreSQLCodeGenerator::print_sp_fields(ofstream & ofile, print_sp_params_mode mode)
 {
 	struct var_list * v_ptr=tableInfo_->param_list;
-	if(mode==INSERT){
-	// Skip the 1st param - assume that it is the ouput parameter and print it out last
-		v_ptr=v_ptr->prev;
-	}
+	string tab_indent("\t\t\t");
+	ofile << endl;
+	//if(mode==INSERT){
+	//// Skip the 1st param - assume that it is the ouput parameter and print it out last
+	//	v_ptr=v_ptr->prev;
+	//}
 	while(v_ptr){
 		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
 		if(v_ptr->var_type == COMPOSITE_TYPE) {
 			v_ptr=v_ptr->prev;
 			continue;
 		}
-		ofile << boost::format("\t%1% ") % v_ptr->var_name;
+		ofile << tab_indent << boost::format("%1%") % v_ptr->var_name;
 
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
@@ -397,4 +408,14 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 			% tableInfo_->tableName_
 			% project_namespace ;
 
+}
+
+string PostgreSQLCodeGenerator::print_sp_pkey_param()
+{
+	return string (string("p_") + tableInfo_->vec_var_list[0]->var_name);
+}
+
+string PostgreSQLCodeGenerator::print_sp_pkey_field()
+{
+	return tableInfo_->vec_var_list[0]->var_name;
 }

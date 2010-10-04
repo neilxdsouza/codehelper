@@ -19,6 +19,8 @@ public:
 	void print_sp_params(ofstream & ofile, print_sp_params_mode mode);
 	void print_sp_fields(ofstream & ofile, print_sp_params_mode mode);
 	void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
+	string print_sp_pkey_param();
+	string print_sp_pkey_field();
 	void print_lower_fname(ofstream & file);
 	string print_lower_table_name();
 	void print_cpp_db_impl_header(ofstream & cpp_db_impl);
