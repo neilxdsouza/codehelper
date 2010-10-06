@@ -7,8 +7,8 @@
 struct PostgreSQLCodeGenerator: public AbstractDataBaseCodeGenerator
 {
 public:
-	TableInfoType * tableInfo_;
-	std::string outputDirPrefix_;
+	//TableInfoType * tableInfo_;
+	//std::string outputDirPrefix_;
 
 public:
 	PostgreSQLCodeGenerator(TableInfoType * p_tabInfo,
@@ -36,6 +36,9 @@ public:
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);
+protected:
+	~PostgreSQLCodeGenerator()
+	{ }
 };
 
 #endif /* POSTGRESQL_CODEGENERATOR_H */

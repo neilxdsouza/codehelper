@@ -12,6 +12,11 @@
 
 #include "PostgreSQLCodeGeneratorFactory.h"
 #include "PostgreSQLCodeGenerator.h"
+
+#include "WtUIGeneratorFactory.h"
+#include "WtUIGenerator.h"
+
+
 #include "TableCollectionSingleton.hpp"
 #include "stmt.h"
 #include "ForwardDecl.h"
@@ -61,11 +66,12 @@ int main(int argc, char* argv[], char* envp[])
 	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
 	//PostgreSQLCodeGenerator psqlCodeGenerator;
 	PostgreSQLCodeGeneratorFactory psqlFactory; 
+	WtUIGeneratorFactory wtFactory;
 	CSharpAspnetCodeGeneratorFactory
-		cSharpAspNetCodeGeneratorFactory(&psqlFactory,
+		cSharpAspNetCodeGeneratorFactory(&psqlFactory, &wtFactory,
 						 output_code_directory_prefix);
 	CppCodeGeneratorFactory
-		cppCodeGeneratorFactory(&psqlFactory,
+		cppCodeGeneratorFactory(&psqlFactory, &wtFactory,
 					output_code_directory_prefix);
 	//codeGeneratorFactory = &cSharpAspNetCodeGeneratorFactory;
 	codeGeneratorFactory = &cppCodeGeneratorFactory;

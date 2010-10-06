@@ -3,16 +3,22 @@
 
 #include "AbstractCodeGenerator.h"
 #include "AbstractDataBaseCodeGeneratorFactory.h"
+#include "AbstractUIGeneratorFactory.h"
 #include "tree.h"
 
 struct AbstractCodeGeneratorFactory
 {
 	AbstractDataBaseCodeGeneratorFactory * dbCodeGeneratorFactory_;
+	AbstractUIGeneratorFactory * uiGeneratorFactory_;
 	std::string outputCodeDirectoryPrefix_;
 	AbstractCodeGeneratorFactory(AbstractDataBaseCodeGeneratorFactory *
-				     p_dbCodeGeneratorFactory, std::string &
-				     p_outputCodeDirectoryPrefix)
+					     p_dbCodeGeneratorFactory, 
+				     AbstractUIGeneratorFactory *
+					     p_uiGeneratorFactory,
+				     std::string &
+					     p_outputCodeDirectoryPrefix)
 	: dbCodeGeneratorFactory_(p_dbCodeGeneratorFactory),
+		uiGeneratorFactory_(p_uiGeneratorFactory),
 		outputCodeDirectoryPrefix_(p_outputCodeDirectoryPrefix)
 	{ }
 	//virtual void print_sql_provider(FILE *fptr)=0;

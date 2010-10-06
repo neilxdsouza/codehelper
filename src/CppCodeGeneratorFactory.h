@@ -10,10 +10,14 @@
 struct CppCodeGeneratorFactory: public AbstractCodeGeneratorFactory
 {
 	CppCodeGeneratorFactory(AbstractDataBaseCodeGeneratorFactory *
-				p_dbCodeGeneratorFactory, std::string&
+				p_dbCodeGeneratorFactory,
+				AbstractUIGeneratorFactory *
+				p_uiGeneratorFactory,
+				std::string&
 				p_outputCodeDirectoryPrefix)
 		: AbstractCodeGeneratorFactory(p_dbCodeGeneratorFactory,
-			p_outputCodeDirectoryPrefix)
+				p_uiGeneratorFactory,
+				p_outputCodeDirectoryPrefix)
 	{ }
 	AbstractCodeGenerator* CreateCodeGenerator(TableInfoType * p_TableInfoType_ptr)
 	{
@@ -21,8 +25,13 @@ struct CppCodeGeneratorFactory: public AbstractCodeGeneratorFactory
 			dbCodeGeneratorFactory_->
 			CreateCodeGenerator(p_TableInfoType_ptr,
 					    outputCodeDirectoryPrefix_);
+		AbstractUIGenerator* ui_code_generator = 
+			uiGeneratorFactory_->
+			CreateCodeGenerator(p_TableInfoType_ptr,
+					    outputCodeDirectoryPrefix_);
 		return new CppCodeGenerator(p_TableInfoType_ptr,
 					    db_code_generator,
+					    ui_code_generator,
 					    outputCodeDirectoryPrefix_);
 	}
 };

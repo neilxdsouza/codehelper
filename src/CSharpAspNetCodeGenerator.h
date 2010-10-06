@@ -7,14 +7,17 @@
 #include "tree.h"
 #include "AbstractCodeGenerator.h"
 #include "AbstractDataBaseCodeGenerator.h"
+#include "AbstractUIGenerator.h"
 
 struct CSharpAspNetCodeGenerator: public AbstractCodeGenerator
 {
 public:
 CSharpAspNetCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 			  AbstractDataBaseCodeGenerator * p_dbCodeGenerator,
+			  AbstractUIGenerator * p_uiGenerator,
 			  std::string & p_outputDirPrefix)
 	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator,
+				p_uiGenerator,
 				p_outputDirPrefix)
 	{ }
 

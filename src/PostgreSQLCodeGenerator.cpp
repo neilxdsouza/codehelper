@@ -13,8 +13,9 @@ extern char project_namespace[];
 
 PostgreSQLCodeGenerator::PostgreSQLCodeGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
-	: tableInfo_(p_tabInfo),
-	  outputDirPrefix_(p_output_dir_path)			
+	//: tableInfo_(p_tabInfo),
+	//  outputDirPrefix_(p_output_dir_path)			
+	:AbstractDataBaseCodeGenerator(p_tabInfo, p_output_dir_path)
 { }
 
 

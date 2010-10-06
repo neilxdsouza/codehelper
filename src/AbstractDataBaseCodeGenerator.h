@@ -1,9 +1,19 @@
 #ifndef ABSTRACT_DATABASE_CODEGENERATOR_H
 #define ABSTRACT_DATABASE_CODEGENERATOR_H
 
+#include "std_headers.h"
+#include "tree.h"
+
 struct AbstractDataBaseCodeGenerator
 {
-	AbstractDataBaseCodeGenerator()
+public:
+	TableInfoType * tableInfo_;
+	std::string outputDirPrefix_;
+	AbstractDataBaseCodeGenerator(TableInfoType * p_tabInfo,
+				std::string & p_output_dir_path)
+
+	: tableInfo_(p_tabInfo),
+	  outputDirPrefix_(p_output_dir_path)			
 	{ }
 	virtual void GenerateCode()=0;
 
@@ -12,6 +22,9 @@ struct AbstractDataBaseCodeGenerator
 protected:
 	~AbstractDataBaseCodeGenerator()
 	{ }
+private:
+	AbstractDataBaseCodeGenerator(const AbstractDataBaseCodeGenerator&);
+	AbstractDataBaseCodeGenerator& operator=(const AbstractDataBaseCodeGenerator&);
 
 
 };

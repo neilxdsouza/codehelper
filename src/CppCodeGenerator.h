@@ -16,8 +16,10 @@ public:
 public:
 CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 		 AbstractDataBaseCodeGenerator * p_dbCodeGenerator,
+		 AbstractUIGenerator * p_uiGenerator,
 		 std::string & p_outputDirPrefix)
 	: AbstractCodeGenerator(p_TableInfoType_ptr, p_dbCodeGenerator,
+				p_uiGenerator, 
 				p_outputDirPrefix),
 	  h_header(), h_body(), h_footer(),
 	  cpp_body()
@@ -41,6 +43,9 @@ public:
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);
+protected:
+	~CppCodeGenerator()
+	{ }
 
 };
 
