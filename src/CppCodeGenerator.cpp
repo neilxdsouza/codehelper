@@ -21,6 +21,7 @@ void CppCodeGenerator::GenerateCode(FILE * fptr)
 	//dbCodeGenerator_->SetOutputDirectory(output_code_directory_prefix);
 	//dbCodeGenerator_->SetTableInfo(tableInfo_);
 	dbCodeGenerator_->GenerateCode();
+	uiGenerator_->GenerateCode();
 	GenerateBLL();
 
 
