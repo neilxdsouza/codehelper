@@ -9,6 +9,7 @@ public:
 	WtUIGenerator(TableInfoType * p_tabInfo,
 				std::string & p_output_dir_path);
 	virtual void GenerateCode();
+	string GenerateUIScaffolding();
 };
 
 #endif /* WT_UI_GENERATOR_H */
