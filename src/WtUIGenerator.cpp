@@ -29,63 +29,11 @@ void WtUIGenerator::GenerateCode()
 string WtUIGenerator::GenerateUIScaffolding()
 {
 	stringstream uiScaffolding;
-	uiScaffolding << "\n";
-	uiScaffolding << "#include <fstream>\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "#include <Wt/WBorderLayout>\n";
-	uiScaffolding << "#include <Wt/WHBoxLayout>\n";
-	uiScaffolding << "#include <Wt/WVBoxLayout>\n";
-	uiScaffolding << "#include <Wt/WFitLayout>\n";
-	uiScaffolding << "#include <Wt/WOverlayLoadingIndicator>\n";
-	uiScaffolding << "#include <Wt/WStandardItemModel>\n";
-	uiScaffolding << "#include <Wt/WStandardItem>\n";
-	uiScaffolding << "#include <Wt/WTable>\n";
-	uiScaffolding << "#include <Wt/WTableCell>\n";
-	uiScaffolding << "#include <Wt/WText>\n";
-	uiScaffolding << "#include <Wt/WTree>\n";
-	uiScaffolding << "#include <Wt/WTableView>\n";
-	uiScaffolding << "#include <Wt/WIconPair>\n";
-	uiScaffolding << "#include <Wt/WTreeNode>\n";
-	uiScaffolding << "#include <Wt/WApplication>\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "#include <Wt/Ext/Button>\n";
-	uiScaffolding << "#include <Wt/Ext/Calendar>\n";
-	uiScaffolding << "#include <Wt/Ext/CheckBox>\n";
-	uiScaffolding << "#include <Wt/Ext/ComboBox>\n";
-	uiScaffolding << "#include <Wt/Ext/Container>\n";
-	uiScaffolding << "#include <Wt/Ext/DateField>\n";
-	uiScaffolding << "#include <Wt/Ext/Dialog>\n";
-	uiScaffolding << "#include <Wt/Ext/Menu>\n";
-	uiScaffolding << "#include <Wt/Ext/MessageBox>\n";
-	uiScaffolding << "#include <Wt/Ext/ProgressDialog>\n";
-	uiScaffolding << "#include <Wt/Ext/Splitter>\n";
-	uiScaffolding << "#include <Wt/Ext/TabWidget>\n";
-	uiScaffolding << "#include <Wt/Ext/TableView>\n";
-	uiScaffolding << "#include <Wt/Ext/TextEdit>\n";
-	uiScaffolding << "#include <Wt/Ext/ToolBar>\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "#include <iostream>\n";
-	uiScaffolding << "\n";
+	uiScaffolding << PrintHeaders();
+
 	uiScaffolding << "using namespace Wt;\n";
 	uiScaffolding << "\n";
-	uiScaffolding << "class good1: public Wt::WApplication\n";
-	uiScaffolding << "{\n";
-	uiScaffolding << "	public:\n";
-	uiScaffolding << "	good1(const Wt::WEnvironment & env);\n";
-	uiScaffolding << "	typedef void (good1::*ShowCentralWidget)();\n";
-	uiScaffolding << "	Wt::WWidget                       *currentForm_;\n";
-	uiScaffolding << "	Wt::WContainerWidget              *formContainer_;\n";
-	uiScaffolding << "	void setCentralWidget(Wt::WWidget *theWidget);\n";
-	uiScaffolding << "	WWidget * createNavigationTree();\n";
-	uiScaffolding << "	void formWidgetsExample();\n";
-	uiScaffolding << "	WTreeNode *createNavigationNode(const WString& label,\n";
-	uiScaffolding << "					    WTreeNode *parentNode,\n";
-	uiScaffolding << "					    ShowCentralWidget f);\n";
-	uiScaffolding << "	void formModify();\n";
-	uiScaffolding << "	Wt::Ext::ComboBox *cb;\n";
-	uiScaffolding << "	Wt::Ext::TextEdit *html_;\n";
-	uiScaffolding << "};\n";
-	uiScaffolding << "\n";
+	uiScaffolding << PrintClassDecl();
 	uiScaffolding << "good1::good1(const WEnvironment & env)\n";
 	uiScaffolding << "	: WApplication(env)\n";
 	uiScaffolding << "{\n";
@@ -134,24 +82,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "\n";
 	uiScaffolding << "}\n";
 	uiScaffolding << "\n";
-	uiScaffolding << "WWidget *good1::createNavigationTree()\n";
-	uiScaffolding << "{\n";
-	uiScaffolding << "	WIconPair *mapIcon\n";
-	uiScaffolding << "	= new WIconPair(\"icons/yellow-folder-closed.png\",\n";
-	uiScaffolding << "		    \"icons/yellow-folder-open.png\", false);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	WTreeNode *rootNode = new WTreeNode(\"Navigation\", mapIcon);\n";
-	uiScaffolding << "	rootNode->setImagePack(\"icons/\");\n";
-	uiScaffolding << "	rootNode->expand();\n";
-	uiScaffolding << "	rootNode->setLoadPolicy(WTreeNode::NextLevelLoading);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	createNavigationNode(\"Form widgets\", rootNode,\n";
-	uiScaffolding << "			    &good1::formWidgetsExample);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	rootNode->setMargin(5);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	return rootNode;\n";
-	uiScaffolding << "}\n";
+
 	uiScaffolding << "\n";
 	uiScaffolding << "void good1::formWidgetsExample()\n";
 	uiScaffolding << "{\n";
@@ -282,4 +213,124 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	return WRun(argc, argv, &createApplication);\n";
 	uiScaffolding << "}\n";
 	return uiScaffolding.str();
+}
+
+
+string WtUIGenerator::PrintHeaders()
+{
+	stringstream h_stream;
+
+	h_stream << "\n";
+	h_stream << "#include <fstream>\n";
+	h_stream << "\n";
+	h_stream << "#include <Wt/WBorderLayout>\n";
+	h_stream << "#include <Wt/WHBoxLayout>\n";
+	h_stream << "#include <Wt/WVBoxLayout>\n";
+	h_stream << "#include <Wt/WFitLayout>\n";
+	h_stream << "#include <Wt/WOverlayLoadingIndicator>\n";
+	h_stream << "#include <Wt/WStandardItemModel>\n";
+	h_stream << "#include <Wt/WStandardItem>\n";
+	h_stream << "#include <Wt/WTable>\n";
+	h_stream << "#include <Wt/WTableCell>\n";
+	h_stream << "#include <Wt/WText>\n";
+	h_stream << "#include <Wt/WTree>\n";
+	h_stream << "#include <Wt/WTableView>\n";
+	h_stream << "#include <Wt/WIconPair>\n";
+	h_stream << "#include <Wt/WTreeNode>\n";
+	h_stream << "#include <Wt/WApplication>\n";
+	h_stream << "\n";
+	h_stream << "#include <Wt/Ext/Button>\n";
+	h_stream << "#include <Wt/Ext/Calendar>\n";
+	h_stream << "#include <Wt/Ext/CheckBox>\n";
+	h_stream << "#include <Wt/Ext/ComboBox>\n";
+	h_stream << "#include <Wt/Ext/Container>\n";
+	h_stream << "#include <Wt/Ext/DateField>\n";
+	h_stream << "#include <Wt/Ext/Dialog>\n";
+	h_stream << "#include <Wt/Ext/Menu>\n";
+	h_stream << "#include <Wt/Ext/MessageBox>\n";
+	h_stream << "#include <Wt/Ext/ProgressDialog>\n";
+	h_stream << "#include <Wt/Ext/Splitter>\n";
+	h_stream << "#include <Wt/Ext/TabWidget>\n";
+	h_stream << "#include <Wt/Ext/TableView>\n";
+	h_stream << "#include <Wt/Ext/TextEdit>\n";
+	h_stream << "#include <Wt/Ext/ToolBar>\n";
+	h_stream << "\n";
+	h_stream << "#include <iostream>\n";
+	h_stream << "\n";
+	return h_stream.str();
+}
+
+string WtUIGenerator::PrintClassDecl()
+{
+	stringstream class_decl;
+	class_decl << "class good1: public Wt::WApplication\n";
+	class_decl << "{\n";
+	class_decl << "	public:\n";
+	class_decl << "	good1(const Wt::WEnvironment & env);\n";
+	class_decl << "	typedef void (good1::*ShowCentralWidget)();\n";
+	class_decl << "	void setCentralWidget(Wt::WWidget *theWidget);\n";
+	class_decl << "	WWidget * createNavigationTree();\n";
+	class_decl << "	void formWidgetsExample();\n";
+	class_decl << "	WTreeNode *createNavigationNode(const WString& label,\n";
+	class_decl << "					    WTreeNode *parentNode,\n";
+	class_decl << "					    ShowCentralWidget f);\n";
+	class_decl << "	void formModify();\n";
+	class_decl << class_functions.str();
+
+	class_decl << "	Wt::Ext::ComboBox *cb;\n";
+	class_decl << "	Wt::Ext::TextEdit *html_;\n";
+	class_decl << "	Wt::WWidget                       *currentForm_;\n";
+	class_decl << "	Wt::WContainerWidget              *formContainer_;\n";
+
+	class_decl << class_vars.str();
+
+	class_decl << "};\n";
+	class_decl << "\n";
+	return class_decl.str();
+}
+
+void WtUIGenerator::AddVariableDecl(std::string & p_var_decl)
+{
+	class_vars << "\t"<< p_var_decl << endl;
+}
+
+void WtUIGenerator::AddFunctionDecl(std::string & p_func_decl)
+{
+	class_functions << "\t" << p_func_decl << endl;
+}
+
+void WtUIGenerator::AddFunctionDefn(std::string & p_func_defn)
+{
+	class_function_impl << p_func_defn << endl;
+}
+
+string WtUIGenerator::PrintNavigationDecl()
+{
+	stringstream navigation_tree_func;
+	navigation_tree_func << "WWidget *good1::createNavigationTree()\n";
+	navigation_tree_func << "{\n";
+	navigation_tree_func << "	WIconPair *mapIcon\n";
+	navigation_tree_func << "	= new WIconPair(\"icons/yellow-folder-closed.png\",\n";
+	navigation_tree_func << "		    \"icons/yellow-folder-open.png\", false);\n";
+	navigation_tree_func << "\n";
+	navigation_tree_func << "	WTreeNode *rootNode = new WTreeNode(\"Navigation\", mapIcon);\n";
+	navigation_tree_func << "	rootNode->setImagePack(\"icons/\");\n";
+	navigation_tree_func << "	rootNode->expand();\n";
+	navigation_tree_func << "	rootNode->setLoadPolicy(WTreeNode::NextLevelLoading);\n";
+	navigation_tree_func << "\n";
+	navigation_tree_func << "	createNavigationNode(\"Form widgets\", rootNode,\n";
+	navigation_tree_func << "			    &good1::formWidgetsExample);\n";
+	navigation_tree_func << navigation_nodes.str();
+	navigation_tree_func << "\n";
+	navigation_tree_func << "	rootNode->setMargin(5);\n";
+	navigation_tree_func << "\n";
+	navigation_tree_func << "	return rootNode;\n";
+	navigation_tree_func << "}\n";
+}
+
+void WtUIGenerator::AddNavigationNode(std::string & label, std::string & func_name)
+{
+	navigation_nodes << "\t createNavigationNode(\""
+			<< label << "\", rootNode,\n"
+			<< "&good1::" << func_name << ");\n";
 }
