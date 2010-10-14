@@ -383,24 +383,27 @@ string WtUIGenerator::GenerateUIInsertForm()
 	}
 
 	for (int counter=0; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-		form_code << boost::format("\t//WText * wt_%2% = new WText(WString::tr(\"%2%\"),\n" 
-				"//\t\ttable->elementAt(%1%, 0));\n")
-				% counter % v_ptr->var_name;
+		if(v_ptr->var_type==COMPOSITE_TYPE)
+			continue;
 		form_code << boost::format("\tWLabel * wt_%2% = new WLabel(WString::tr(\"%2%\"),\n" 
 				"\t\ttable->elementAt(%1%, 0));\n")
 				% counter % v_ptr->var_name;
-		form_code << boost::format("\t//WTextEdit * wte_%2% = new WTextEdit(table->elementAt(%1%, 1));\n")
-				% counter % v_ptr->var_name;
-		form_code << boost::format("\tWTextArea * wta_%2% = new WTextArea(\"\", table->elementAt(%1%, 1));\n")
-				% counter % v_ptr->var_name;
-		form_code << boost::format("\twta_%1%->setRows(1);\n")
-				% v_ptr->var_name;
+		if (v_ptr->var_type==DATETIME_TYPE) {
+			form_code << boost::format("\tExt::DateField * edf_%2% = new Ext::DateField(table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
+
+		} else {
+			form_code << boost::format("\tWTextArea * wta_%2% = new WTextArea(\"\", table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
+			form_code << boost::format("\twta_%1%->setRows(1);\n")
+					% v_ptr->var_name;
+		}
 	}
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")
 					% tableInfo_->tableName_;
 	AddNavigationNode(tableInfo_->tableName_, func_name.str());
-
+	
 	form_code << "\tsetCentralWidget(canvas);\n";
 	form_code << boost::format("}\n");
 	return form_code.str();
