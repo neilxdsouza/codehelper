@@ -2963,3 +2963,8 @@ void CSharpAspNetCodeGenerator::print_lower_fname(FILE * fptr)
 void CSharpAspNetCodeGenerator::print_ui(FILE * fptr)
 {
 }
+
+void CSharpAspNetCodeGenerator::FinalCleanUp()
+{
+}
+

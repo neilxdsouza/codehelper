@@ -5,30 +5,45 @@
 
 using namespace std;
 
+
+std::stringstream WtUIGenerator::class_vars;
+std::stringstream WtUIGenerator::class_functions_decl;
+std::stringstream WtUIGenerator::class_function_impl;
+std::stringstream WtUIGenerator::navigation_nodes;
+
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
 	//: tableInfo_(p_tabInfo),
 	//  outputDirPrefix_(p_output_dir_path)			
-	:AbstractUIGenerator(p_tabInfo, p_output_dir_path)
+	: AbstractUIGenerator(p_tabInfo, p_output_dir_path)
+	  //,
+	  //class_vars(), class_functions(), class_function_impl(),
+	  //navigation_nodes()
 { }
 
 void WtUIGenerator::GenerateCode()
 {
 	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
-	string ui_fname (string(outputDirPrefix_.c_str()
-					+ string("/")
-					+ string("wt_ui.cpp")));
-	ofstream ui(ui_fname.c_str(), ios_base::out| ios_base::trunc);
-	ui << GenerateUIScaffolding();
-
+	//ui << GenerateUIScaffolding();
+	GenerateForms();
+	
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
+}
+
+void WtUIGenerator::GenerateForms()
+{
+	AddFunctionDefn(GenerateUIInsertForm());
 }
 
 string WtUIGenerator::GenerateUIScaffolding()
 {
 	stringstream uiScaffolding;
+	string ui_fname (string(outputDirPrefix_.c_str()
+					+ string("/")
+					+ string("wt_ui.cpp")));
+	ofstream ui(ui_fname.c_str(), ios_base::out| ios_base::trunc);
 	uiScaffolding << PrintHeaders();
 
 	uiScaffolding << "using namespace Wt;\n";
@@ -82,6 +97,8 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "\n";
 	uiScaffolding << "}\n";
 	uiScaffolding << "\n";
+
+	uiScaffolding << PrintNavigationDecl();
 
 	uiScaffolding << "\n";
 	uiScaffolding << "void good1::formWidgetsExample()\n";
@@ -212,6 +229,11 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "{\n";
 	uiScaffolding << "	return WRun(argc, argv, &createApplication);\n";
 	uiScaffolding << "}\n";
+	uiScaffolding << "\n";
+	uiScaffolding << class_function_impl.str();
+	uiScaffolding << "\n";
+
+	ui << uiScaffolding.str();
 	return uiScaffolding.str();
 }
 
@@ -233,6 +255,8 @@ string WtUIGenerator::PrintHeaders()
 	h_stream << "#include <Wt/WTable>\n";
 	h_stream << "#include <Wt/WTableCell>\n";
 	h_stream << "#include <Wt/WText>\n";
+	h_stream << "#include <Wt/WLabel>\n";
+	h_stream << "#include <Wt/WTextEdit>\n";
 	h_stream << "#include <Wt/WTree>\n";
 	h_stream << "#include <Wt/WTableView>\n";
 	h_stream << "#include <Wt/WIconPair>\n";
@@ -275,7 +299,7 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "					    WTreeNode *parentNode,\n";
 	class_decl << "					    ShowCentralWidget f);\n";
 	class_decl << "	void formModify();\n";
-	class_decl << class_functions.str();
+	class_decl << class_functions_decl.str();
 
 	class_decl << "	Wt::Ext::ComboBox *cb;\n";
 	class_decl << "	Wt::Ext::TextEdit *html_;\n";
@@ -289,17 +313,17 @@ string WtUIGenerator::PrintClassDecl()
 	return class_decl.str();
 }
 
-void WtUIGenerator::AddVariableDecl(std::string & p_var_decl)
+void WtUIGenerator::AddVariableDecl(std::string  p_var_decl)
 {
 	class_vars << "\t"<< p_var_decl << endl;
 }
 
-void WtUIGenerator::AddFunctionDecl(std::string & p_func_decl)
+void WtUIGenerator::AddFunctionDecl(std::string  p_func_decl)
 {
-	class_functions << "\t" << p_func_decl << endl;
+	class_functions_decl << "\t" << p_func_decl << endl;
 }
 
-void WtUIGenerator::AddFunctionDefn(std::string & p_func_defn)
+void WtUIGenerator::AddFunctionDefn(std::string  p_func_defn)
 {
 	class_function_impl << p_func_defn << endl;
 }
@@ -326,11 +350,63 @@ string WtUIGenerator::PrintNavigationDecl()
 	navigation_tree_func << "\n";
 	navigation_tree_func << "	return rootNode;\n";
 	navigation_tree_func << "}\n";
+	return navigation_tree_func.str();
 }
 
-void WtUIGenerator::AddNavigationNode(std::string & label, std::string & func_name)
+void WtUIGenerator::AddNavigationNode(std::string  label, std::string  func_name)
 {
-	navigation_nodes << "\t createNavigationNode(\""
-			<< label << "\", rootNode,\n"
-			<< "&good1::" << func_name << ");\n";
+	//navigation_nodes << "// Hello,World\n";
+	navigation_nodes << "\tcreateNavigationNode(\""
+	 		<< label << "\", rootNode,\n"
+	 		<< "\t\t\t&good1::" << func_name << ");\n";
+}
+
+string WtUIGenerator::GenerateUIInsertForm()
+{
+	stringstream form_code;
+	stringstream func_decl_signature, func_defn_signature;
+	func_decl_signature << boost::format("void formInsert%1%()")
+			% tableInfo_->tableName_;
+	func_defn_signature << boost::format("void good1::formInsert%1%()")
+			% tableInfo_->tableName_;
+	form_code << func_defn_signature.str() << "\n{\n";
+	class_functions_decl << "\t" << func_decl_signature.str() << ";\n";
+		
+	form_code << "\tWContainerWidget *canvas = new WContainerWidget();\n";
+	form_code << "\tWText *title = new WText( WString::tr(\""
+		<< tableInfo_->tableName_ << "\"), canvas);\n";
+	form_code << "\ttitle->setMargin(5, Bottom);\n";
+	form_code << "\tWTable *table = new WTable(canvas);\n";
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if( v_ptr == 0){
+		form_code << "// v_ptr== NULL\n";
+	}
+
+	for (int counter=0; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+		form_code << boost::format("\t//WText * wt_%2% = new WText(WString::tr(\"%2%\"),\n" 
+				"//\t\ttable->elementAt(%1%, 0));\n")
+				% counter % v_ptr->var_name;
+		form_code << boost::format("\tWLabel * wt_%2% = new WLabel(WString::tr(\"%2%\"),\n" 
+				"\t\ttable->elementAt(%1%, 0));\n")
+				% counter % v_ptr->var_name;
+		form_code << boost::format("\t//WTextEdit * wte_%2% = new WTextEdit(table->elementAt(%1%, 1));\n")
+				% counter % v_ptr->var_name;
+		form_code << boost::format("\tWTextArea * wta_%2% = new WTextArea(\"\", table->elementAt(%1%, 1));\n")
+				% counter % v_ptr->var_name;
+		form_code << boost::format("\twta_%1%->setRows(1);\n")
+				% v_ptr->var_name;
+	}
+	stringstream func_name;
+	func_name << boost::format("formInsert%1%")
+					% tableInfo_->tableName_;
+	AddNavigationNode(tableInfo_->tableName_, func_name.str());
+
+	form_code << "\tsetCentralWidget(canvas);\n";
+	form_code << boost::format("}\n");
+	return form_code.str();
+}
+
+void WtUIGenerator::FinalCleanUp()
+{
+	GenerateUIScaffolding();
 }

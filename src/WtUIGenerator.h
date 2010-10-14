@@ -11,19 +11,22 @@ public:
 	WtUIGenerator(TableInfoType * p_tabInfo,
 				std::string & p_output_dir_path);
 	virtual void GenerateCode();
+	virtual void FinalCleanUp();
 	std::string GenerateUIScaffolding();
 	std::string PrintHeaders();
 	std::string PrintClassDecl();
 	std::string PrintNavigationDecl();
-	void AddVariableDecl(std::string & p_var_decl);
-	void AddFunctionDefn(std::string & p_func_defn);
-	void AddFunctionDecl(std::string & p_func_defn);
-	void AddNavigationNode(std::string & label, std::string & func_name);
+	void AddVariableDecl(std::string  p_var_decl);
+	void AddFunctionDefn(std::string  p_func_defn);
+	void AddFunctionDecl(std::string  p_func_decl);
+	void AddNavigationNode(std::string  label, std::string  func_name);
+	string GenerateUIInsertForm();
+	void GenerateForms();
 
-	std::stringstream class_vars;
-	std::stringstream class_functions;
-	std::stringstream class_function_impl;
-	std::stringstream navigation_nodes;
+	static std::stringstream class_vars;
+	static std::stringstream class_functions_decl;
+	static std::stringstream class_function_impl;
+	static std::stringstream navigation_nodes;
 };
 
 #endif /* WT_UI_GENERATOR_H */

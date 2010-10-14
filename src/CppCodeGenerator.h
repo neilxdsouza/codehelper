@@ -26,6 +26,7 @@ CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 	{ }
 
 	void GenerateCode(FILE * fptr);
+	void FinalCleanUp();
 	void GenerateBLL();
 	void GenerateBLLDefn_h(std::ofstream & bll_h);
 	void GenerateBLLDefn_cpp(std::ofstream & bll_cpp);

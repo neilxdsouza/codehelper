@@ -15,6 +15,7 @@ public:
 	  outputDirPrefix_(p_output_dir_path)
 	{ }
 	virtual void GenerateCode()=0;
+	virtual void FinalCleanUp()=0;
 
 	//virtual void SetOutputDirectory();
 	//virtual void SetTableInfo();

@@ -326,3 +326,8 @@ void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 		% tableInfo_->tableName_;
 	cpp_body << "}\n";
 }
+
+void CppCodeGenerator::FinalCleanUp()
+{
+	uiGenerator_->FinalCleanUp();
+}

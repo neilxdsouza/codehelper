@@ -20,7 +20,6 @@ TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 }
 */
 
-
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name
 		,  struct var_list* & v_list, AbstractCodeGeneratorFactory * p_codeGeneratorFactory
 		,  vector<var_list*>& vec_var_list )
@@ -65,4 +64,5 @@ void table_decl_stmt::GenerateCode(FILE * & fptr)
 		codeGenerator_->GenerateCode(fptr);
 		if(prev) prev->GenerateCode(fptr);
 	}
+	codeGenerator_->uiGenerator_->FinalCleanUp();
 }
