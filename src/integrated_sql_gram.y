@@ -94,7 +94,7 @@ statement_list: statement {
 	}
 	;
 
-statement:	CREATE TABLE NAME '(' decl_comma_list ')'';' {
+statement:	CREATE TABLE NAME '(' decl_comma_list ')' ';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($5);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,

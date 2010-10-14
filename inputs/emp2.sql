@@ -1,5 +1,6 @@
 CREATE TABLE Employee(
-      Employee_Code int: references many EmployeeStatus(Employee_Code) not null,
+      Employee_Code int: primary_key,
+      EmployeeStatus composite:	references many EmployeeStatus(Employee_Code),
       Gender bit : not null,
       Title varchar(150) : not null,
       ForeName varchar(250) : not null,
@@ -9,10 +10,7 @@ CREATE TABLE Employee(
       Date_of_Birth datetime : not null,
       Previous_Employee_Code int : not null,
       HireDate datetime : not null
-      //Photo [image] NULL
-
 );
-
  
 CREATE TABLE EmployeeStatus(
       EmpStatusID int : not null,
