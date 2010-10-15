@@ -20,6 +20,7 @@ public:
 	void AddFunctionDefn(std::string  p_func_defn);
 	void AddFunctionDecl(std::string  p_func_decl);
 	void AddNavigationNode(std::string  label, std::string  func_name);
+	void AddIncludeFile(std::string  p_include_file);
 	string GenerateUIInsertForm();
 	void GenerateForms();
 
@@ -27,6 +28,7 @@ public:
 	static std::stringstream class_functions_decl;
 	static std::stringstream class_function_impl;
 	static std::stringstream navigation_nodes;
+	static std::stringstream header_files;
 };
 
 #endif /* WT_UI_GENERATOR_H */

@@ -10,6 +10,7 @@ std::stringstream WtUIGenerator::class_vars;
 std::stringstream WtUIGenerator::class_functions_decl;
 std::stringstream WtUIGenerator::class_function_impl;
 std::stringstream WtUIGenerator::navigation_nodes;
+std::stringstream WtUIGenerator::header_files;
 
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
@@ -240,48 +241,49 @@ string WtUIGenerator::GenerateUIScaffolding()
 
 string WtUIGenerator::PrintHeaders()
 {
-	stringstream h_stream;
-
-	h_stream << "\n";
-	h_stream << "#include <fstream>\n";
-	h_stream << "\n";
-	h_stream << "#include <Wt/WBorderLayout>\n";
-	h_stream << "#include <Wt/WHBoxLayout>\n";
-	h_stream << "#include <Wt/WVBoxLayout>\n";
-	h_stream << "#include <Wt/WFitLayout>\n";
-	h_stream << "#include <Wt/WOverlayLoadingIndicator>\n";
-	h_stream << "#include <Wt/WStandardItemModel>\n";
-	h_stream << "#include <Wt/WStandardItem>\n";
-	h_stream << "#include <Wt/WTable>\n";
-	h_stream << "#include <Wt/WTableCell>\n";
-	h_stream << "#include <Wt/WText>\n";
-	h_stream << "#include <Wt/WLabel>\n";
-	h_stream << "#include <Wt/WTextEdit>\n";
-	h_stream << "#include <Wt/WTree>\n";
-	h_stream << "#include <Wt/WTableView>\n";
-	h_stream << "#include <Wt/WIconPair>\n";
-	h_stream << "#include <Wt/WTreeNode>\n";
-	h_stream << "#include <Wt/WApplication>\n";
-	h_stream << "\n";
-	h_stream << "#include <Wt/Ext/Button>\n";
-	h_stream << "#include <Wt/Ext/Calendar>\n";
-	h_stream << "#include <Wt/Ext/CheckBox>\n";
-	h_stream << "#include <Wt/Ext/ComboBox>\n";
-	h_stream << "#include <Wt/Ext/Container>\n";
-	h_stream << "#include <Wt/Ext/DateField>\n";
-	h_stream << "#include <Wt/Ext/Dialog>\n";
-	h_stream << "#include <Wt/Ext/Menu>\n";
-	h_stream << "#include <Wt/Ext/MessageBox>\n";
-	h_stream << "#include <Wt/Ext/ProgressDialog>\n";
-	h_stream << "#include <Wt/Ext/Splitter>\n";
-	h_stream << "#include <Wt/Ext/TabWidget>\n";
-	h_stream << "#include <Wt/Ext/TableView>\n";
-	h_stream << "#include <Wt/Ext/TextEdit>\n";
-	h_stream << "#include <Wt/Ext/ToolBar>\n";
-	h_stream << "\n";
-	h_stream << "#include <iostream>\n";
-	h_stream << "\n";
-	return h_stream.str();
+	stringstream h_files;
+	h_files << "\n";
+	h_files << "#include <fstream>\n";
+	h_files << "\n";
+	h_files << "#include <Wt/WBorderLayout>\n";
+	h_files << "#include <Wt/WHBoxLayout>\n";
+	h_files << "#include <Wt/WVBoxLayout>\n";
+	h_files << "#include <Wt/WFitLayout>\n";
+	h_files << "#include <Wt/WOverlayLoadingIndicator>\n";
+	h_files << "#include <Wt/WStandardItemModel>\n";
+	h_files << "#include <Wt/WStandardItem>\n";
+	h_files << "#include <Wt/WTable>\n";
+	h_files << "#include <Wt/WTableCell>\n";
+	h_files << "#include <Wt/WText>\n";
+	h_files << "#include <Wt/WLabel>\n";
+	h_files << "#include <Wt/WTextEdit>\n";
+	h_files << "#include <Wt/WTree>\n";
+	h_files << "#include <Wt/WTableView>\n";
+	h_files << "#include <Wt/WIconPair>\n";
+	h_files << "#include <Wt/WTreeNode>\n";
+	h_files << "#include <Wt/WApplication>\n";
+	h_files << "#include <Wt/WPushButton>\n";
+	h_files << "\n";
+	h_files << "#include <Wt/Ext/Button>\n";
+	h_files << "#include <Wt/Ext/Calendar>\n";
+	h_files << "#include <Wt/Ext/CheckBox>\n";
+	h_files << "#include <Wt/Ext/ComboBox>\n";
+	h_files << "#include <Wt/Ext/Container>\n";
+	h_files << "#include <Wt/Ext/DateField>\n";
+	h_files << "#include <Wt/Ext/Dialog>\n";
+	h_files << "#include <Wt/Ext/Menu>\n";
+	h_files << "#include <Wt/Ext/MessageBox>\n";
+	h_files << "#include <Wt/Ext/ProgressDialog>\n";
+	h_files << "#include <Wt/Ext/Splitter>\n";
+	h_files << "#include <Wt/Ext/TabWidget>\n";
+	h_files << "#include <Wt/Ext/TableView>\n";
+	h_files << "#include <Wt/Ext/TextEdit>\n";
+	h_files << "#include <Wt/Ext/ToolBar>\n";
+	h_files << "\n";
+	h_files << "#include <iostream>\n";
+	h_files << "\n";
+	h_files << header_files.str();
+	return h_files.str();
 }
 
 string WtUIGenerator::PrintClassDecl()
@@ -363,6 +365,52 @@ void WtUIGenerator::AddNavigationNode(std::string  label, std::string  func_name
 
 string WtUIGenerator::GenerateUIInsertForm()
 {
+	stringstream ui_class_headers, ui_class_decl, ui_class_defn;
+	ui_class_headers << "\n";
+	ui_class_headers << "#include <fstream>\n";
+	ui_class_headers << "\n";
+	ui_class_headers << "#include <Wt/WBorderLayout>\n";
+	ui_class_headers << "#include <Wt/WHBoxLayout>\n";
+	ui_class_headers << "#include <Wt/WVBoxLayout>\n";
+	ui_class_headers << "#include <Wt/WFitLayout>\n";
+	ui_class_headers << "#include <Wt/WOverlayLoadingIndicator>\n";
+	ui_class_headers << "#include <Wt/WStandardItemModel>\n";
+	ui_class_headers << "#include <Wt/WStandardItem>\n";
+	ui_class_headers << "#include <Wt/WTable>\n";
+	ui_class_headers << "#include <Wt/WTableCell>\n";
+	ui_class_headers << "#include <Wt/WText>\n";
+	ui_class_headers << "#include <Wt/WLabel>\n";
+	ui_class_headers << "#include <Wt/WTextEdit>\n";
+	ui_class_headers << "#include <Wt/WTree>\n";
+	ui_class_headers << "#include <Wt/WTableView>\n";
+	ui_class_headers << "#include <Wt/WIconPair>\n";
+	ui_class_headers << "#include <Wt/WTreeNode>\n";
+	ui_class_headers << "#include <Wt/WApplication>\n";
+	ui_class_headers << "#include <Wt/WPushButton>\n";
+	ui_class_headers << "\n";
+	ui_class_headers << "#include <Wt/Ext/Button>\n";
+	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
+	ui_class_headers << "#include <Wt/Ext/CheckBox>\n";
+	ui_class_headers << "#include <Wt/Ext/ComboBox>\n";
+	ui_class_headers << "#include <Wt/Ext/Container>\n";
+	ui_class_headers << "#include <Wt/Ext/DateField>\n";
+	ui_class_headers << "#include <Wt/Ext/Dialog>\n";
+	ui_class_headers << "#include <Wt/Ext/Menu>\n";
+	ui_class_headers << "#include <Wt/Ext/MessageBox>\n";
+	ui_class_headers << "#include <Wt/Ext/ProgressDialog>\n";
+	ui_class_headers << "#include <Wt/Ext/Splitter>\n";
+	ui_class_headers << "#include <Wt/Ext/TabWidget>\n";
+	ui_class_headers << "#include <Wt/Ext/TableView>\n";
+	ui_class_headers << "#include <Wt/Ext/TextEdit>\n";
+	ui_class_headers << "#include <Wt/Ext/ToolBar>\n";
+	ui_class_headers << "\n";
+	ui_class_headers << "#include <iostream>\n";
+	ui_class_headers << "\n";
+
+	ui_class_decl << boost::format("class %1%_ui : public WContainerWidget\n{\n")
+				% tableInfo_->tableName_;
+
+
 	stringstream form_code;
 	stringstream func_decl_signature, func_defn_signature;
 	func_decl_signature << boost::format("void formInsert%1%()")
@@ -371,34 +419,49 @@ string WtUIGenerator::GenerateUIInsertForm()
 			% tableInfo_->tableName_;
 	form_code << func_defn_signature.str() << "\n{\n";
 	class_functions_decl << "\t" << func_decl_signature.str() << ";\n";
-		
-	form_code << "\tWContainerWidget *canvas = new WContainerWidget();\n";
-	form_code << "\tWText *title = new WText( WString::tr(\""
+	
+	form_code << "\tWt::WContainerWidget *canvas = new WContainerWidget();\n";
+	ui_class_decl << "\tWt::WContainerWidget *canvas;\n";
+	form_code << "\tWt::WText *title = new WText( WString::tr(\""
 		<< tableInfo_->tableName_ << "\"), canvas);\n";
+	ui_class_decl << "\tWt::WText *title;\n";
+	
 	form_code << "\ttitle->setMargin(5, Bottom);\n";
-	form_code << "\tWTable *table = new WTable(canvas);\n";
+	form_code << "\tWt::WTable *table = new WTable(canvas);\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if( v_ptr == 0){
 		form_code << "// v_ptr== NULL\n";
 	}
-
-	for (int counter=0; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+	int counter=0;
+	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if(v_ptr->var_type==COMPOSITE_TYPE)
 			continue;
-		form_code << boost::format("\tWLabel * wt_%2% = new WLabel(WString::tr(\"%2%\"),\n" 
+		ui_class_decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
+					% v_ptr->var_name;
+		form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(WString::tr(\"%2%\"),\n" 
 				"\t\ttable->elementAt(%1%, 0));\n")
 				% counter % v_ptr->var_name;
 		if (v_ptr->var_type==DATETIME_TYPE) {
-			form_code << boost::format("\tExt::DateField * edf_%2% = new Ext::DateField(table->elementAt(%1%, 1));\n")
+			form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name;
-
+			ui_class_decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
+						% v_ptr->var_name;
 		} else {
-			form_code << boost::format("\tWTextArea * wta_%2% = new WTextArea(\"\", table->elementAt(%1%, 1));\n")
+			form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name;
 			form_code << boost::format("\twta_%1%->setRows(1);\n")
 					% v_ptr->var_name;
+			ui_class_decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
+						% v_ptr->var_name;
 		}
 	}
+	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
+			% counter;
+	ui_class_decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
+	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
+					% tableInfo_->tableName_;
+	
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")
 					% tableInfo_->tableName_;
@@ -406,10 +469,30 @@ string WtUIGenerator::GenerateUIInsertForm()
 	
 	form_code << "\tsetCentralWidget(canvas);\n";
 	form_code << boost::format("}\n");
+
+	stringstream inc_file;
+	inc_file << boost::format("#include \"%1%_bll.h\"\n")
+				% tableInfo_->tableName_;
+	AddIncludeFile(inc_file.str());
+
+	string ui_h_fname (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ tableInfo_->tableName_
+				+ string("_ui.h"))); 
+	std::ofstream ui_h(ui_h_fname.c_str(), ios_base::out|ios_base::trunc);
+	ui_class_decl << boost::format("};\n");
+	ui_h << ui_class_headers.str();
+	ui_h << ui_class_decl.str();
 	return form_code.str();
 }
 
 void WtUIGenerator::FinalCleanUp()
 {
 	GenerateUIScaffolding();
+}
+
+
+void WtUIGenerator::AddIncludeFile(std::string  p_include_file)
+{
+	header_files << p_include_file ;
 }
