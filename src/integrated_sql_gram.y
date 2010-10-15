@@ -68,7 +68,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %token <dt> NCHAR_T
 %token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
-%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY
+%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE
 
 %token TABLE
 %token ','
@@ -192,6 +192,12 @@ options: REFERENCES NAME '(' NAME ')' {
 	}
 	|	PRIMARY_KEY {
 		options_list.primary_key = true;
+	}
+	|	VISIBLE {
+		options_list.visible = true;
+	}
+	|	INVISIBLE {
+		options_list.visible = false;
 	}
 	;
 

@@ -66,9 +66,11 @@
      VALIDATOR_RE_ALPHANUMWSP = 282,
      SEARCH_KEY = 283,
      PRIMARY_KEY = 284,
-     TABLE = 285,
-     NAME = 286,
-     INUMBER = 287
+     VISIBLE = 285,
+     INVISIBLE = 286,
+     TABLE = 287,
+     NAME = 288,
+     INUMBER = 289
    };
 #endif
 
@@ -91,7 +93,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 95 "src/integrated_sql_gram.hpp"
+#line 97 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

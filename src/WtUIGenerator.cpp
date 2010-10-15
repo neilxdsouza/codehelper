@@ -473,7 +473,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 					% v_ptr->var_name;
 			ui_class_decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
 						% v_ptr->var_name;
-			ui_class_defn << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
+			ui_class_defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name;
 			ui_class_defn << boost::format("\twta_%1%->setRows(1);\n")
 					% v_ptr->var_name;
@@ -482,14 +482,23 @@ string WtUIGenerator::GenerateUIInsertForm()
 	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
 			% counter;
 	ui_class_decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
+	ui_class_defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table->elementAt(%1%, 0));\n")
+			% counter;
+	ui_class_defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
+	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
 					% tableInfo_->tableName_;
-	ui_class_defn << boost::format("\t//wpb_insert.clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-	ui_class_defn << boost::format("\t//wpb_insert.clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
+	ui_class_defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+	ui_class_defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
 					% tableInfo_->tableName_;
 	ui_class_defn << "}\n";
 	form_code << "\t*/\n";
+
+	ui_class_decl << boost::format("\tvoid ProcessInsert%1%();\n")
+					% tableInfo_->tableName_;
+	ui_class_defn << boost::format("void %1%_ui::ProcessInsert%1%()\n{\n")
+					% tableInfo_->tableName_;
+	ui_class_defn << "}\n";
 	
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")

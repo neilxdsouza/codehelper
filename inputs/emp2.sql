@@ -29,9 +29,9 @@ CREATE TABLE Division(
       Division_Name varchar(150) : not  null,
       Division_Head int : not null,
       Part_of_Division int : not null,
-      Lft int : not null,
-      Rgt int : not null,
-      Deleted bit: not null 
+      Lft int : not null invisible,
+      Rgt int : not null invisible,
+      Deleted bit: not null invisible
 );
 
 

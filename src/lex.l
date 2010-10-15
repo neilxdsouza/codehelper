@@ -53,8 +53,17 @@ NULL	{ return DBNULL; }
 MANY	{
 	return MANY;
 }
+
 UNIQUE	{
 	return UNIQUE;
+}
+
+VISIBLE {
+	return VISIBLE;
+}
+
+INVISIBLE {
+	return INVISIBLE;
 }
 
 VALIDATOR_REQ_FIELD {
