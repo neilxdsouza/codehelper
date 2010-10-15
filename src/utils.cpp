@@ -341,3 +341,49 @@ void print_sp_types(ofstream& file, datatype dt)
 			<< ", function: " << __PRETTY_FUNCTION__ << endl;
 	}
 }
+
+std::string print_cpp_types(datatype dt)
+{
+	stringstream var_type_str;
+	switch (dt){
+		case INT32_TYPE:{
+		var_type_str << "int32_t";
+		}
+		break;		
+		case TEXT_TYPE:
+		case VARCHAR_TYPE:
+		case NVARCHAR_TYPE:
+		case NCHAR_TYPE:
+		case NTEXT_TYPE:
+		var_type_str << "std::string";
+		break;		
+		case FLOAT_TYPE:{
+		var_type_str << "float";
+		}
+		break;		
+		case DOUBLE_TYPE:{
+		var_type_str << "double";
+		}
+		break;
+		case BIT_TYPE:{
+		var_type_str << "bool";
+		}
+		break;
+		case DATETIME_TYPE:{
+		var_type_str << "boost::gregorian::date";
+		}
+		break;
+		case BIGINT_TYPE:
+		var_type_str << "int64_t";
+		break;
+		case TINYINT_TYPE:
+		var_type_str << "byte";
+		break;
+		case IMAGE_TYPE:
+		var_type_str << "Image";
+		break;
+		default:
+		var_type_str << "Unknown type: error";
+	}
+	return var_type_str.str();
+}

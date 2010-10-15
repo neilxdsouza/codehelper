@@ -132,6 +132,22 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 			h_header << boost::format("#include \"%1%_bll.h\"\n") %
 					v_ptr->options.ref_table_name;
 		} else {
+			var_type << print_cpp_types(v_ptr->var_type);
+			if(!emitted_string_header){
+				switch(v_ptr->var_type){
+				case TEXT_TYPE:
+				case VARCHAR_TYPE:
+				case NVARCHAR_TYPE:
+				case NCHAR_TYPE:
+				case NTEXT_TYPE:
+					h_header << boost::format("#include <string>\n");
+					emitted_string_header = true;
+				break;
+				default:
+					;
+				}
+			}
+			/*
 			switch (v_ptr->var_type){
 				case INT32_TYPE:{
 				var_type << "int32_t";
@@ -178,6 +194,7 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 				var_type << "Unknown type: error";
 
 			}
+			*/
 		}
 
 		if(v_ptr->options.ref_table_name!=""){
@@ -257,6 +274,7 @@ void CppCodeGenerator::print_bll_api_functions_decl(std::ofstream & bll_h)
 	h_body << "\tint Insert();\n";
 	h_body << "\t//bool ValidateForUpdate();\n";
 	h_body << "\t//int Update();\n";
+	print_bll_api_constructors();
 }
 
 void CppCodeGenerator::print_bll_Insert_defn(std::ofstream & bll_cpp)
@@ -330,4 +348,21 @@ void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 void CppCodeGenerator::FinalCleanUp()
 {
 	uiGenerator_->FinalCleanUp();
+}
+
+
+void CppCodeGenerator::print_bll_api_constructors()
+{
+	h_body << "\n";
+	h_body << boost::format("\tBiz%1%(\n")
+			% tableInfo_->tableName_;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		h_body << "\t\t" << print_cpp_types(v_ptr->var_type);
+		v_ptr=v_ptr->prev;		
+		if(v_ptr){
+			h_body << ",\n";
+		}
+	}
+	h_body << "\t);\n";
 }
