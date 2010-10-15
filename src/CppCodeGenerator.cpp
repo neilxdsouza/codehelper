@@ -358,7 +358,8 @@ void CppCodeGenerator::print_bll_api_constructors()
 			% tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
-		h_body << "\t\t" << print_cpp_types(v_ptr->var_type);
+		h_body << "\t\t" << v_ptr->print_cpp_var_type()
+			<< " " << v_ptr->print_cpp_var_param_name();
 		v_ptr=v_ptr->prev;		
 		if(v_ptr){
 			h_body << ",\n";

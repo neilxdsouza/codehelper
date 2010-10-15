@@ -140,6 +140,9 @@ struct var_list
 
 		}
 	}
+	std::string print_cpp_var_type();
+	std::string print_cpp_var_param_name();
+	std::string print_cpp_var_name();
 
 	private:
 		var_list& operator=(const var_list&);
