@@ -409,12 +409,12 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <iostream>\n";
 	ui_class_headers << "\n";
 
-	ui_class_decl << boost::format("class %1%_ui : public Wt::WContainerWidget\n{\n")
+	ui_class_decl << boost::format("class %1%_ui : public Wt::WContainerWidget\n{\npublic:\n")
 				% tableInfo_->tableName_;
 	ui_class_decl << boost::format("\t%1%_ui(Wt::WContainerWidget * parent);\n")
 		% tableInfo_->tableName_ ;
-
-
+	
+	
 	stringstream form_code;
 	stringstream func_decl_signature, func_defn_signature;
 	func_decl_signature << boost::format("void formInsert%1%()")
@@ -424,14 +424,18 @@ string WtUIGenerator::GenerateUIInsertForm()
 	form_code << func_defn_signature.str() << "\n{\n";
 	class_functions_decl << "\t" << func_decl_signature.str() << ";\n";
 	
+	form_code << boost::format("\tWt::WContainerWidget *canvas = new %1%_ui(0);\n")
+			% tableInfo_->tableName_;
+	form_code << "\t/*\n";
 	form_code << "\tWt::WContainerWidget *canvas = new Wt::WContainerWidget();\n";
 	ui_class_decl << "\tWt::WContainerWidget *canvas;\n";
+	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
+		% tableInfo_->tableName_ ;
 	form_code << "\tWt::WText *title = new Wt::WText( Wt::WString::tr(\""
 		<< tableInfo_->tableName_ << "\"), canvas);\n";
 	ui_class_decl << "\tWt::WText *title;\n";
-	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
-		% tableInfo_->tableName_ ;
-	
+	ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
+		<< tableInfo_->tableName_ << "\"), this);\n";
 	form_code << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	form_code << "\tWt::WTable *table = new WTable(canvas);\n";
@@ -442,14 +446,14 @@ string WtUIGenerator::GenerateUIInsertForm()
 		form_code << "// v_ptr== NULL\n";
 	}
 	int counter=0;
-
+	
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if(v_ptr->var_type==COMPOSITE_TYPE)
 			continue;
 		ui_class_decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
 					% v_ptr->var_name;
 		form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-				"\t\t\ttable->elementAt(%1%, 0));\n")
+					"\t\t\ttable->elementAt(%1%, 0));\n")
 				% counter % v_ptr->var_name;
 		ui_class_defn << 
 			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
@@ -475,13 +479,17 @@ string WtUIGenerator::GenerateUIInsertForm()
 					% v_ptr->var_name;
 		}
 	}
-	ui_class_defn << "}\n";
 	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
 			% counter;
 	ui_class_decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
 	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
 	form_code << boost::format("\twpb_insert.clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
 					% tableInfo_->tableName_;
+	ui_class_defn << boost::format("\t//wpb_insert.clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+	ui_class_defn << boost::format("\t//wpb_insert.clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
+					% tableInfo_->tableName_;
+	ui_class_defn << "}\n";
+	form_code << "\t*/\n";
 	
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")
@@ -493,6 +501,10 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 	stringstream inc_file;
 	inc_file << boost::format("#include \"%1%_bll.h\"\n")
+				% tableInfo_->tableName_;
+	AddIncludeFile(inc_file.str());
+	inc_file.str("");
+	inc_file << boost::format("#include \"%1%_ui.h\"\n")
 				% tableInfo_->tableName_;
 	AddIncludeFile(inc_file.str());
 
