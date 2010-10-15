@@ -6,3 +6,5 @@ make-build-dir
 bin
 err
 op
+inputs/output/*
+src/tags

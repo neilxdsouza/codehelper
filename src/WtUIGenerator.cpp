@@ -64,7 +64,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	/* North */\n";
 	uiScaffolding << "	Ext::Panel *north = new Ext::Panel();\n";
 	uiScaffolding << "	north->setBorder(false);\n";
-	uiScaffolding << "	WText *head = new WText(WString::tr(\"header\"));\n";
+	uiScaffolding << "	WText *head = new WText(Wt::WString::tr(\"header\"));\n";
 	uiScaffolding << "	head->setStyleClass(\"north\");\n";
 	uiScaffolding << "	north->setLayout(new WFitLayout());\n";
 	uiScaffolding << "	north->layout()->addWidget(head);\n";
@@ -93,7 +93,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	formContainer_->setPadding(5);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	WContainerWidget *container = new WContainerWidget(formContainer_);\n";
-	uiScaffolding << "	container->addWidget(new WText(WString::tr(\"about\")));\n";
+	uiScaffolding << "	container->addWidget(new WText(Wt::WString::tr(\"about\")));\n";
 	uiScaffolding << "	currentForm_ = container;\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "}\n";
@@ -106,7 +106,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "{\n";
 	uiScaffolding << "	WContainerWidget *ex = new WContainerWidget();\n";
 	uiScaffolding << "\n";
-	uiScaffolding << "	WText *wt = new WText( WString::tr(\"ex-form-widgets\"), ex);\n";
+	uiScaffolding << "	WText *wt = new WText( Wt::WString::tr(\"ex-form-widgets\"), ex);\n";
 	uiScaffolding << "	wt->setMargin(5, Bottom);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	WTable *table = new WTable(ex);\n";
@@ -192,7 +192,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	setCentralWidget(ex);\n";
 	uiScaffolding << "}\n";
 	uiScaffolding << "\n";
-	uiScaffolding << "WTreeNode *good1::createNavigationNode(const WString& label,\n";
+	uiScaffolding << "WTreeNode *good1::createNavigationNode(const Wt::WString& label,\n";
 	uiScaffolding << "				    WTreeNode *parentNode,\n";
 	uiScaffolding << "				    ShowCentralWidget f)\n";
 	uiScaffolding << "{\n";
@@ -297,7 +297,7 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "	void setCentralWidget(Wt::WWidget *theWidget);\n";
 	class_decl << "	WWidget * createNavigationTree();\n";
 	class_decl << "	void formWidgetsExample();\n";
-	class_decl << "	WTreeNode *createNavigationNode(const WString& label,\n";
+	class_decl << "	WTreeNode *createNavigationNode(const Wt::WString& label,\n";
 	class_decl << "					    WTreeNode *parentNode,\n";
 	class_decl << "					    ShowCentralWidget f);\n";
 	class_decl << "	void formModify();\n";
@@ -387,6 +387,8 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/WTreeNode>\n";
 	ui_class_headers << "#include <Wt/WApplication>\n";
 	ui_class_headers << "#include <Wt/WPushButton>\n";
+	ui_class_headers << "#include <Wt/WContainerWidget>\n";
+	ui_class_headers << "#include <Wt/WWidget>\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <Wt/Ext/Button>\n";
 	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
@@ -407,8 +409,10 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <iostream>\n";
 	ui_class_headers << "\n";
 
-	ui_class_decl << boost::format("class %1%_ui : public WContainerWidget\n{\n")
+	ui_class_decl << boost::format("class %1%_ui : public Wt::WContainerWidget\n{\n")
 				% tableInfo_->tableName_;
+	ui_class_decl << boost::format("\t%1%_ui(Wt::WContainerWidget * parent);\n")
+		% tableInfo_->tableName_ ;
 
 
 	stringstream form_code;
@@ -420,32 +424,44 @@ string WtUIGenerator::GenerateUIInsertForm()
 	form_code << func_defn_signature.str() << "\n{\n";
 	class_functions_decl << "\t" << func_decl_signature.str() << ";\n";
 	
-	form_code << "\tWt::WContainerWidget *canvas = new WContainerWidget();\n";
+	form_code << "\tWt::WContainerWidget *canvas = new Wt::WContainerWidget();\n";
 	ui_class_decl << "\tWt::WContainerWidget *canvas;\n";
-	form_code << "\tWt::WText *title = new WText( WString::tr(\""
+	form_code << "\tWt::WText *title = new Wt::WText( Wt::WString::tr(\""
 		<< tableInfo_->tableName_ << "\"), canvas);\n";
 	ui_class_decl << "\tWt::WText *title;\n";
+	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
+		% tableInfo_->tableName_ ;
 	
-	form_code << "\ttitle->setMargin(5, Bottom);\n";
+	form_code << "\ttitle->setMargin(5, Wt::Bottom);\n";
+	ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	form_code << "\tWt::WTable *table = new WTable(canvas);\n";
+	ui_class_decl << "\tWt::WTable *table;\n";
+	ui_class_defn << "\ttable = new Wt::WTable(this);\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if( v_ptr == 0){
 		form_code << "// v_ptr== NULL\n";
 	}
 	int counter=0;
+
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if(v_ptr->var_type==COMPOSITE_TYPE)
 			continue;
 		ui_class_decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
 					% v_ptr->var_name;
-		form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(WString::tr(\"%2%\"),\n" 
-				"\t\ttable->elementAt(%1%, 0));\n")
+		form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+				"\t\t\ttable->elementAt(%1%, 0));\n")
 				% counter % v_ptr->var_name;
+		ui_class_defn << 
+			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+					"\t\t\ttable->elementAt(%1%, 0));\n")
+					% counter % v_ptr->var_name;
 		if (v_ptr->var_type==DATETIME_TYPE) {
 			form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name;
 			ui_class_decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
 						% v_ptr->var_name;
+			ui_class_defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
 		} else {
 			form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name;
@@ -453,8 +469,13 @@ string WtUIGenerator::GenerateUIInsertForm()
 					% v_ptr->var_name;
 			ui_class_decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
 						% v_ptr->var_name;
+			ui_class_defn << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
+			ui_class_defn << boost::format("\twta_%1%->setRows(1);\n")
+					% v_ptr->var_name;
 		}
 	}
+	ui_class_defn << "}\n";
 	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
 			% counter;
 	ui_class_decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
@@ -483,6 +504,18 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_decl << boost::format("};\n");
 	ui_h << ui_class_headers.str();
 	ui_h << ui_class_decl.str();
+
+	string ui_cpp_fname (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ tableInfo_->tableName_
+				+ string("_ui.cpp"))); 
+	std::ofstream ui_cpp(ui_cpp_fname.c_str(), ios_base::out|ios_base::trunc);
+	ui_cpp << ui_class_headers.str();
+	ui_cpp << boost::format("#include \"%1%_ui.h\"\n")
+			% tableInfo_->tableName_ ;
+	ui_cpp << ui_class_defn.str();
+
+
 	return form_code.str();
 }
 
