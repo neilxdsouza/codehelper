@@ -25,7 +25,8 @@ public:
 	void AddIncludeFile(std::string  p_include_file);
 	string GenerateUIInsertForm();
 	void GenerateUITab(std::stringstream & decl, std::stringstream & defn,
-				TableInfoType * aTableInfo);
+				bool called_recursively,
+				vector<TableInfoType *> p_vecTableInfo);
 	void GenerateForms();
 
 	static std::stringstream class_vars;

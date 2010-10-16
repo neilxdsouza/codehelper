@@ -2,6 +2,7 @@
 #include "WtUIGenerator.h"
 
 #include "std_using.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -444,7 +445,9 @@ string WtUIGenerator::GenerateUIInsertForm()
 	}
 	//int counter=0;
 
-	GenerateUITab(ui_class_decl, ui_class_defn, tableInfo_);
+	vector <TableInfoType *> vecTableInfo;
+	vecTableInfo.push_back(tableInfo_);
+	GenerateUITab(ui_class_decl, ui_class_defn, false, vecTableInfo);
 	
 	/*
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
@@ -545,8 +548,12 @@ void WtUIGenerator::AddIncludeFile(std::string  p_include_file)
 }
 
 void WtUIGenerator::GenerateUITab(std::stringstream & decl,
-				std::stringstream & defn, TableInfoType * aTableInfo)
+				std::stringstream & defn, 
+				bool called_recursively,
+				vector<TableInfoType *> p_vecTableInfo)
 {
+	TableInfoType * aTableInfo = p_vecTableInfo.back();
+	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
 	int counter=0;
 	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
@@ -558,8 +565,11 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-		if(v_ptr->var_type==COMPOSITE_TYPE)
+		if (v_ptr->var_type==COMPOSITE_TYPE) {
+			TableInfoType * ti_ptr = find_TableInfo(v_ptr->var_name);
+			p_vecTableInfo.push_back(ti_ptr);
 			continue;
+		}
 		decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
 					% v_ptr->var_name;
 		//form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
@@ -589,14 +599,21 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 					% v_ptr->var_name;
 		}
 	}
-	decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-	defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
-			% counter% aTableInfo->tableName_% aTableInfo->tableName_;
-	defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
-	defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-	defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
-					% tableInfo_->tableName_;
+
 	defn << boost::format("\ttw->addTab(wcw_%1%, \"%1%\");\n")
-				% tableInfo_->tableName_;
-	defn << "}\n";
+				% aTableInfo->tableName_;
+
+	if (p_vecTableInfo.size()>0) {
+		GenerateUITab(decl, defn, true, p_vecTableInfo);
+	}
+	if (called_recursively==false) {
+		decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
+		defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
+				% counter% aTableInfo->tableName_% aTableInfo->tableName_;
+		defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
+		defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+		defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
+						% tableInfo_->tableName_;
+		defn << "}\n";
+	}
 }
