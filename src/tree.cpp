@@ -9,9 +9,11 @@
 
 
 TableInfoType::TableInfoType(string name, struct var_list*  elist,
-		vector<var_list*> & p_vec_var_list): 
-		tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
-		has_multi(0), has_search_key(0), vec_var_list(p_vec_var_list)
+		vector<var_list*> & p_vec_var_list)
+	: 
+	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
+	has_multi(0), has_search_key(0), nInvisible(0),
+	vec_var_list(p_vec_var_list)
 {
 	printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
@@ -25,6 +27,9 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		if(v_ptr->options.search_key){
 			++has_search_key;
+		}
+		if (v_ptr->options.visible==false) {
+			++nInvisible ;
 		}
 		v_ptr=v_ptr->prev;
 	}
@@ -71,6 +76,13 @@ std::string var_list:: print_cpp_var_type()
 		case IMAGE_TYPE:
 		var_type_str << "Image";
 		break;
+		case COMPOSITE_TYPE:
+		if (options.many == true) {
+			var_type_str << boost::format("std::vector<boost::shared_ptr<Biz%1%> > &")
+					% var_name;	
+		}
+		break;
+
 		default:
 		var_type_str << "Unknown type: error";
 	}
@@ -79,10 +91,29 @@ std::string var_list:: print_cpp_var_type()
 
 std::string var_list::print_cpp_var_param_name()
 {
-	return string("p_") + var_name;
+	if(var_type==COMPOSITE_TYPE) {
+		if (options.many==true) {
+			return string("p_vec") + var_name;
+		} else {
+			return string("p_") + var_name;
+		}
+	} else {
+		return string("p_") + var_name;
+	}
 }
 
 std::string var_list::print_cpp_var_name()
 {
-	return var_name;
+	/*{
+		return var_name;
+	}*/
+	if(var_type==COMPOSITE_TYPE) {
+		if (options.many==true) {
+			return string("vec") + var_name + string("_") ;
+		} else {
+			return var_name + string("_") ;
+		}
+	} else {
+		return var_name + string("_") ;
+	}
 }

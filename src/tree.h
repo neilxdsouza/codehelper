@@ -169,10 +169,11 @@ struct TableInfoType
 	string tableName_;
 	struct var_list * param_list;
 	struct scope * table_scope;
-	vector<var_list*> vec_var_list;
 	int has_composite_objs;
 	int has_multi;
 	int has_search_key;
+	int nInvisible;
+	vector<var_list*> vec_var_list;
 	void print_lower_fname(FILE * fptr);
 	TableInfoType(string name, struct var_list*  elist
 			, vector<var_list*> & p_vec_var_list); 

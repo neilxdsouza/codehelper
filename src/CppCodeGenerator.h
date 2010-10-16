@@ -40,8 +40,13 @@ public:
 	void print_bll_api_defns(std::ofstream & bll_cpp);
 	void print_bll_api_test_stubs(std::ofstream & bll_cpp);
 	void print_bll_api_constructors();
+	void print_bll_constructor_decl_with_all_fields();
+	void print_bll_constructor_decl_without_invisible_fields();
 public:
 	void print_bll_Insert_defn(std::ofstream & bll_cpp);
+	void print_bll_Constructor_defn(std::ofstream & bll_cpp);
+	void print_bll_Constructor_with_all_fields();
+	void print_bll_Constructor_without_invisible_fields();
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);
