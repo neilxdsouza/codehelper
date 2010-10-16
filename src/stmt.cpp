@@ -1,3 +1,4 @@
+#include "std_headers.h"
 #include "stmt.h"
 #include "tree.h"
 #include "TableCollectionSingleton.hpp"
@@ -6,6 +7,7 @@
 #include "AbstractCodeGeneratorFactory.h"
 
 using std::string;
+vector <TableInfoType *> vec_table_info;
 
 //template <typename T> TableCollectionSingleton<T> * TableCollectionSingleton::pInstance_=0;
 /*
@@ -27,13 +29,8 @@ table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & nam
 {
 	cout << __PRETTY_FUNCTION__ << "," << __FILE__ << "," << __LINE__ << endl;
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
-		//cout << "got func_decl" << endl;
 		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list );
-		//CSharpAspNetCodeGenerator * ptr = new CSharpAspNetCodeGenerator(ti);
 		codeGenerator_ = p_codeGeneratorFactory->CreateCodeGenerator(ti);
-		//table_info_table.push_back(ti);
-		//TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance().Tables.push_back(ti);
-		//(TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance()).Tables.push_back(ptr);
 		TableCollectionSingleton::Instance().Tables.push_back(codeGenerator_);
 		type=TABLE_TYPE;
 		struct symtab_ent* se=new struct symtab_ent;
@@ -44,6 +41,7 @@ table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & nam
 		string s(name);
 		active_scope->sym_tab[s] = se;
 		se->type=TABLE_TYPE;
+		vec_table_info.push_back(ti);
 		//tableInfo_=ti;
 	} else {
 		cerr << "Symbol : " << name << " already present in symbol table" << endl;

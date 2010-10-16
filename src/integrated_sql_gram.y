@@ -133,13 +133,6 @@ decl_comma_list: var_decl_with_or_wo_options {
 
 var_decl_with_or_wo_options: var_decl ':' options_list {
 	$$ = $1;
-	//$1->ref_table_name = options_list.ref_table_name;
-	//$1->ref_field_name = options_list.ref_field_name;
-	//$1->many = options_list.many;
-	//$1->null = options_list.null;
-	//$1->unique = options_list.unique;
-	//$1->validator = options_list.validator;
-	//$1->search_key = options_list.search_key;
 	$1->options = options_list;
 	options_list.reinit();
 	}

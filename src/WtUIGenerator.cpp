@@ -11,6 +11,7 @@ std::stringstream WtUIGenerator::class_functions_decl;
 std::stringstream WtUIGenerator::class_function_impl;
 std::stringstream WtUIGenerator::navigation_nodes;
 std::stringstream WtUIGenerator::header_files;
+extern vector <TableInfoType *> vec_table_info;
 
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
@@ -426,27 +427,31 @@ string WtUIGenerator::GenerateUIInsertForm()
 	
 	form_code << boost::format("\tWt::WContainerWidget *canvas = new %1%_ui(0);\n")
 			% tableInfo_->tableName_;
-	form_code << "\t/*\n";
-	form_code << "\tWt::WContainerWidget *canvas = new Wt::WContainerWidget();\n";
+	//form_code << "\t/*\n";
 	ui_class_decl << "\tWt::WContainerWidget *canvas;\n";
+	ui_class_decl << "\tWt::Ext::TabWidget *tw;\n";
+	ui_class_decl << "\tWt::WContainerWidget  *wcw;\n";
 	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
 		% tableInfo_->tableName_ ;
-	form_code << "\tWt::WText *title = new Wt::WText( Wt::WString::tr(\""
-		<< tableInfo_->tableName_ << "\"), canvas);\n";
 	ui_class_decl << "\tWt::WText *title;\n";
 	ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
 		<< tableInfo_->tableName_ << "\"), this);\n";
-	form_code << "\ttitle->setMargin(5, Wt::Bottom);\n";
+	ui_class_defn << "\ttw = new Wt::Ext::TabWidget(this);\n";
+	ui_class_defn << "\twcw = new Wt::WContainerWidget();\n";
+	//ui_class_defn << "\tpanel->setLayout(new Wt::WFitLayout());\n";
 	ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
-	form_code << "\tWt::WTable *table = new WTable(canvas);\n";
 	ui_class_decl << "\tWt::WTable *table;\n";
-	ui_class_defn << "\ttable = new Wt::WTable(this);\n";
+	ui_class_defn << "\ttable = new Wt::WTable(wcw);\n";
+	//ui_class_defn << "\tpanel->layout()->addWidget();\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if( v_ptr == 0){
 		form_code << "// v_ptr== NULL\n";
 	}
 	int counter=0;
+
+	GenerateUITab(ui_class_decl, ui_class_defn, tableInfo_);
 	
+	/*
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if(v_ptr->var_type==COMPOSITE_TYPE)
 			continue;
@@ -481,18 +486,11 @@ string WtUIGenerator::GenerateUIInsertForm()
 	}
 	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
 			% counter;
-	ui_class_decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-	ui_class_defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table->elementAt(%1%, 0));\n")
-			% counter;
-	ui_class_defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
 	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
 	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
 					% tableInfo_->tableName_;
-	ui_class_defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-	ui_class_defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
-					% tableInfo_->tableName_;
-	ui_class_defn << "}\n";
-	form_code << "\t*/\n";
+	form_code << "\t*" << "/\n";
+	*/
 
 	ui_class_decl << boost::format("\tvoid ProcessInsert%1%();\n")
 					% tableInfo_->tableName_;
@@ -549,4 +547,53 @@ void WtUIGenerator::FinalCleanUp()
 void WtUIGenerator::AddIncludeFile(std::string  p_include_file)
 {
 	header_files << p_include_file ;
+}
+
+void WtUIGenerator::GenerateUITab(std::stringstream & decl,
+				std::stringstream & defn, TableInfoType * aTableInfo)
+{
+	struct var_list* v_ptr=aTableInfo->param_list;
+	int counter=0;
+	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+		if(v_ptr->var_type==COMPOSITE_TYPE)
+			continue;
+		decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
+					% v_ptr->var_name;
+		//form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+		//			"\t\t\ttable->elementAt(%1%, 0));\n")
+		//		% counter % v_ptr->var_name;
+		defn << 
+			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+					"\t\t\ttable->elementAt(%1%, 0));\n")
+					% counter % v_ptr->var_name;
+		if (v_ptr->var_type==DATETIME_TYPE) {
+			//form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
+			//		% counter % v_ptr->var_name;
+			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
+		} else {
+			//form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
+			//		% counter % v_ptr->var_name;
+			//form_code << boost::format("\twta_%1%->setRows(1);\n")
+			//		% v_ptr->var_name;
+			decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name;
+			defn << boost::format("\twta_%1%->setRows(1);\n")
+					% v_ptr->var_name;
+		}
+	}
+	decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
+	defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table->elementAt(%1%, 0));\n")
+			% counter;
+	defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
+	defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+	defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
+					% tableInfo_->tableName_;
+	defn << boost::format("\t tw->addTab(wcw, \"%1%\");\n")
+				% tableInfo_->tableName_;
+	defn << "}\n";
 }

@@ -5,6 +5,8 @@
 
 #include "AbstractUIGenerator.h"
 
+struct TableInfoType;
+
 struct WtUIGenerator : public AbstractUIGenerator
 {
 public:
@@ -22,6 +24,8 @@ public:
 	void AddNavigationNode(std::string  label, std::string  func_name);
 	void AddIncludeFile(std::string  p_include_file);
 	string GenerateUIInsertForm();
+	void GenerateUITab(std::stringstream & decl, std::stringstream & defn,
+				TableInfoType * aTableInfo);
 	void GenerateForms();
 
 	static std::stringstream class_vars;

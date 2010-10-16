@@ -495,9 +495,9 @@ static const yytype_uint8 yyrline[] =
 {
        0,    84,    84,    89,    92,    97,   106,   107,   108,   109,
      110,   111,   112,   113,   114,   115,   116,   117,   118,   119,
-     122,   127,   134,   148,   149,   152,   157,   162,   166,   172,
-     175,   178,   181,   184,   187,   190,   193,   196,   199,   206,
-     209
+     122,   127,   134,   141,   142,   145,   150,   155,   159,   165,
+     168,   171,   174,   177,   180,   183,   186,   189,   192,   199,
+     202
 };
 #endif
 
@@ -1505,13 +1505,6 @@ yyreduce:
 #line 134 "src/integrated_sql_gram.y"
     {
 	(yyval.v_list) = (yyvsp[(1) - (3)].v_list);
-	//$1->ref_table_name = options_list.ref_table_name;
-	//$1->ref_field_name = options_list.ref_field_name;
-	//$1->many = options_list.many;
-	//$1->null = options_list.null;
-	//$1->unique = options_list.unique;
-	//$1->validator = options_list.validator;
-	//$1->search_key = options_list.search_key;
 	(yyvsp[(1) - (3)].v_list)->options = options_list;
 	options_list.reinit();
 	;}
@@ -1520,7 +1513,7 @@ yyreduce:
   case 25:
 
 /* Line 1455 of yacc.c  */
-#line 152 "src/integrated_sql_gram.y"
+#line 145 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(4) - (5)].name);
 		options_list.ref_table_name = (yyvsp[(2) - (5)].name);
@@ -1531,7 +1524,7 @@ yyreduce:
   case 26:
 
 /* Line 1455 of yacc.c  */
-#line 157 "src/integrated_sql_gram.y"
+#line 150 "src/integrated_sql_gram.y"
     {
 		options_list.ref_field_name = (yyvsp[(5) - (6)].name);
 		options_list.ref_table_name = (yyvsp[(3) - (6)].name);
@@ -1542,7 +1535,7 @@ yyreduce:
   case 27:
 
 /* Line 1455 of yacc.c  */
-#line 162 "src/integrated_sql_gram.y"
+#line 155 "src/integrated_sql_gram.y"
     {
 		options_list.null = true;
 		cout << "parsing option DBNULL" ;
@@ -1552,7 +1545,7 @@ yyreduce:
   case 28:
 
 /* Line 1455 of yacc.c  */
-#line 166 "src/integrated_sql_gram.y"
+#line 159 "src/integrated_sql_gram.y"
     {
 		/*
 		$1->null=false;
@@ -1564,7 +1557,7 @@ yyreduce:
   case 29:
 
 /* Line 1455 of yacc.c  */
-#line 172 "src/integrated_sql_gram.y"
+#line 165 "src/integrated_sql_gram.y"
     {
 		options_list.unique = true;
 	;}
@@ -1573,7 +1566,7 @@ yyreduce:
   case 30:
 
 /* Line 1455 of yacc.c  */
-#line 175 "src/integrated_sql_gram.y"
+#line 168 "src/integrated_sql_gram.y"
     {
 		options_list.validator = req_field;
 	;}
@@ -1582,7 +1575,7 @@ yyreduce:
   case 31:
 
 /* Line 1455 of yacc.c  */
-#line 178 "src/integrated_sql_gram.y"
+#line 171 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_int;
 	;}
@@ -1591,7 +1584,7 @@ yyreduce:
   case 32:
 
 /* Line 1455 of yacc.c  */
-#line 181 "src/integrated_sql_gram.y"
+#line 174 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_float;
 	;}
@@ -1600,7 +1593,7 @@ yyreduce:
   case 33:
 
 /* Line 1455 of yacc.c  */
-#line 184 "src/integrated_sql_gram.y"
+#line 177 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnum;
 	;}
@@ -1609,7 +1602,7 @@ yyreduce:
   case 34:
 
 /* Line 1455 of yacc.c  */
-#line 187 "src/integrated_sql_gram.y"
+#line 180 "src/integrated_sql_gram.y"
     {
 		options_list.validator = re_alnumwsp;
 	;}
@@ -1618,7 +1611,7 @@ yyreduce:
   case 35:
 
 /* Line 1455 of yacc.c  */
-#line 190 "src/integrated_sql_gram.y"
+#line 183 "src/integrated_sql_gram.y"
     {
 		options_list.search_key = true;
 	;}
@@ -1627,7 +1620,7 @@ yyreduce:
   case 36:
 
 /* Line 1455 of yacc.c  */
-#line 193 "src/integrated_sql_gram.y"
+#line 186 "src/integrated_sql_gram.y"
     {
 		options_list.primary_key = true;
 	;}
@@ -1636,7 +1629,7 @@ yyreduce:
   case 37:
 
 /* Line 1455 of yacc.c  */
-#line 196 "src/integrated_sql_gram.y"
+#line 189 "src/integrated_sql_gram.y"
     {
 		options_list.visible = true;
 	;}
@@ -1645,7 +1638,7 @@ yyreduce:
   case 38:
 
 /* Line 1455 of yacc.c  */
-#line 199 "src/integrated_sql_gram.y"
+#line 192 "src/integrated_sql_gram.y"
     {
 		options_list.visible = false;
 	;}
@@ -1654,7 +1647,7 @@ yyreduce:
   case 39:
 
 /* Line 1455 of yacc.c  */
-#line 206 "src/integrated_sql_gram.y"
+#line 199 "src/integrated_sql_gram.y"
     {
 		(yyval.v_list)=new var_list((yyvsp[(2) - (2)].dt), (yyvsp[(1) - (2)].name));
 	;}
@@ -1663,7 +1656,7 @@ yyreduce:
   case 40:
 
 /* Line 1455 of yacc.c  */
-#line 209 "src/integrated_sql_gram.y"
+#line 202 "src/integrated_sql_gram.y"
     {
 		if(!((yyvsp[(2) - (5)].dt)==VARCHAR_TYPE||(yyvsp[(2) - (5)].dt)==NVARCHAR_TYPE ||(yyvsp[(2) - (5)].dt)==NCHAR_TYPE)){
 			cerr << "only varchar allowed : line: " << line_no << endl;
@@ -1676,7 +1669,7 @@ yyreduce:
 
 
 /* Line 1455 of yacc.c  */
-#line 1680 "src/integrated_sql_gram.cpp"
+#line 1673 "src/integrated_sql_gram.cpp"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1888,7 +1881,7 @@ yyreturn:
 
 
 /* Line 1675 of yacc.c  */
-#line 218 "src/integrated_sql_gram.y"
+#line 211 "src/integrated_sql_gram.y"
 
 
 

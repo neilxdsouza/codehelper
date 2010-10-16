@@ -5,6 +5,8 @@
 #include "std_headers.h"
 #include "std_using.h"
 
+extern vector <TableInfoType *> vec_table_info;
+
 bool isOfStringType(datatype dt)
 {
 	if (dt==NVARCHAR_TYPE
@@ -387,3 +389,15 @@ std::string print_cpp_types(datatype dt)
 	}
 	return var_type_str.str();
 }
+
+
+TableInfoType * find_TableInfo(string name)
+{
+	for (int i=0; i<vec_table_info.size(); ++i) {
+		if (vec_table_info[i]->tableName_==name) {
+			return vec_table_info[i];
+		}
+	}
+	return 0;
+}
+
