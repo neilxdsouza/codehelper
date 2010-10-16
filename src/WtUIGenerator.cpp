@@ -428,26 +428,21 @@ string WtUIGenerator::GenerateUIInsertForm()
 	form_code << boost::format("\tWt::WContainerWidget *canvas = new %1%_ui(0);\n")
 			% tableInfo_->tableName_;
 	//form_code << "\t/*\n";
-	ui_class_decl << "\tWt::WContainerWidget *canvas;\n";
 	ui_class_decl << "\tWt::Ext::TabWidget *tw;\n";
-	ui_class_decl << "\tWt::WContainerWidget  *wcw;\n";
 	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
 		% tableInfo_->tableName_ ;
 	ui_class_decl << "\tWt::WText *title;\n";
 	ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
 		<< tableInfo_->tableName_ << "\"), this);\n";
 	ui_class_defn << "\ttw = new Wt::Ext::TabWidget(this);\n";
-	ui_class_defn << "\twcw = new Wt::WContainerWidget();\n";
 	//ui_class_defn << "\tpanel->setLayout(new Wt::WFitLayout());\n";
 	ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
-	ui_class_decl << "\tWt::WTable *table;\n";
-	ui_class_defn << "\ttable = new Wt::WTable(wcw);\n";
 	//ui_class_defn << "\tpanel->layout()->addWidget();\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if( v_ptr == 0){
 		form_code << "// v_ptr== NULL\n";
 	}
-	int counter=0;
+	//int counter=0;
 
 	GenerateUITab(ui_class_decl, ui_class_defn, tableInfo_);
 	
@@ -554,6 +549,14 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 {
 	struct var_list* v_ptr=aTableInfo->param_list;
 	int counter=0;
+	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+			% aTableInfo->tableName_;
+	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+			% aTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%;\n")
+			% aTableInfo->tableName_;
+	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+			% aTableInfo->tableName_;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if(v_ptr->var_type==COMPOSITE_TYPE)
 			continue;
@@ -564,15 +567,15 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 		//		% counter % v_ptr->var_name;
 		defn << 
 			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-					"\t\t\ttable->elementAt(%1%, 0));\n")
-					% counter % v_ptr->var_name;
+					"\t\t\ttable_%3%->elementAt(%1%, 0));\n")
+					% counter % v_ptr->var_name % aTableInfo->tableName_;
 		if (v_ptr->var_type==DATETIME_TYPE) {
 			//form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
 			//		% counter % v_ptr->var_name;
 			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
+			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% aTableInfo->tableName_;
 		} else {
 			//form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
 			//		% counter % v_ptr->var_name;
@@ -580,20 +583,20 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			//		% v_ptr->var_name;
 			decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
+			defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% aTableInfo->tableName_;
 			defn << boost::format("\twta_%1%->setRows(1);\n")
 					% v_ptr->var_name;
 		}
 	}
 	decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-	defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table->elementAt(%1%, 0));\n")
-			% counter;
+	defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
+			% counter% aTableInfo->tableName_% aTableInfo->tableName_;
 	defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
 	defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
 	defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
 					% tableInfo_->tableName_;
-	defn << boost::format("\t tw->addTab(wcw, \"%1%\");\n")
+	defn << boost::format("\ttw->addTab(wcw_%1%, \"%1%\");\n")
 				% tableInfo_->tableName_;
 	defn << "}\n";
 }
