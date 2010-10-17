@@ -13,8 +13,8 @@ CREATE TABLE Employee(
 );
  
 CREATE TABLE EmployeeStatus(
-      EmpStatusID int : not null,
-      Employee_Code int : not null,
+      EmployeeStatus_Code int : primary_key,
+      Employee_Code int : not null references Employee(Employee_Code),
       Position_Code int : not null,
       Date_appointed_to_Position datetime : not null,
       Division_Code int : not null,
@@ -25,13 +25,13 @@ CREATE TABLE EmployeeStatus(
 
 
 CREATE TABLE Division(
-      Division_Code int : not null,
+      Division_Code int : primary_key,
       Division_Name varchar(150) : not  null,
       Division_Head int : not null,
       Part_of_Division int : not null,
       Lft int : not null invisible,
       Rgt int : not null invisible,
-      Deleted bit: not null invisible
+      Deleted bit: null invisible
 );
 
 

@@ -34,6 +34,9 @@ public:
 	static std::stringstream class_function_impl;
 	static std::stringstream navigation_nodes;
 	static std::stringstream header_files;
+
 };
+
+	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);
 
 #endif /* WT_UI_GENERATOR_H */

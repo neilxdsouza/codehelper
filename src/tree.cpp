@@ -117,3 +117,21 @@ std::string var_list::print_cpp_var_name()
 		return var_name + string("_") ;
 	}
 }
+
+std::string var_list::print_lower_var_name()
+{
+	string lower_name = var_name;
+	lower_name[0] = tolower(lower_name[0]);
+	return lower_name;
+}
+
+
+std::string var_list::print_improved_lower_var_name()
+{
+	string orig_varname = var_name;
+	int pos = orig_varname.find("_Code");
+	string improved_name = orig_varname.substr(0, pos);
+	improved_name[0] = tolower(improved_name[0]);
+	return improved_name;
+}
+

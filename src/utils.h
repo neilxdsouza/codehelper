@@ -15,5 +15,6 @@ void print_aspx_types(FILE * fptr, datatype dt);
 void print_sp_types(ofstream& file, datatype dt);
 std::string print_cpp_types(datatype dt);
 TableInfoType * find_TableInfo(string name);
+bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);
 
 #endif /* UTILS_H */

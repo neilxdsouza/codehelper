@@ -55,5 +55,6 @@ protected:
 	{ }
 
 };
+//	bool ReferencedTableContainsUs(TableInfoType * me, std::string ref_table_name);
 
 #endif /* CPP_CODE_GENERATOR_H */

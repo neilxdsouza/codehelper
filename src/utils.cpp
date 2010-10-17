@@ -401,3 +401,24 @@ TableInfoType * find_TableInfo(string name)
 	return 0;
 }
 
+
+
+bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name)
+{
+	TableInfoType * ti_ptr = find_TableInfo(ref_table_name);
+	if (ti_ptr ==0 ){
+		cerr << " Referenced table: " << ref_table_name << " not found ... exiting";
+		exit(1);
+	}
+	
+	struct var_list* v_ptr=ti_ptr->param_list;
+	while (v_ptr) {
+		if (v_ptr->var_name == me->tableName_ &&
+				v_ptr->var_type==COMPOSITE_TYPE) {
+			
+			return true;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	return false;
+}

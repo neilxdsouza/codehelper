@@ -118,14 +118,14 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 	bool emitted_vector_header = false;
 	bool emitted_string_header = false;
 	while(v_ptr){
-		if(v_ptr->options.ref_table_name!=""){
-			if(v_ptr->options.many==false){
+		if (v_ptr->options.ref_table_name!="") {
+			if (v_ptr->options.many==false) {
 				var_type << boost::format("Biz%1%") % v_ptr->options.ref_table_name;
 			} else {
 				var_type << boost::format("std::vector<boost::shared_ptr<Biz%1%> >") 
 					% v_ptr->options.ref_table_name;
 			}
-			if(!emitted_vector_header){
+			if (!emitted_vector_header) {
 				h_header << boost::format("#include <vector>\n");
 				emitted_vector_header = true;
 			}
@@ -133,8 +133,8 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 					v_ptr->options.ref_table_name;
 		} else {
 			var_type << print_cpp_types(v_ptr->var_type);
-			if(!emitted_string_header){
-				switch(v_ptr->var_type){
+			if (!emitted_string_header) {
+				switch (v_ptr->var_type) {
 				case TEXT_TYPE:
 				case VARCHAR_TYPE:
 				case NVARCHAR_TYPE:
@@ -197,17 +197,32 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 			*/
 		}
 
-		if(v_ptr->options.ref_table_name!=""){
-			string orig_varname = v_ptr->var_name.c_str();
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos);
-			variables << var_type.str() << boost::format(" vec%1%_;\n") % improved_name;
-			functions << "\t";
-			functions << boost::format("%2% & Get_%1%() { return vec%1%_;}\n") 
-				% improved_name % var_type.str() ;
-			functions << "\t";
-			functions << boost::format("void Set_%1%(%2% & value) { vec%1%_= value;}\n") 
-				% improved_name % var_type.str();
+		if (v_ptr->options.ref_table_name!="") {
+			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				variables.str("");
+				functions.str("");
+				var_type.str("");
+				variables.clear();
+				functions.clear();
+				var_type.clear();
+				v_ptr=v_ptr->prev;
+				continue;
+			}
+			if (v_ptr->options.many==true) {
+				string orig_varname = v_ptr->var_name.c_str();
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				variables << var_type.str() << boost::format(" vec%1%_;\n") % improved_name;
+				functions << "\t";
+				functions << boost::format("%2% & Get_%1%() { return vec%1%_;}\n") 
+					% improved_name % var_type.str() ;
+				functions << "\t";
+				functions << boost::format("void Set_%1%(%2% & value) { vec%1%_= value;}\n") 
+					% improved_name % var_type.str();
+			} else {
+				variables << var_type.str() << boost::format(" %1%_;\n") % 
+					v_ptr->print_improved_lower_var_name();
+			}
 		} else {
 			variables << var_type.str() << boost::format(" %1%_;\n") % v_ptr->var_name;
 			functions << "\t";
@@ -220,11 +235,13 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 
 		h_body << functions.str();
 		h_body << "\t" << variables.str();
+		/*
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			h_body << "\t\tpublic ";
 			print_csharp_types(h_body, v_ptr->var_type);
 			h_body << v_ptr->var_name;
 		}
+		*/
 
 		v_ptr=v_ptr->prev;
 		variables.str("");
@@ -234,10 +251,14 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 		functions.clear();
 		var_type.clear();
 	}
-	v_ptr=tableInfo_->param_list;
+	// v_ptr=tableInfo_->param_list;
 	// print the properties of Fields which are inside a composite object
 	// I need to modify the input language to accept UI flags but for now 
 	// hard code everything
+
+	/* Dont need this for c++
+	   */
+	/*
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			fprintf(stderr, "%s %s : %d\n", __FILE__, __PRETTY_FUNCTION__, __LINE__);
@@ -266,6 +287,7 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 		}
 		v_ptr=v_ptr->prev;
 	}
+	*/
 }
 
 void CppCodeGenerator::print_bll_api_functions_decl(std::ofstream & bll_h)
@@ -484,3 +506,25 @@ void CppCodeGenerator::print_bll_Constructor_without_invisible_fields()
 	}
 	cpp_body << "\n{ }\n";
 }
+
+/*
+bool ReferencedTableContainsUs(TableInfoType* me, std::string ref_table_name)
+{
+	TableInfoType * ti_ptr = find_TableInfo(ref_table_name);
+	if (ti_ptr ==0 ){
+		cerr << " Referenced table: " << ref_table_name << " not found ... exiting";
+		exit(1);
+	}
+	
+	struct var_list* v_ptr=ti_ptr->param_list;
+	while (v_ptr) {
+		if (v_ptr->var_name == me->tableName_ &&
+				v_ptr->var_type==COMPOSITE_TYPE) {
+			
+			return true;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	return false;
+}
+*/

@@ -565,6 +565,24 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+		if (v_ptr->options.ref_table_name!="") {
+			cout << " called_recursively: " << called_recursively
+				<< endl;
+			cout << " my table name: " << aTableInfo->tableName_
+				<< endl;
+			cout << " ref_table_name: " << v_ptr->options.ref_table_name
+				<< endl;
+			cout << "ReferencedTableContainsUs: " 
+				<< ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name)
+				<< endl;
+		}
+		if (called_recursively && v_ptr->options.ref_table_name!=""
+				&& ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name) ) {
+			continue;
+		}
+		if (v_ptr->options.primary_key) {
+			continue;
+		}
 		if (v_ptr->var_type==COMPOSITE_TYPE) {
 			TableInfoType * ti_ptr = find_TableInfo(v_ptr->var_name);
 			p_vecTableInfo.push_back(ti_ptr);
@@ -617,3 +635,25 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 		defn << "}\n";
 	}
 }
+
+/*
+bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name)
+{
+	TableInfoType * ti_ptr = find_TableInfo(ref_table_name);
+	if (ti_ptr ==0 ){
+		cerr << " Referenced table: " << ref_table_name << " not found ... exiting";
+		exit(1);
+	}
+	
+	struct var_list* v_ptr=ti_ptr->param_list;
+	while (v_ptr) {
+		if (v_ptr->var_name == me->tableName_ &&
+				v_ptr->var_type==COMPOSITE_TYPE) {
+			
+			return true;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	return false;
+}
+*/
