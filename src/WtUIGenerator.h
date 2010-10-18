@@ -21,6 +21,9 @@ public:
 	void AddVariableDecl(std::string  p_var_decl);
 	void AddFunctionDefn(std::string  p_func_defn);
 	void AddFunctionDecl(std::string  p_func_decl);
+
+	void AddFunctionDefnToStream(std::string  p_func_defn, stringstream & defn);
+	void AddFunctionDeclToStream(std::string  p_func_decl, stringstream & decl);
 	void AddNavigationNode(std::string  label, std::string  func_name);
 	void AddIncludeFile(std::string  p_include_file);
 	string GenerateUIInsertForm();
@@ -29,6 +32,7 @@ public:
 				vector<TableInfoType *> p_vecTableInfo);
 	void GenerateForms();
 	void GenerateMakefile();
+	string print_ChoiceHandler(struct var_list * p_vptr);
 
 	static std::stringstream class_vars;
 	static std::stringstream class_functions_decl;
@@ -36,6 +40,8 @@ public:
 	static std::stringstream navigation_nodes;
 	static std::stringstream header_files;
 	static std::stringstream makefile_objs;
+	std::vector<std::string> vec_handler_decls;
+	std::vector<std::string> vec_handler_defns;
 
 };
 

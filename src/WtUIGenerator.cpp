@@ -393,6 +393,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/WPushButton>\n";
 	ui_class_headers << "#include <Wt/WContainerWidget>\n";
 	ui_class_headers << "#include <Wt/WWidget>\n";
+	ui_class_headers << "#include <Wt/WDialog>\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <Wt/Ext/Button>\n";
 	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
@@ -497,6 +498,14 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_defn << boost::format("void %1%_ui::ProcessInsert%1%()\n{\n")
 					% tableInfo_->tableName_;
 	ui_class_defn << "}\n";
+	// I should use some form of assert to check 
+	// that vec_handler_decls.size == vec_handler_defns.size
+	for(int i=0; i<vec_handler_decls.size(); ++i) {
+		ui_class_decl << endl << vec_handler_decls[i] << endl;
+	}
+	for(int i=0; i<vec_handler_defns.size(); ++i) {
+		ui_class_defn << endl << vec_handler_defns[i] << endl;
+	}
 	
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")
@@ -579,10 +588,18 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 				<< ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name)
 				<< endl;
 		}
+		//! called_recursively == true means this form is being generated in the context of 
+		//! the original table that contains this one as a composite object
+		//! for such tables the foreign key is being supplied by the master table
+		//! for example in the case of "employee, employeestatus" in which 
+		//! employeestatus is also contained in employee as separate composite object
+		//! when generating the employeestatus tab - we dont want to display the employee 
+		//! code again in employeestatus - it is already supplied in the employee tab
 		if (called_recursively && v_ptr->options.ref_table_name!=""
 				&& ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name) ) {
 			continue;
-		}
+		} 
+			
 		if (v_ptr->options.primary_key) {
 			continue;
 		}
@@ -593,25 +610,47 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 		}
 		decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
 					% v_ptr->var_name;
-		//form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-		//			"\t\t\ttable->elementAt(%1%, 0));\n")
-		//		% counter % v_ptr->var_name;
 		defn << 
 			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
 					"\t\t\ttable_%3%->elementAt(%1%, 0));\n")
 					% counter % v_ptr->var_name % aTableInfo->tableName_;
-		if (v_ptr->var_type==DATETIME_TYPE) {
-			//form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
-			//		% counter % v_ptr->var_name;
+
+		if (v_ptr->options.ref_table_name!="" 
+				&& v_ptr->var_type != COMPOSITE_TYPE
+				 ) {
+			decl <<  boost::format("\tWt::WLabel * wt_%1%_value;\n")
+						% v_ptr->var_name;
+			decl <<  boost::format("\tWt::WPushButton * wpb_choose_%1%;\n")
+						% v_ptr->var_name;
+			defn << 
+				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
+						% counter % v_ptr->var_name % aTableInfo->tableName_;
+			defn << 
+				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString::tr(\"Choose %2%\"),\n" 
+						"\t\t\ttable_%3%->elementAt(%1%, 2));\n")
+						% counter % v_ptr->var_name % aTableInfo->tableName_;
+			defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::disable);\n")
+				% v_ptr->var_name;
+			defn << boost::format("\twpb_choose_%1%->clicked().connect(this, &%2%_ui::HandleChoose%1%);\n")
+							% v_ptr->var_name % tableInfo_->tableName_;
+			decl << boost::format("\tWt::Ext::Dialog * wd_choose_%1%;\n")
+						% v_ptr->var_name;
+			stringstream handle_func_decl;
+			handle_func_decl << boost::format("\tvoid HandleChoose%1%();\n")
+				% v_ptr->var_name;
+			vec_handler_decls.push_back(handle_func_decl.str());
+			
+			stringstream handle_func_defn;
+			handle_func_defn << print_ChoiceHandler(v_ptr);
+			vec_handler_defns.push_back(handle_func_defn.str());
+			
+		} else if (v_ptr->var_type==DATETIME_TYPE) {
 			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 		} else {
-			//form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
-			//		% counter % v_ptr->var_name;
-			//form_code << boost::format("\twta_%1%->setRows(1);\n")
-			//		% v_ptr->var_name;
 			decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table_%3%->elementAt(%1%, 1));\n")
@@ -682,4 +721,23 @@ void WtUIGenerator::GenerateMakefile()
 	makefile_fname << outputDirPrefix_ << "/Makefile." << input_file_name ;
 	std::ofstream makefile(makefile_fname.str().c_str(), ios_base::out|ios_base::trunc);
 	makefile << makefile_str.str();
+}
+
+
+string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr)
+{
+	stringstream func_defn;
+	func_defn << boost::format("void %2%_ui::HandleChoose%1%()\n{\n")
+		% p_vptr->var_name % tableInfo_->tableName_;
+	func_defn << boost::format("\twd_choose_%1% = new Wt::Ext::Dialog(\"Choose %1%\");\n")
+		% p_vptr->var_name;
+	func_defn << boost::format("\tWt::WPushButton*  ok= new Wt::WPushButton(\"Ok\", wd_choose_%1%->contents());\n")
+		% p_vptr->var_name;
+	func_defn << boost::format("\tok->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
+		% p_vptr->var_name;
+	func_defn << boost::format("\twd_choose_%1%->exec();\n")
+		% p_vptr->var_name;
+
+	func_defn << "}\n";
+	return func_defn.str();
 }
