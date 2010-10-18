@@ -12,6 +12,7 @@ std::stringstream WtUIGenerator::class_functions_decl;
 std::stringstream WtUIGenerator::class_function_impl;
 std::stringstream WtUIGenerator::navigation_nodes;
 std::stringstream WtUIGenerator::header_files;
+std::stringstream WtUIGenerator::makefile_objs;
 extern vector <TableInfoType *> vec_table_info;
 
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
@@ -30,6 +31,7 @@ void WtUIGenerator::GenerateCode()
 		% __PRETTY_FUNCTION__;
 	//ui << GenerateUIScaffolding();
 	GenerateForms();
+	makefile_objs << boost::format("%1%_ui.o ") % tableInfo_->tableName_;
 	
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
@@ -539,6 +541,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 void WtUIGenerator::FinalCleanUp()
 {
 	GenerateUIScaffolding();
+	GenerateMakefile();
 }
 
 
@@ -657,3 +660,26 @@ bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name)
 	return false;
 }
 */
+
+extern std::string input_file_name;
+
+void WtUIGenerator::GenerateMakefile()
+{
+	std::stringstream makefile_str;
+	makefile_str << "CXX := $(CXX) -g " << endl;
+	makefile_str << "OBJS = "
+		<< makefile_objs.str() << endl;
+	makefile_str << "LINK_LIBS = -lwt -lwtext -lwthttp"
+		<< endl;
+	makefile_str << endl
+		<< "test_ui: $(OBJS) wt_ui.o " << endl
+		<< "\t$(CXX) -g -o $@ $(OBJS) wt_ui.o $(LINK_LIBS)" << endl
+		<< endl;
+	makefile_str << "%.o: %.cpp %.h" << endl
+		<< "\t$(CXX) -g -c $<" << endl << endl;
+	stringstream makefile_fname;
+
+	makefile_fname << outputDirPrefix_ << "/Makefile." << input_file_name ;
+	std::ofstream makefile(makefile_fname.str().c_str(), ios_base::out|ios_base::trunc);
+	makefile << makefile_str.str();
+}

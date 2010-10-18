@@ -52,6 +52,7 @@ void Init();
 	struct stmt * tree_root=0;
 
 void ParseProgramOptions(int argc, char* argv[]);
+std::string input_file_name;
 
 int main(int argc, char* argv[], char* envp[])
 {
@@ -62,7 +63,9 @@ int main(int argc, char* argv[], char* envp[])
 		exit(0);
 	}
 	Init();
+	input_file_name = argv[1];
 	rhs_name_space_name=argv[2];
+	
 	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
 	//PostgreSQLCodeGenerator psqlCodeGenerator;
 	PostgreSQLCodeGeneratorFactory psqlFactory; 

@@ -28,12 +28,14 @@ public:
 				bool called_recursively,
 				vector<TableInfoType *> p_vecTableInfo);
 	void GenerateForms();
+	void GenerateMakefile();
 
 	static std::stringstream class_vars;
 	static std::stringstream class_functions_decl;
 	static std::stringstream class_function_impl;
 	static std::stringstream navigation_nodes;
 	static std::stringstream header_files;
+	static std::stringstream makefile_objs;
 
 };
 
