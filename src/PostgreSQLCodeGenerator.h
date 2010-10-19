@@ -15,9 +15,10 @@ public:
 				std::string & p_output_dir_path);
 	virtual void GenerateCode();
 	virtual void GenerateStoredProcedures();
-	void print_sp_param_decls(ofstream & ofile, print_sp_params_mode mode);
-	void print_sp_params(ofstream & ofile, print_sp_params_mode mode);
-	void print_sp_fields(ofstream & ofile, print_sp_params_mode mode);
+	//void print_sp_param_decls(ofstream & ofile, print_sp_params_mode mode);
+	string print_sp_param_decls(print_sp_params_mode mode);
+	string print_sp_params( print_sp_params_mode mode);
+	string print_sp_fields( print_sp_params_mode mode);
 	void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
 	string print_sp_pkey_param();
 	string print_sp_pkey_field();
@@ -27,12 +28,16 @@ public:
 	void GenerateDB_h();
 public:
 	virtual void GenerateInsertSP();
+	virtual void GenerateSelectSP();
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
 	void PrintGetConn(ofstream & cpp_db_impl);
 	void PrintConnCloser(ofstream & cpp_db_impl);
 	void PrintMallocDeleter(ofstream & cpp_db_impl);
 	void print_exit_nicely(ofstream & cpp_db_impl);
+	std::string print_sp_search_key_params();
+	std::string print_sp_search_key_fields();
+	std::string print_sp_search_key_whereclause();
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

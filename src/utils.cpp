@@ -286,62 +286,64 @@ void print_aspx_types(FILE * fptr, datatype dt)
 }
 
 // this is used for postgres
-void print_sp_types(ofstream& file, datatype dt)
+std::string print_sp_types(datatype dt)
 {
+	stringstream type_str;
 	switch (dt){
 		case INT32_TYPE:{
-		file << "int";
+		type_str << "int";
 		}
 		break;		
 		case NCHAR_TYPE:
-		file << "char";
+		type_str << "char";
 		break;		
 		case VARCHAR_TYPE:
-		file << "varchar";
+		type_str << "varchar";
 		break;		
 		case NVARCHAR_TYPE:
-		file << "varchar";
+		type_str << "varchar";
 		break;		
 		case FLOAT_TYPE:{
-		file << "real";
+		type_str << "real";
 		}
 		break;		
 		case DOUBLE_TYPE:{
-		file << "double precision";
+		type_str << "double precision";
 		}
 		break;
 		case BIT_TYPE:{
-		file << "boolean";
+		type_str << "boolean";
 		}
 		break;
 		case DATETIME_TYPE:{
-		file << "timestamp";
+		type_str << "timestamp";
 		}
 		break;
 		case TINYINT_TYPE:
-		file << "smallint";
+		type_str << "smallint";
 		break;
 		case TEXT_TYPE:
-		file << "text";
+		type_str << "text";
 		break;
 		case NTEXT_TYPE:
-		file << "text";
+		type_str << "text";
 		break;
 		case BIGINT_TYPE:
-		file << "bigint";
+		type_str << "bigint";
 		break;
 		case IMAGE_TYPE:
-		file << "Image type Invalid data type in postgres: file: " << __FILE__ 
+		type_str << "Image type Invalid data type in postgres: type_str: " << __FILE__ 
 			<< ", line: " << __LINE__
 			<< ", function: " << __PRETTY_FUNCTION__ << endl;
-		file << "image";
+		type_str << "image";
 		break;
 		default:
-		//fprintf(fptr, "Invalid data type: file: %s, line: %d\n", __FILE__, __LINE__  );
-		file << "Invalid data type: file: " << __FILE__ 
+		//fprintf(fptr, "Invalid data type: type_str: %s, line: %d\n", __FILE__, __LINE__  );
+		type_str << "Invalid data type: type_str: " << __FILE__ 
 			<< ", line: " << __LINE__
 			<< ", function: " << __PRETTY_FUNCTION__ << endl;
 	}
+	return type_str.str();
 }
 
 std::string print_cpp_types(datatype dt)

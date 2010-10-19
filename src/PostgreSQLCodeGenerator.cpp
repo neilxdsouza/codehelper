@@ -36,6 +36,7 @@ void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 {
 	GenerateDB_h();
 	GenerateInsertSP();
+	GenerateSelectSP();
 }
 
 /*
@@ -59,14 +60,14 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 	}
 	insert_sp << boost::format("create or replace function sp_%1%_insert_%1%(")
 		% tableInfo_->tableName_;
-	print_sp_param_decls(insert_sp, INSERT);
+	insert_sp << print_sp_param_decls( INSERT);
 	insert_sp << ") AS $$\n";
 	insert_sp << "BEGIN\n";
 	insert_sp << "\tINSERT INTO " << tableInfo_->tableName_ 
 		<< "(";
-	print_sp_fields( insert_sp, INSERT);
+	insert_sp << print_sp_fields(  INSERT);
 	insert_sp << "\t\t) values (";
-	print_sp_params( insert_sp, INSERT);
+	insert_sp << print_sp_params(  INSERT);
 	insert_sp << "\t\t);\n";
 	insert_sp << "\tselect last_value into ";
 	print_sp_1st_param( insert_sp, INSERT);
@@ -79,49 +80,54 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 			
 }
 
-void PostgreSQLCodeGenerator::print_sp_param_decls(ofstream & ofile, print_sp_params_mode mode)
+string PostgreSQLCodeGenerator::print_sp_param_decls(print_sp_params_mode mode)
 {
 	struct var_list * v_ptr=tableInfo_->param_list;
 	if(mode==INSERT){
 	// Skip the 1st param - assume that it is the ouput parameter and print it out last
 		v_ptr=v_ptr->prev;
 	}
+	stringstream sp_param_decls_str;
 	while(v_ptr){
 		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
 		if(v_ptr->var_type == COMPOSITE_TYPE) {
 			v_ptr=v_ptr->prev;
 			continue;
 		}
-		ofile << boost::format("\tp_%1% ") % v_ptr->var_name;
-		print_sp_types(ofile,  v_ptr->var_type);
+		sp_param_decls_str << boost::format("\tp_%1% %2%") % v_ptr->var_name
+			% print_sp_types(v_ptr->var_type) ;
 		if(v_ptr->var_type==NVARCHAR_TYPE||v_ptr->var_type==VARCHAR_TYPE
 			|| v_ptr->var_type==NCHAR_TYPE	){
 			//fprintf(fptr, "(%d)", v_ptr->arr_len);
-			ofile << "(" << v_ptr->arr_len << ")";
+			sp_param_decls_str << "(" << v_ptr->arr_len << ")";
 		}
 		v_ptr=v_ptr->prev;
-		if(mode==INSERT){
-				ofile << ",\n";
+		if (v_ptr==NULL && mode==INSERT){
+			sp_param_decls_str << ",\n";
 		} else {
-			if(v_ptr){
-				ofile << ",\n";
+			if (v_ptr){
+				sp_param_decls_str << ",\n";
 			} else {
-				ofile << "\n";
+				sp_param_decls_str << "\n";
 			}
 		}
 	}
-	ofile	<< "\tout " 
-		<< print_sp_pkey_param() << " int\n";
+	if (mode == INSERT) {
+		sp_param_decls_str	<< "\tout " 
+			<< print_sp_pkey_param() << " int\n";
+	}
+	return sp_param_decls_str.str();
 }
 
-void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_mode mode)
+string PostgreSQLCodeGenerator::print_sp_params( print_sp_params_mode mode)
 {
+	stringstream sp_params;
 	struct var_list * v_ptr=tableInfo_->param_list;
 	string tab_indent("\t\t\t");
-	ofile << endl;
+	sp_params << endl;
 	if(mode==INSERT){
 	// Skip the 1st param - assume that it is the ouput parameter and print it out last
-		ofile << tab_indent << "DEFAULT,\n";
+		sp_params << tab_indent << "DEFAULT,\n";
 		v_ptr=v_ptr->prev;
 	}
 	while(v_ptr){
@@ -130,45 +136,45 @@ void PostgreSQLCodeGenerator::print_sp_params(ofstream & ofile, print_sp_params_
 			v_ptr=v_ptr->prev;
 			continue;
 		}
-		ofile << tab_indent << boost::format("p_%1%") % v_ptr->var_name;
+		sp_params << tab_indent << boost::format("p_%1%") % v_ptr->var_name;
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			//fprintf(fptr, ",\n");
-			ofile << ",\n";
+			sp_params << ",\n";
 		} else {
 			//fprintf(fptr, "\n");
-			ofile << "\n";
+			sp_params << "\n";
 		}
 	}
+	return sp_params.str();
 }
 
 
-void PostgreSQLCodeGenerator::print_sp_fields(ofstream & ofile, print_sp_params_mode mode)
+string PostgreSQLCodeGenerator::print_sp_fields( print_sp_params_mode mode)
 {
+	stringstream sp_fields;
 	struct var_list * v_ptr=tableInfo_->param_list;
 	string tab_indent("\t\t\t");
-	ofile << endl;
+	sp_fields << endl;
 	//if(mode==INSERT){
 	//// Skip the 1st param - assume that it is the ouput parameter and print it out last
 	//	v_ptr=v_ptr->prev;
 	//}
 	while(v_ptr){
-		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
 		if(v_ptr->var_type == COMPOSITE_TYPE) {
 			v_ptr=v_ptr->prev;
 			continue;
 		}
-		ofile << tab_indent << boost::format("%1%") % v_ptr->var_name;
+		sp_fields << tab_indent << boost::format("%1%") % v_ptr->var_name;
 
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
-			//fprintf(fptr, ",\n");
-			ofile << ",\n";
+			sp_fields << ",\n";
 		} else {
-			//fprintf(fptr, "\n");
-			ofile << "\n";
+			sp_fields << "\n";
 		}
 	}
+	return sp_fields.str();
 }
 
 
@@ -295,9 +301,8 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 		if (i==tableInfo_->vec_var_list.size()-1){
 			print_comma=false;
 		}
-		cpp_db_impl << format("$%1%") % (++j);
-		cpp_db_impl << "::";
-		print_sp_types(cpp_db_impl, tableInfo_->vec_var_list[i]->var_type);
+		cpp_db_impl << format("$%1%::%2%") % (++j)
+			% print_sp_types(tableInfo_->vec_var_list[i]->var_type);
 		if (print_comma) {
 			cpp_db_impl << ",";
 		}
@@ -419,4 +424,179 @@ string PostgreSQLCodeGenerator::print_sp_pkey_param()
 string PostgreSQLCodeGenerator::print_sp_pkey_field()
 {
 	return tableInfo_->vec_var_list[0]->var_name;
+}
+
+void PostgreSQLCodeGenerator::GenerateSelectSP()
+{
+
+	// search key params
+
+	string sp_select_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_select_postgres.sql"))); 
+	std::ofstream select_sp(sp_select_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!select_sp){
+		string err_msg="unable to open " + sp_select_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	select_sp << boost::format("create or replace function sp_%1%_select_%1%(")
+		% tableInfo_->tableName_;
+
+	select_sp << "p_PageIndex  int,\n";
+	select_sp << "p_PageSize   int";
+	
+
+	if(tableInfo_->has_search_key){
+		select_sp << ",\n";
+		select_sp << print_sp_search_key_params();
+	}
+
+	select_sp << ")\n";
+	select_sp << "\nAS $$\nBEGIN\n"
+		<< "\tSELECT * FROM(\n"
+		<< "\t\tSELECT \n";
+	struct var_list* v_ptr=tableInfo_->param_list;
+	///stringstream select_clause, inner_join_clause, where_condition;
+	//print_sp_select_fields(fptr);
+	select_sp << print_sp_fields(SELECT);
+	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNum\n", tableInfo_->param_list->var_name.c_str());
+	select_sp << "\t\t\tRANK() OVER (ORDER BY ";
+	select_sp << print_sp_search_key_fields();
+	select_sp << "\t\t\t) AS RowNum\n";
+	v_ptr=tableInfo_->param_list;
+	int loop_counter=0;
+	while(v_ptr){
+		if(loop_counter==0)
+			//fprintf(fptr, "\t\tFROM %s\n", tableInfo_->tableName_.c_str());
+			select_sp << boost::format("\t\tFROM %1%\n")
+				% tableInfo_->tableName_;
+		else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			string orig_varname = v_ptr->var_name.c_str();
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos) ;
+
+			/*
+			fprintf(fptr, "\t\tINNER JOIN %s %s ON %s.%s=%s.%s \n",
+				v_ptr->options.ref_table_name.c_str(),
+				improved_name.c_str(),
+				tableInfo_->tableName_.c_str(),
+				v_ptr->var_name.c_str(),
+				improved_name.c_str(),
+				v_ptr->options.ref_field_name.c_str()
+				);
+				*/
+			select_sp << boost::format(
+				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
+				v_ptr->options.ref_table_name %
+				improved_name %
+				tableInfo_->tableName_%
+				v_ptr->var_name %
+				improved_name %
+				v_ptr->options.ref_field_name;
+
+		}
+		v_ptr=v_ptr->prev;
+		++loop_counter;
+	}
+	// print out search keys
+	select_sp << print_sp_search_key_whereclause();
+
+	select_sp << boost::format ( "\t) sp_select_%s\n") 
+		% tableInfo_->tableName_;
+	// fprintf(fptr, "\tWHERE sp_select_%s.RowNum BETWEEN (@PageIndex*@PageSize+1) AND ((@PageIndex+1)*@PageSize)\n", tableInfo_->tableName_.c_str());
+	select_sp << boost::format( "\tWHERE sp_select_%s.RowNum BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize)\n")
+		% tableInfo_->tableName_;
+	select_sp << "END\n$$ LANGUAGE plpgsql;\n";
+}
+
+
+
+std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
+{
+	stringstream search_key_params;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(tableInfo_->has_search_key){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				search_key_params <<  boost::format("p_%1% %2%") 
+					% v_ptr->var_name.c_str()
+					% print_sp_types(v_ptr->var_type);
+				if(v_ptr->var_type==NVARCHAR_TYPE
+					|| v_ptr->var_type==VARCHAR_TYPE 
+					|| v_ptr->var_type==NCHAR_TYPE){
+					search_key_params << boost::format( "(%d)\n")
+						% v_ptr->arr_len;
+				} 
+				++count;
+				if(count<tableInfo_->has_search_key){
+					search_key_params <<  ",\n";
+				} else 
+					search_key_params << "\n";
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_params << "\n";
+	}
+	return search_key_params.str();
+}
+
+std::string PostgreSQLCodeGenerator::print_sp_search_key_fields()
+{
+	stringstream search_key_fields_str;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(tableInfo_->has_search_key){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				search_key_fields_str <<  boost::format("\t\t\t %1%") 
+					% v_ptr->var_name.c_str();
+				++count;
+				if(count<tableInfo_->has_search_key){
+					search_key_fields_str <<  ",\n";
+				} else 
+					search_key_fields_str << "\n";
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_fields_str << "\n";
+	}
+	return search_key_fields_str.str();
+}
+
+
+string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
+{
+	stringstream search_key_where_clause_str;
+	if(tableInfo_->has_search_key){
+		struct var_list* v_ptr = tableInfo_->param_list;
+		search_key_where_clause_str << "\t\tWHERE ";
+		int count = 0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				boost::format("%s.%s ")
+					% tableInfo_->tableName_.c_str()
+					% v_ptr->var_name.c_str();
+				if(isOfStringType(v_ptr->var_type)){
+					search_key_where_clause_str << 
+						boost::format("like p_%1%")
+						% v_ptr->var_name.c_str();
+				} else {
+					//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
+					search_key_where_clause_str << 
+						boost::format("= p_%1%")
+						% v_ptr->var_name.c_str();
+				}
+				++count;
+				if(count<tableInfo_->has_search_key){
+					search_key_where_clause_str << " AND \n";
+				}
+			}
+			v_ptr=v_ptr->prev;
+		}
+	}
+	return search_key_where_clause_str.str();
 }
