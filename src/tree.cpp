@@ -135,3 +135,17 @@ std::string var_list::print_improved_lower_var_name()
 	return improved_name;
 }
 
+
+std::string var_list::print_sql_var_decl()
+{
+	stringstream var_decl_str;
+	if (var_type==COMPOSITE_TYPE) {
+	} else {
+		var_decl_str << var_name << " " << print_sp_types(var_type);
+		if (var_type==NVARCHAR_TYPE || var_type==VARCHAR_TYPE
+			|| var_type==NCHAR_TYPE) {
+			var_decl_str << "(" << arr_len << ")";
+		}
+	}
+	return var_decl_str.str();
+}

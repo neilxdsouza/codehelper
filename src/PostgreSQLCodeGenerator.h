@@ -29,6 +29,7 @@ public:
 public:
 	virtual void GenerateInsertSP();
 	virtual void GenerateSelectSP();
+	virtual void GenerateCreateSQL();
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
 	void PrintGetConn(ofstream & cpp_db_impl);

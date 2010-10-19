@@ -37,6 +37,7 @@ void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 	GenerateDB_h();
 	GenerateInsertSP();
 	GenerateSelectSP();
+	GenerateCreateSQL();
 }
 
 /*
@@ -606,4 +607,36 @@ string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
 		}
 	}
 	return search_key_where_clause_str.str();
+}
+
+void PostgreSQLCodeGenerator::GenerateCreateSQL()
+{
+	using boost::format;
+	stringstream create_sql_str;
+	create_sql_str << format("CREATE TABLE %1% (\n")
+			%  tableInfo_->tableName_;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		string s(v_ptr->print_sql_var_decl());
+		if (s.length() > 0) {
+			create_sql_str << "\t" << s;
+			
+		}
+		v_ptr=v_ptr->prev;
+		if (v_ptr && s.length() >0) {
+			create_sql_str << ",\n";
+		}
+	}
+
+	create_sql_str << "\n);\n";
+	string sp_create_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_create_postgres.sql"))); 
+	std::ofstream create_sp(sp_create_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!create_sp){
+		string err_msg="unable to open " + sp_create_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	create_sp << create_sql_str.str();
 }
