@@ -168,11 +168,14 @@ string PostgreSQLCodeGenerator::print_sp_fields( print_sp_params_mode mode)
 		sp_fields << tab_indent << boost::format("%1%") % v_ptr->var_name;
 
 		v_ptr=v_ptr->prev;
-		if(v_ptr){
-			sp_fields << ",\n";
-		} else {
-			sp_fields << "\n";
-		}
+		// because of the Window function rank() ... over order by ...
+		// we need the extra comma
+		//if(v_ptr){
+		//	sp_fields << ",\n";
+		//} else {
+		//	sp_fields << "\n";
+		//}
+		sp_fields << ",\n";
 	}
 	return sp_fields.str();
 }
@@ -440,11 +443,11 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		string err_msg="unable to open " + sp_select_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	select_sp << boost::format("create or replace function sp_%1%_select_%1%(")
+	select_sp << boost::format("create or replace function sp_%1%_select_%1%(\n")
 		% tableInfo_->tableName_;
 
-	select_sp << "p_PageIndex  int,\n";
-	select_sp << "p_PageSize   int";
+	select_sp << "\tp_PageIndex  int,\n";
+	select_sp << "\tp_PageSize   int";
 	
 
 	if(tableInfo_->has_search_key){
@@ -461,9 +464,13 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 	//print_sp_select_fields(fptr);
 	select_sp << print_sp_fields(SELECT);
 	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNum\n", tableInfo_->param_list->var_name.c_str());
-	select_sp << "\t\t\tRANK() OVER (ORDER BY ";
-	select_sp << print_sp_search_key_fields();
-	select_sp << "\t\t\t) AS RowNum\n";
+	select_sp << "\t\t\tRANK() OVER (ORDER BY\n";
+	if (tableInfo_->has_search_key>0) {
+		select_sp << print_sp_search_key_fields();
+	} else {
+		select_sp << "\t\t\t\t" << print_sp_pkey_field();
+	}
+	select_sp << "\n\t\t\t) AS RowNum\n";
 	v_ptr=tableInfo_->param_list;
 	int loop_counter=0;
 	while(v_ptr){
@@ -516,21 +523,21 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
 {
 	stringstream search_key_params;
 	struct var_list* v_ptr=tableInfo_->param_list;
-	if(tableInfo_->has_search_key){
+	if (tableInfo_->has_search_key) {
 		int count=0;
-		while(v_ptr){
-			if(v_ptr->options.search_key){
-				search_key_params <<  boost::format("p_%1% %2%") 
+		while (v_ptr) {
+			if (v_ptr->options.search_key) {
+				search_key_params <<  boost::format("\tp_%1% %2%") 
 					% v_ptr->var_name.c_str()
 					% print_sp_types(v_ptr->var_type);
-				if(v_ptr->var_type==NVARCHAR_TYPE
+				if (v_ptr->var_type==NVARCHAR_TYPE
 					|| v_ptr->var_type==VARCHAR_TYPE 
-					|| v_ptr->var_type==NCHAR_TYPE){
+					|| v_ptr->var_type==NCHAR_TYPE) {
 					search_key_params << boost::format( "(%d)\n")
 						% v_ptr->arr_len;
-				} 
+				}
 				++count;
-				if(count<tableInfo_->has_search_key){
+				if (count<tableInfo_->has_search_key) {
 					search_key_params <<  ",\n";
 				} else 
 					search_key_params << "\n";
@@ -551,7 +558,7 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_fields()
 		int count=0;
 		while(v_ptr){
 			if(v_ptr->options.search_key){
-				search_key_fields_str <<  boost::format("\t\t\t %1%") 
+				search_key_fields_str <<  boost::format("\t\t\t\t %1%") 
 					% v_ptr->var_name.c_str();
 				++count;
 				if(count<tableInfo_->has_search_key){

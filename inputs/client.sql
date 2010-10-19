@@ -11,7 +11,7 @@ CREATE TABLE ClientGroup(
 
 CREATE TABLE Client(
 	Client_Code int : PRIMARY_KEY,
-	Client_Name varchar(250):  UNIQUE,
+	Client_Name varchar(250):  UNIQUE SEARCH_KEY,
 	ClientGroup_Code int: REFERENCES ClientGroup(ClientGroup_Code),
 	Address1 varchar(500) :NULL,
 	Address2 varchar(500) :NULL,
@@ -30,7 +30,7 @@ CREATE TABLE Client(
 
 CREATE TABLE ClientContactPerson(
 	ClientContactPerson_Code int:  PRIMARY_KEY,
-	ClientContactPerson_Name varchar(250): NOT NULL,
+	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY,
 	Client_Code int: REFERENCES Client(Client_Code),
 	Designation varchar(150): NULL,
 	Email1 varchar(250): not null,
