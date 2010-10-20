@@ -1,9 +1,11 @@
 #include "std_headers.h"
 #include "error.h"
 #include "utils.h"
+#include "CppCodeGenerator.h"
 
 #include "PostgreSQLCodeGeneratorFactory.h"
 #include "PostgreSQLCodeGenerator.h"
+#include "TableCollectionSingleton.hpp"
 
 #include "std_using.h"
 
@@ -434,67 +436,51 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 {
 
 	// search key params
-
-	string sp_select_fname (string(outputDirPrefix_.c_str()
-					+ string("/sp_")
-					+ tableInfo_->tableName_ 
-					+ string("_select_postgres.sql"))); 
-	std::ofstream select_sp(sp_select_fname.c_str(), ios_base::out|ios_base::trunc);
-	if(!select_sp){
-		string err_msg="unable to open " + sp_select_fname + "for writing";
-		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
-	}
-	select_sp << boost::format("create or replace function sp_%1%_select_%1%(\n")
+	stringstream sp_decl;
+	sp_decl << boost::format("create or replace function sp_%1%_select_%1%(\n")
 		% tableInfo_->tableName_;
 
-	select_sp << "\tp_PageIndex  int,\n";
-	select_sp << "\tp_PageSize   int";
+	sp_decl << "\tp_PageIndex  int,\n";
+	sp_decl << "\tp_PageSize   int";
 	
 
 	if(tableInfo_->has_search_key){
-		select_sp << ",\n";
-		select_sp << print_sp_search_key_params();
+		sp_decl << ",\n";
+		sp_decl << print_sp_search_key_params();
 	}
 
-	select_sp << ")\n";
-	select_sp << "\nAS $$\nBEGIN\n"
+	sp_decl << ")\n";
+
+	stringstream sp_body;
+	sp_body << "\nAS $$\nBEGIN\n"
 		<< "\tSELECT * FROM(\n"
 		<< "\t\tSELECT \n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	///stringstream select_clause, inner_join_clause, where_condition;
-	//print_sp_select_fields(fptr);
-	select_sp << print_sp_fields(SELECT);
+	stringstream sp_select_fields;
+	print_sp_select_fields(sp_select_fields);
+	sp_body << sp_select_fields.str();
+	//sp_body << print_sp_fields(SELECT);
 	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNum\n", tableInfo_->param_list->var_name.c_str());
-	select_sp << "\t\t\tRANK() OVER (ORDER BY\n";
+	sp_body << "\t\t\tRANK() OVER (ORDER BY\n";
 	if (tableInfo_->has_search_key>0) {
-		select_sp << print_sp_search_key_fields();
+		sp_body << print_sp_search_key_fields();
 	} else {
-		select_sp << "\t\t\t\t" << print_sp_pkey_field();
+		sp_body << "\t\t\t\t" << print_sp_pkey_field();
 	}
-	select_sp << "\n\t\t\t) AS RowNum\n";
+	sp_body << "\n\t\t\t) AS RowNum\n";
 	v_ptr=tableInfo_->param_list;
 	int loop_counter=0;
 	while(v_ptr){
 		if(loop_counter==0)
-			//fprintf(fptr, "\t\tFROM %s\n", tableInfo_->tableName_.c_str());
-			select_sp << boost::format("\t\tFROM %1%\n")
+			sp_body << boost::format("\t\tFROM %1%\n")
 				% tableInfo_->tableName_;
 		else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			string orig_varname = v_ptr->var_name.c_str();
 			int pos = orig_varname.find("_Code");
 			string improved_name = orig_varname.substr(0, pos) ;
 
-			/*
-			fprintf(fptr, "\t\tINNER JOIN %s %s ON %s.%s=%s.%s \n",
-				v_ptr->options.ref_table_name.c_str(),
-				improved_name.c_str(),
-				tableInfo_->tableName_.c_str(),
-				v_ptr->var_name.c_str(),
-				improved_name.c_str(),
-				v_ptr->options.ref_field_name.c_str()
-				);
-				*/
-			select_sp << boost::format(
+			sp_body << boost::format(
 				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
 				v_ptr->options.ref_table_name %
 				improved_name %
@@ -508,14 +494,25 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		++loop_counter;
 	}
 	// print out search keys
-	select_sp << print_sp_search_key_whereclause();
+	sp_body << print_sp_search_key_whereclause();
 
-	select_sp << boost::format ( "\t) sp_select_%s\n") 
+	sp_body << boost::format ( "\t) sp_select_%s\n") 
 		% tableInfo_->tableName_;
-	// fprintf(fptr, "\tWHERE sp_select_%s.RowNum BETWEEN (@PageIndex*@PageSize+1) AND ((@PageIndex+1)*@PageSize)\n", tableInfo_->tableName_.c_str());
-	select_sp << boost::format( "\tWHERE sp_select_%s.RowNum BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize)\n")
+	sp_body << boost::format( "\tWHERE sp_select_%s.RowNum BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize)\n")
 		% tableInfo_->tableName_;
-	select_sp << "END\n$$ LANGUAGE plpgsql;\n";
+	sp_body << "END\n$$ LANGUAGE plpgsql;\n";
+
+
+	string sp_select_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_select_postgres.sql"))); 
+	std::ofstream select_sp(sp_select_fname.c_str(), ios_base::out|ios_base::trunc);
+	if (!select_sp) {
+		string err_msg="unable to open " + sp_select_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	select_sp << sp_decl.str() << sp_body.str();
 }
 
 
@@ -659,4 +656,94 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 	}
 	create_sp << create_sql_str.str();
 	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "EXIT");
+}
+
+
+
+void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields)
+{
+	using boost::format;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields
+						, false, true, v_ptr->var_name.c_str());
+				p_sp_select_fields << ",\n";
+			} else {
+				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			if(tbl_ptr){
+				//p_sp_select_fields << ",\n";
+			}
+			p_sp_select_fields << boost::format("\t\t\t%1%.%2%,\n") 
+				% tableInfo_->tableName_
+				% v_ptr->var_name;
+		} else {
+			p_sp_select_fields <<  format("\t\t\t%1%,\n")
+				% v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+	}
+}
+
+
+void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_select_fields,
+		bool with_pkey, bool rename_vars, string inner_join_tabname)
+{
+	using boost::format;
+	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
+	//	% with_pkey % rename_vars % inner_join_tabname;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(!with_pkey){
+		v_ptr=v_ptr->prev;
+	}
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields
+						, false, true, v_ptr->options.ref_table_name);
+			} else {
+				p_sp_select_fields << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			if(tbl_ptr){
+				p_sp_select_fields <<  ",";
+			}
+			p_sp_select_fields << format("\t\t\t%1%.%2%,\n")
+				% tableInfo_->tableName_.c_str() % v_ptr->var_name ;
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
+		} else {
+			if(rename_vars){
+				string orig_varname = inner_join_tabname;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				p_sp_select_fields << format("\t\t\t%1%.%2% as %1%_%2%")
+					% improved_name
+					% v_ptr->var_name;
+			} else {
+				format("\t\t\t%1%.%2%")
+					% tableInfo_->tableName_
+					% v_ptr->var_name;
+			}
+		}
+		
+		v_ptr=v_ptr->prev;
+		if(v_ptr){
+			p_sp_select_fields << ",\n ";
+		} 
+		//else 
+		//	p_sp_select_fields <<  "\n ";
+	}
+	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
+	//		% with_pkey % rename_vars % inner_join_tabname;
 }

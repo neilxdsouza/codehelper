@@ -2342,7 +2342,6 @@ void CSharpAspNetCodeGenerator::print_sp_select_params(FILE* fptr, bool with_pke
 				string orig_varname = inner_join_tabname;
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
-
 				fprintf(fptr, "\t\t\t%s.%s as %s_%s", improved_name.c_str(), v_ptr->var_name.c_str(),
 						improved_name.c_str(), v_ptr->var_name.c_str());
 			} else {
