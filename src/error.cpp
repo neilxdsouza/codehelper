@@ -23,3 +23,16 @@ void fixme(std::string filename, int line_no, std::string function_name,
 	     << ", msg: " << msg
 	     << std::endl;
 }
+
+
+void log_mesg(std::string filename, int line_no, std::string function_name,
+	   std::string msg)
+{
+	std::cout << "LOG "
+	     << ", filename: " << filename
+	     << ", line no: " << line_no
+	     << ", function: " << function_name
+	     << ", msg: " << msg
+	     << std::endl;
+}
+

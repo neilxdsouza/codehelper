@@ -134,6 +134,10 @@ decl_comma_list: var_decl_with_or_wo_options {
 var_decl_with_or_wo_options: var_decl ':' options_list {
 	$$ = $1;
 	$1->options = options_list;
+	$$->options = options_list;
+
+	cout << "var_name: " << $1->var_name << "options: unique = " 
+		<< $1->options.unique << endl;
 	options_list.reinit();
 	}
 	;

@@ -613,14 +613,33 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 {
 	using boost::format;
 	stringstream create_sql_str;
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "ENTER");
+	
 	create_sql_str << format("CREATE TABLE %1% (\n")
 			%  tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
-		string s(v_ptr->print_sql_var_decl());
+		string s;
+		if (v_ptr->options.primary_key) {
+			s = v_ptr->var_name + string(" serial unique");
+		} else {
+			s= v_ptr->print_sql_var_decl();
+			if (v_ptr->options.unique) {
+				cout << "var_name: " << v_ptr->var_name 
+					<< " has unique set"
+					<< endl;
+				s += string(" unique");
+			}
+			if (v_ptr->options.ref_table_name != "") {
+				s += string(" references ")
+					+ v_ptr->options.ref_table_name 
+					+ string ("(")
+					+ v_ptr->options.ref_field_name
+					+ string (")");
+			}
+		}
 		if (s.length() > 0) {
 			create_sql_str << "\t" << s;
-			
 		}
 		v_ptr=v_ptr->prev;
 		if (v_ptr && s.length() >0) {
@@ -639,4 +658,5 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
 	create_sp << create_sql_str.str();
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "EXIT");
 }
