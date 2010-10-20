@@ -672,14 +672,12 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields
 						, false, true, v_ptr->var_name.c_str());
-				p_sp_select_fields << ",\n";
+				if (v_ptr->prev)
+					p_sp_select_fields << ",\n";
 			} else {
 				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
 					% v_ptr->options.ref_table_name;
 				exit(1);
-			}
-			if(tbl_ptr){
-				//p_sp_select_fields << ",\n";
 			}
 			p_sp_select_fields << boost::format("\t\t\t%1%.%2%,\n") 
 				% tableInfo_->tableName_
@@ -741,8 +739,6 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 		if(v_ptr){
 			p_sp_select_fields << ",\n ";
 		} 
-		//else 
-		//	p_sp_select_fields <<  "\n ";
 	}
 	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
 	//		% with_pkey % rename_vars % inner_join_tabname;
