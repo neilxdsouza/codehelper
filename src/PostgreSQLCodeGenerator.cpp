@@ -453,22 +453,23 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 
 	stringstream sp_body;
 	sp_body << "\nAS $$\nBEGIN\n"
-		<< "\tSELECT * FROM(\n"
+		<< "\tRETURN QUERY SELECT * FROM(\n"
 		<< "\t\tSELECT \n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	///stringstream select_clause, inner_join_clause, where_condition;
-	stringstream sp_select_fields;
-	print_sp_select_fields(sp_select_fields);
+	stringstream sp_select_fields, sp_select_fields_with_type;
+	print_sp_select_fields(sp_select_fields, sp_select_fields_with_type);
+	sp_select_fields_with_type << ",\np_RowNumber bigint\n";
 	sp_body << sp_select_fields.str();
 	//sp_body << print_sp_fields(SELECT);
-	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNum\n", tableInfo_->param_list->var_name.c_str());
+	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNumber\n", tableInfo_->param_list->var_name.c_str());
 	sp_body << "\t\t\tRANK() OVER (ORDER BY\n";
 	if (tableInfo_->has_search_key>0) {
 		sp_body << print_sp_search_key_fields();
 	} else {
 		sp_body << "\t\t\t\t" << print_sp_pkey_field();
 	}
-	sp_body << "\n\t\t\t) AS RowNum\n";
+	sp_body << "\n\t\t\t) AS RowNumber\n";
 	v_ptr=tableInfo_->param_list;
 	int loop_counter=0;
 	while(v_ptr){
@@ -498,7 +499,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 
 	sp_body << boost::format ( "\t) sp_select_%s\n") 
 		% tableInfo_->tableName_;
-	sp_body << boost::format( "\tWHERE sp_select_%s.RowNum BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize)\n")
+	sp_body << boost::format( "\tWHERE sp_select_%s.RowNumber BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize);\n")
 		% tableInfo_->tableName_;
 	sp_body << "END\n$$ LANGUAGE plpgsql;\n";
 
@@ -512,7 +513,13 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		string err_msg="unable to open " + sp_select_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	select_sp << sp_decl.str() << sp_body.str();
+	select_sp << sp_decl.str() 
+		<< "\nRETURNS TABLE (\n"
+		<< sp_select_fields_with_type.str() 
+		<< "\n)"
+		<< sp_body.str()
+		<< endl
+		<< endl;
 }
 
 
@@ -587,12 +594,12 @@ string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
 					% v_ptr->var_name.c_str();
 				if(isOfStringType(v_ptr->var_type)){
 					search_key_where_clause_str << 
-						boost::format("like p_%1%")
+						boost::format("%1% like p_%1%")
 						% v_ptr->var_name.c_str();
 				} else {
 					//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
 					search_key_where_clause_str << 
-						boost::format("= p_%1%")
+						boost::format("%1% = p_%1%")
 						% v_ptr->var_name.c_str();
 				}
 				++count;
@@ -660,7 +667,8 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 
 
 
-void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields)
+void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields,
+				std::stringstream & p_sp_select_fields_with_type)
 {
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -670,10 +678,13 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 					(TableCollectionSingleton::Instance()
 					 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
-				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields
+				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
+						p_sp_select_fields_with_type
 						, false, true, v_ptr->var_name.c_str());
-				if (v_ptr->prev)
+				if (v_ptr->prev) {
 					p_sp_select_fields << ",\n";
+					p_sp_select_fields_with_type << ",\n";
+				}
 			} else {
 				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
 					% v_ptr->options.ref_table_name;
@@ -685,6 +696,12 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 		} else {
 			p_sp_select_fields <<  format("\t\t\t%1%,\n")
 				% v_ptr->var_name;
+			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			if (v_ptr->prev) {
+				p_sp_select_fields_with_type << ",\n";
+			} else {
+				p_sp_select_fields_with_type << "";
+			}
 		}
 		v_ptr=v_ptr->prev;
 	}
@@ -692,6 +709,7 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 
 
 void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_select_fields,
+		std::stringstream & p_sp_select_fields_with_type,
 		bool with_pkey, bool rename_vars, string inner_join_tabname)
 {
 	using boost::format;
@@ -707,7 +725,8 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
-				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields
+				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
+						p_sp_select_fields_with_type
 						, false, true, v_ptr->options.ref_table_name);
 			} else {
 				p_sp_select_fields << format("referenced table: %1% not found in table list: ... exiting")
@@ -728,16 +747,22 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 				p_sp_select_fields << format("\t\t\t%1%.%2% as %1%_%2%")
 					% improved_name
 					% v_ptr->var_name;
+				p_sp_select_fields_with_type << 
+					"p_" << improved_name << "_" << v_ptr->var_name << " " <<
+					v_ptr->print_sql_var_type();
 			} else {
-				format("\t\t\t%1%.%2%")
+				p_sp_select_fields << format("\t\t\t%1%.%2%")
 					% tableInfo_->tableName_
 					% v_ptr->var_name;
+				p_sp_select_fields_with_type << 
+					v_ptr->print_sql_var_decl_for_select_return_table();
 			}
 		}
 		
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			p_sp_select_fields << ",\n ";
+			p_sp_select_fields_with_type << ",\n";
 		} 
 	}
 	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")

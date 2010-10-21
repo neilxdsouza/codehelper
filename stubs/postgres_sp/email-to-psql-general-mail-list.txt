@@ -1,0 +1,133 @@
+consider the following sql statement:
+
+create table food(
+	food_code serial unique,
+	food_category varchar(20),
+	food_name varchar(20)
+	);
+
+insert into food (food_category, food_name) values ('fruit', 'tomato');
+insert into food (food_category, food_name) values ('fruit', 'banana');
+insert into food (food_category, food_name) values ('fruit', 'apple');
+
+insert into food (food_category, food_name) values ('vegetable', 'cabbage');
+insert into food (food_category, food_name) values ('vegetable', 'cauliflower');
+insert into food (food_category, food_name) values ('vegetable', 'okra');
+
+insert into food (food_category, food_name) values ('nuts', 'almonds');
+insert into food (food_category, food_name) values ('nuts', 'hazelnuts');
+insert into food (food_category, food_name) values ('nuts', 'pine-seeds');
+
+I tried the following queries - the output is listed below:
+select food_category, food_name, rank as my_rank from 
+	(
+	 select food_category, food_name, rank()  over (order by food_category, food_name) from food
+	) stage1 
+where rank >= 4 and rank <=8;
+output
+---------
+food_category |  food_name  | my_rank 
+---------------+-------------+---------
+ nuts          | almonds     |       4
+ nuts          | hazelnuts   |       5
+ nuts          | pine-seeds  |       6
+ vegetable     | cabbage     |       7
+ vegetable     | cauliflower |       8
+
+select food_category, food_name, my_rank from 
+	(
+	 select food_category, food_name, rank()  over (order by food_category, food_name)as  my_rank from food
+	) stage1 
+where my_rank >= 4 and my_rank <=8;
+
+output
+---------
+ food_category |  food_name  | my_rank 
+---------------+-------------+---------
+ nuts          | almonds     |       4
+ nuts          | hazelnuts   |       5
+ nuts          | pine-seeds  |       6
+ vegetable     | cabbage     |       7
+ vegetable     | cauliflower |       8
+
+
+Consider what happens when I try to make a simple variant of the 2nd query into a stored procedure
+
+create or replace function food4(p1 int, p2 int)
+returns table (
+food_code int,
+food_category varchar(20),
+food_name varchar(20),
+my_rank bigint
+) as $$
+begin
+return query 
+	select stage1.* from 
+	(
+	 select food_code, food_category, food_name, rank()  over (order by food_code) as my_rank from food
+	) stage1;
+	--where rank >= 4 and rank <=8;
+end 
+$$ language plpgsql;
+
+nxd=> \i my_rank_sp4.sql 
+psql:my_rank_sp4.sql:16: ERROR:  syntax error at or near "$4"
+LINE 1: ... $1 ,  $2 ,  $3 , rank() over (order by  $1 ) as  $4  from f...
+                                                             ^
+	The stored procedure does not allow me to rename the variable to the name I need in the output table.
+
+	I went to the plpgsql documentation of the user manual - Chapter 38 - section 38.3.1 . There you have the "extended_sales" function which also returns a table (what I needed), and there the table has a parameter called total which is computed - the multiplication of "quantity * price" is not renamed to "total" which is in the output table, rather "quantity*price" is in the same position (2nd position) in the select query that "total" occupies in the output table. Hence I decided not to rename the ranked field - stored procedure query given below.
+
+create or replace function food5(p1 int, p2 int)
+returns table (
+food_code int,
+food_category varchar(20),
+food_name varchar(20),
+my_rank bigint
+) as $$
+begin
+return query 
+	select stage1.* from 
+	(
+	 select food_code, food_category, food_name, rank()  over (order by food_code) from food
+	) stage1;
+	--where rank >= 4 and rank <=8;
+end 
+$$ language plpgsql;
+							  
+and this works - However when I run the function this is what i get
+nxd=> \i my_rank_sp5.sql 
+CREATE FUNCTION
+nxd=> select * from food5(1,9);
+ food_code | food_category | food_name | my_rank 
+-----------+---------------+-----------+---------
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+           |               |           |       1
+
+The values are blank as you can see above
+If, I run a plain query like this - which is just text from the stored procedure,
+but not embedded in a plpgsql function - the result is fine
+nxd=> select stage1.* from 
+nxd-> (
+nxd(>  select food_code, food_category, food_name, rank()  over (order by food_code) from food
+nxd(> ) stage1;
+ food_code | food_category |  food_name  | rank 
+-----------+---------------+-------------+------
+         1 | fruit         | tomato      |    1
+         2 | fruit         | banana      |    2
+         3 | fruit         | apple       |    3
+         4 | vegetable     | cabbage     |    4
+         5 | vegetable     | cauliflower |    5
+         6 | vegetable     | okra        |    6
+         7 | nuts          | almonds     |    7
+         8 | nuts          | hazelnuts   |    8
+         9 | nuts          | pine-seeds  |    9
+
+Can someone please tell me what I am doing wrong?

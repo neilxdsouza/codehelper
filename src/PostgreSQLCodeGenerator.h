@@ -40,8 +40,10 @@ public:
 	std::string print_sp_search_key_fields();
 	std::string print_sp_search_key_whereclause();
 
-	void print_sp_select_fields(std::stringstream & p_sp_select_fields);
+	void print_sp_select_fields(std::stringstream & p_sp_select_fields,
+			std::stringstream & p_sp_select_fields_with_type);
 	void print_sp_select_params(std::stringstream & p_sp_select_fields, 
+			std::stringstream & p_sp_select_fields_with_type,
 			bool with_pkey, bool rename_vars, string inner_join_tabname);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
