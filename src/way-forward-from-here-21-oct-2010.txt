@@ -1,0 +1,16 @@
+Where we are right now:
+
+Simple BLL generation done. Simple DAL generation is done. For a simple case i.e. no composited objects we are able to do an insert into the Postgres Database. We are also able to create a simple Wt UI form to collect the data. What needs to be done to complete the "Insert object into database" path is collect the data from the Wt UI form and push it into the database. However this seems to be quite easy for the simple case - so I have stopped work on this path at this point and shifted to ggenerating the read-data-from-database path
+
+read-data-from-database-path
+I have just finished implementing the automatic generation of the stored procedure for retrieving data. This handles the case where there are composited objects using the references clause. I have not tested "deep nesting" as yet (table contains references to objects which themselves have references to objects) - and currently am not worried about this. I can have another stab at this later.
+
+The next steps are:
+
+1. Generate DAL reader which uses the new select stored procedure, with the paging parameters and any search keys are parameters also. Will have to take special care of handling date fields as search keys - maybe we should not worry about this on the first attempt and refine. The DAL reader will return a vector of smart_ptr biz objects.
+
+2. Generate a BLL api to return these values to the front end (Wt UI in our case).
+
+3. Generate user interface for each contained object which is a control - for selecting. For example client has an embedded object country which has to be chosen. So in the client user interface create a push button chooser which allows you to select a country. here is where the UI control comes into play - we use the Country UI control to display the country selector UI to the user - when user clicks on a country in the country selector - the value is transferred back to the Client UI. So We need to autmatically generate the Country UI selector. 
+
+4. UI selectors will use their select BLL functions to present the data to the user. If the referenced table has a search key then the Select UI will also have a search key. 

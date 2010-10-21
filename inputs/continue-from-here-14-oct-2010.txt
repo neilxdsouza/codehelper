@@ -1,0 +1,1 @@
+look at wt-3.5.1/examples/form to see how to inherit a form from WContainerWidget.

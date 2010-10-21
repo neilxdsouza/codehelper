@@ -1,0 +1,3 @@
+The Wt::WDialog widget can probably be used to implement the single object contained - user interface data selection.
+
+The Wt::WDialog has functions titleBar and contents which are both WContainerWidget (s) underneath. So I could set the WContainerWidget to an automatically created form control and connect the select button to the underlying form's relevant field. 

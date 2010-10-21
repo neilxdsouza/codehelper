@@ -32,6 +32,7 @@ public:
 	virtual void GenerateCreateSQL();
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
+	string PrintCppSelectFunc();
 	void PrintGetConn(ofstream & cpp_db_impl);
 	void PrintConnCloser(ofstream & cpp_db_impl);
 	void PrintMallocDeleter(ofstream & cpp_db_impl);

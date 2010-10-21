@@ -208,6 +208,8 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
 
+	cpp_db_impl << PrintCppSelectFunc();
+
 	cpp_db_impl << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
@@ -690,17 +692,26 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
-			p_sp_select_fields << boost::format("\t\t\t%1%.%2%,\n") 
+			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
 				% tableInfo_->tableName_
 				% v_ptr->var_name;
+			// p_sp_select_fields_with_type << "p_" << v_ptr->var_name;
+			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
+				p_sp_select_fields_with_type << ",\n";
+			}
 		} else {
-			p_sp_select_fields <<  format("\t\t\t%1%,\n")
+			p_sp_select_fields <<  format("\t\t\t%1%")
 				% v_ptr->var_name;
 			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
 				p_sp_select_fields_with_type << ",\n";
 			} else {
 				p_sp_select_fields_with_type << "";
+				p_sp_select_fields << "";
 			}
 		}
 		v_ptr=v_ptr->prev;
@@ -767,4 +778,23 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 	}
 	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
 	//		% with_pkey % rename_vars % inner_join_tabname;
+}
+
+string PostgreSQLCodeGenerator::PrintCppSelectFunc()
+{
+	stringstream func_signature;
+	using boost::format;
+	func_signature << format("\n\n/*\nstd::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
+		tableInfo_->tableName_;
+	stringstream func_params;
+	func_params << "()\n";
+	func_signature << func_params.str();
+	stringstream func_body;
+	func_body << "{\n}\n";
+
+	stringstream the_func;
+	the_func << func_signature.str() 
+		<< func_body.str();
+	the_func << "\n*/\n\n";
+	return the_func.str();
 }
