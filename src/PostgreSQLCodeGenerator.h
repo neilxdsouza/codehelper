@@ -38,6 +38,7 @@ public:
 	void PrintMallocDeleter(ofstream & cpp_db_impl);
 	void print_exit_nicely(ofstream & cpp_db_impl);
 	std::string print_sp_search_key_params();
+	std::string print_cpp_search_key_params();
 	std::string print_sp_search_key_fields();
 	std::string print_sp_search_key_whereclause();
 

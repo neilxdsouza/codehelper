@@ -25,10 +25,8 @@ void PostgreSQLCodeGenerator::GenerateCode()
 {
 	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
-
 	GenerateStoredProcedures();
 	GenerateCppFuncs();
-	
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
 }
@@ -79,8 +77,6 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 	insert_sp << endl << "END\n$$ LANGUAGE plpgsql;\n";
 	if(insert_sp)
 		insert_sp.close();
-			
-			
 }
 
 string PostgreSQLCodeGenerator::print_sp_param_decls(print_sp_params_mode mode)
@@ -169,7 +165,6 @@ string PostgreSQLCodeGenerator::print_sp_fields( print_sp_params_mode mode)
 			continue;
 		}
 		sp_fields << tab_indent << boost::format("%1%") % v_ptr->var_name;
-
 		v_ptr=v_ptr->prev;
 		// because of the Window function rank() ... over order by ...
 		// we need the extra comma
@@ -196,7 +191,6 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 					+ tableInfo_->tableName_ 
 					+ string("_db_postgres.cpp"))); 
 	std::ofstream cpp_db_impl(cpp_db_impl_fname.c_str(), ios_base::out|ios_base::trunc);
-
 	if(!cpp_db_impl){
 		string err_msg="unable to open " + cpp_db_impl_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
@@ -207,13 +201,10 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	print_exit_nicely(cpp_db_impl);
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
-
 	cpp_db_impl << PrintCppSelectFunc();
-
 	cpp_db_impl << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
-
 }
 
 
@@ -224,7 +215,6 @@ void PostgreSQLCodeGenerator::print_lower_fname(ofstream & file)
 		strcpy(buffer, tableInfo_->tableName_.c_str());
 		buffer[0]=tolower(buffer[0]);
 		string lower_name(buffer);
-		//fprintf(fptr, "%s", buffer);
 		file << lower_name;
 	}
 }
@@ -252,29 +242,20 @@ void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("#include <cstring>\n");
 	cpp_db_impl << boost::format("#include <sstream>\n");
 	cpp_db_impl << boost::format("#include \"%1%_bll.h\"\n") % tableInfo_->tableName_;
-
 	cpp_db_impl << boost::format("namespace %1% { namespace db { namespace %2% {\n")
 			% project_namespace % tableInfo_->tableName_;
-
 }
 
 void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 {
-	cpp_db_impl << boost::format("int Insert%1%(Biz%1% & %2%)\n{") % tableInfo_->tableName_
+	cpp_db_impl << boost::format("int Insert%1%(Biz%1% & %2%)\n{\n") % tableInfo_->tableName_
 		% print_lower_table_name();
-	//print_lower_fname(cpp_db_impl);
-	//cpp_db_impl << ")\n{\n";
 	cpp_db_impl << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
 	cpp_db_impl << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
 		% tableInfo_->vec_var_list.size() ;
-
-	//const char *paramValues[2];
-	//int			paramLengths[2];
-	//int			paramFormats[2];
 	cpp_db_impl << boost::format("\tconst char * paramValues[%1%];\n"
 			"\tstd::stringstream ss_param_values[%1%];\n") % 
 		tableInfo_->vec_var_list.size();
-
 	// skip 1st param - assume to be primary key
 	int nActualParams=0;
 	for (int i=1 ; i<tableInfo_->vec_var_list.size(); ++i) {
@@ -296,10 +277,8 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 				% nActualParams;
 		++nActualParams;
 	}
-
 	cpp_db_impl << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_insert_%1%(\"\n") %
 		tableInfo_->tableName_;
-
 	bool print_comma=true;
 	cpp_db_impl << "\t\t\t\"";
 	// skip 1st param - assume to be primary key
@@ -317,12 +296,10 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	}
 	cpp_db_impl << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
 			nActualParams;
-	
 	cpp_db_impl << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
 	cpp_db_impl << "\t\tint res_status = PQresultStatus(res);\n";
 	cpp_db_impl << "\t\tprintf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\\n\",\n"
 				 << "\t\t\tres_status, PGRES_COMMAND_OK, PGRES_TUPLES_OK);\n";
-
 	cpp_db_impl << "\t\tfprintf(stderr, \"insert employee failed: %s\", PQerrorMessage(conn.get()));\n";
 	cpp_db_impl << "\t\tPQclear(res);\n";
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
@@ -339,21 +316,15 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	cpp_db_impl << "\t	char * value=PQgetvalue(res, 0, 0);\n";
 	cpp_db_impl << "\t	printf(\"value: %s\\n\", value);\n";
 	cpp_db_impl << "\t}\n";
-
-
-
-
 	cpp_db_impl << "\n}\n";
 }
 
 void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 {
 	cpp_db_impl << "\nPGconn * GetPGConn()\n{\n";
-
 	cpp_db_impl << "\tconst char  *conninfo;\n";
 	cpp_db_impl << "\tPGconn      *conn;\n";
 	cpp_db_impl << "\tconninfo = \"dbname=nxd port=5433\";\n";
-
 	cpp_db_impl << "\tconn = PQconnectdb(conninfo);\n";
 	cpp_db_impl << "\tif (PQstatus(conn) != CONNECTION_OK)\n";
 	cpp_db_impl << "\t{\n";
@@ -362,7 +333,6 @@ void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 	cpp_db_impl << "\t	exit_nicely(conn);\n";
 	cpp_db_impl << "\t}\n";
 	cpp_db_impl << "\treturn conn;\n";
-
 	cpp_db_impl << "\n}\n";
 }
 
@@ -407,21 +377,16 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 					+ tableInfo_->tableName_ 
 					+ string("_db_postgres.h"))); 
 	std::ofstream db_h(db_h_fname.c_str(), ios_base::out|ios_base::trunc);
-
 	db_h << boost::format("#include \"%1%_bll.h\"\n")
 			% tableInfo_->tableName_;
-	
 	db_h << boost::format("namespace %1% { namespace db { namespace %2% {\n")
 			% project_namespace % tableInfo_->tableName_;
-
 	db_h << boost::format("int Insert%1%(Biz%1% & ") % tableInfo_->tableName_;
 	print_lower_fname(db_h);
 	db_h << ");\n";
-
 	db_h << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
-
 }
 
 string PostgreSQLCodeGenerator::print_sp_pkey_param()
@@ -436,23 +401,17 @@ string PostgreSQLCodeGenerator::print_sp_pkey_field()
 
 void PostgreSQLCodeGenerator::GenerateSelectSP()
 {
-
 	// search key params
 	stringstream sp_decl;
 	sp_decl << boost::format("create or replace function sp_%1%_select_%1%(\n")
 		% tableInfo_->tableName_;
-
 	sp_decl << "\tp_PageIndex  int,\n";
 	sp_decl << "\tp_PageSize   int";
-	
-
 	if(tableInfo_->has_search_key){
 		sp_decl << ",\n";
 		sp_decl << print_sp_search_key_params();
 	}
-
 	sp_decl << ")\n";
-
 	stringstream sp_body;
 	sp_body << "\nAS $$\nBEGIN\n"
 		<< "\tRETURN QUERY SELECT * FROM(\n"
@@ -482,7 +441,6 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 			string orig_varname = v_ptr->var_name.c_str();
 			int pos = orig_varname.find("_Code");
 			string improved_name = orig_varname.substr(0, pos) ;
-
 			sp_body << boost::format(
 				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
 				v_ptr->options.ref_table_name %
@@ -491,21 +449,18 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 				v_ptr->var_name %
 				improved_name %
 				v_ptr->options.ref_field_name;
-
 		}
 		v_ptr=v_ptr->prev;
 		++loop_counter;
 	}
 	// print out search keys
 	sp_body << print_sp_search_key_whereclause();
-
 	sp_body << boost::format ( "\t) sp_select_%s\n") 
 		% tableInfo_->tableName_;
 	sp_body << boost::format( "\tWHERE sp_select_%s.RowNumber BETWEEN (p_PageIndex*p_PageSize+1) AND ((p_PageIndex+1)*p_PageSize);\n")
 		% tableInfo_->tableName_;
 	sp_body << "END\n$$ LANGUAGE plpgsql;\n";
-
-
+	/* output the sp to a file */
 	string sp_select_fname (string(outputDirPrefix_.c_str()
 					+ string("/sp_")
 					+ tableInfo_->tableName_ 
@@ -620,7 +575,6 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 	using boost::format;
 	stringstream create_sql_str;
 	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "ENTER");
-	
 	create_sql_str << format("CREATE TABLE %1% (\n")
 			%  tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -652,7 +606,6 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 			create_sql_str << ",\n";
 		}
 	}
-
 	create_sql_str << "\n);\n";
 	string sp_create_fname (string(outputDirPrefix_.c_str()
 					+ string("/sp_")
@@ -769,7 +722,6 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 					v_ptr->print_sql_var_decl_for_select_return_table();
 			}
 		}
-		
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			p_sp_select_fields << ",\n ";
@@ -787,14 +739,47 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_signature << format("\n\n/*\nstd::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
 		tableInfo_->tableName_;
 	stringstream func_params;
-	func_params << "()\n";
+	func_params << "(";
+	func_params << "int p_PageIndex, int p_PageSize";
+	string search_key_params = print_cpp_search_key_params();
+	if (search_key_params != "" ) {
+		func_params << ",\n";
+		func_params << search_key_params;
+	}
+	func_params << "\t\t)\n";
 	func_signature << func_params.str();
 	stringstream func_body;
-	func_body << "{\n}\n";
-
+	func_body << "{\n";
+	func_body << "}\n";
 	stringstream the_func;
 	the_func << func_signature.str() 
 		<< func_body.str();
 	the_func << "\n*/\n\n";
 	return the_func.str();
+}
+
+std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
+{
+	stringstream search_key_fields_str;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(tableInfo_->has_search_key){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				search_key_fields_str <<  boost::format("\t\t");
+				search_key_fields_str << print_cpp_types(v_ptr->var_type);
+				search_key_fields_str <<  boost::format(" %1%") 
+					% v_ptr->var_name.c_str();
+				++count;
+				if(count<tableInfo_->has_search_key){
+					search_key_fields_str <<  ",\n";
+				} else 
+					search_key_fields_str << "\n";
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_fields_str << "";
+	}
+	return search_key_fields_str.str();
 }
