@@ -384,6 +384,22 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 	db_h << boost::format("int Insert%1%(Biz%1% & ") % tableInfo_->tableName_;
 	print_lower_fname(db_h);
 	db_h << ");\n";
+	/* Print Get Function signature using a different style */
+	stringstream get_func_signature;
+	using boost::format;
+	get_func_signature << format("std::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
+		tableInfo_->tableName_;
+	stringstream get_func_params;
+	get_func_params << "(";
+	get_func_params << "int p_PageIndex, int p_PageSize";
+	string search_key_params = print_cpp_search_key_params();
+	if (search_key_params != "" ) {
+		get_func_params << ",\n";
+		get_func_params << search_key_params;
+	}
+	get_func_params << "\t\t);\n";
+	get_func_signature << get_func_params.str();
+	db_h << get_func_signature.str();
 	db_h << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
@@ -736,7 +752,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 {
 	stringstream func_signature;
 	using boost::format;
-	func_signature << format("\n\n/*\nstd::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
+	func_signature << format("\n\nstd::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
 		tableInfo_->tableName_;
 	stringstream func_params;
 	func_params << "(";
@@ -750,6 +766,33 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_signature << func_params.str();
 	stringstream func_body;
 	func_body << "{\n";
+	func_body << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
+	func_body << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
+		% (tableInfo_->has_search_key + 2) /* int PageSize int PageIndex */ ;
+	func_body << boost::format("\tconst char * paramValues[%1%];\n"
+			"\tstd::stringstream ss_param_values[%1%];\n") 
+		% (tableInfo_->has_search_key + 2) /* int PageSize int PageIndex */ ;
+	int nActualParams = 0;
+	func_body << format("\tss_param_values[%1%] << p_PageSize;\n")
+		% nActualParams;
+	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+		% nActualParams++;
+	func_body << format("\tss_param_values[%1%] << p_PageSize;\n")
+		% nActualParams;
+	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+		% nActualParams++;
+	int count;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			func_body << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+				% nActualParams % v_ptr->var_name;
+			func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+				% nActualParams++;
+			++count;
+		}
+		v_ptr=v_ptr->prev;
+	}
 	func_body << "}\n";
 	stringstream the_func;
 	the_func << func_signature.str() 
@@ -768,7 +811,7 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 			if(v_ptr->options.search_key){
 				search_key_fields_str <<  boost::format("\t\t");
 				search_key_fields_str << print_cpp_types(v_ptr->var_type);
-				search_key_fields_str <<  boost::format(" %1%") 
+				search_key_fields_str <<  boost::format(" p_%1%") 
 					% v_ptr->var_name.c_str();
 				++count;
 				if(count<tableInfo_->has_search_key){
