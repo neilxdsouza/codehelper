@@ -1,2 +1,14 @@
+Prompt>mkdir make-build-dir bin
+Prompt>cd inputs
+Prompt>mkdir -p output/CppCodeGenerator
+Prompt>cd ..
+
 build using 
+
 Prompt> make -f CustomMakefile 
+
+test using:
+Prompt>cd inputs
+Prompt>../bin/csassist.exe emp2.sql "test"
+Prompt>../bin/csassist.exe client.sql "test"
+
