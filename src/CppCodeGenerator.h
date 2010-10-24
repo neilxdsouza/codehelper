@@ -47,6 +47,8 @@ public:
 	void print_bll_Constructor_defn(std::ofstream & bll_cpp);
 	void print_bll_Constructor_with_all_fields();
 	void print_bll_Constructor_without_invisible_fields();
+	std::string print_bll_empty_constructor_decl();
+	std::string print_bll_empty_constructor_defn();
 private:
 	CppCodeGenerator(const CppCodeGenerator&);
 	CppCodeGenerator& operator=(CppCodeGenerator &);

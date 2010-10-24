@@ -232,6 +232,12 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 					% v_ptr->var_name 
 					% v_ptr->print_improved_lower_var_name()
 					;
+				functions << boost::format("\tvoid Set_%2%(%1%  value ) { %3%_.%2%_ = value; }\n") 
+					% v_ptr->print_cpp_var_type()
+					% v_ptr->var_name 
+					% v_ptr->print_improved_lower_var_name()
+					;
+
 			}
 		} else {
 			variables << var_type.str() << boost::format(" %1%_;\n") % v_ptr->var_name;
@@ -389,6 +395,7 @@ void CppCodeGenerator::print_bll_api_constructors()
 	print_bll_constructor_decl_with_all_fields();
 	if (tableInfo_->nInvisible>0)
 		print_bll_constructor_decl_without_invisible_fields();
+	h_body << print_bll_empty_constructor_decl();
 }
 
 void CppCodeGenerator::print_bll_constructor_decl_with_all_fields()
@@ -445,6 +452,7 @@ void CppCodeGenerator::print_bll_Constructor_defn(std::ofstream & bll_cpp)
 	print_bll_Constructor_with_all_fields();
 	if (tableInfo_->nInvisible>0)
 		print_bll_Constructor_without_invisible_fields();
+	cpp_body << print_bll_empty_constructor_defn();
 }
 
 #if 0
@@ -472,16 +480,36 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 	cpp_body << "\t)\n\t:\n";
 	v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
-		cpp_body <<  "\t" << v_ptr->print_cpp_var_name() 
-			<< "("
-			<< v_ptr->print_cpp_var_param_name()
-			<< ")"; 
-		v_ptr=v_ptr->prev;		
-		if(v_ptr){
-			cpp_body << ",\n";
+		bool skip_comma = false;
+		if (v_ptr->options.ref_table_name == "") {
+			cpp_body <<  "\t" << v_ptr->print_cpp_var_name() 
+				<< "("
+				<< v_ptr->print_cpp_var_param_name()
+				<< ")"; 
+		} else {
+			skip_comma=true;
+		}
+		v_ptr=v_ptr->prev;
+		if(!skip_comma) {
+			if(v_ptr){
+				cpp_body << ",\n";
+			}
 		}
 	}
-	cpp_body << "\n{ }\n";
+
+	cpp_body << "\n{\n";
+	v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
+			cpp_body << boost::format("\t%1%_.%2%_ = %3%;\n") 
+				% v_ptr->print_improved_lower_var_name()
+				% v_ptr->var_name 
+				% v_ptr->print_cpp_var_param_name()
+				;
+		}
+		v_ptr=v_ptr->prev;		
+	}
+	cpp_body << "}\n";
 }
 
 void CppCodeGenerator::print_bll_Constructor_without_invisible_fields()
@@ -538,3 +566,21 @@ bool ReferencedTableContainsUs(TableInfoType* me, std::string ref_table_name)
 	return false;
 }
 */
+
+
+std::string CppCodeGenerator::print_bll_empty_constructor_decl()
+{
+	stringstream str;
+	str << boost::format("\tBiz%1%();\n")
+			% tableInfo_->tableName_;
+	return str.str();
+}
+
+std::string CppCodeGenerator::print_bll_empty_constructor_defn()
+{
+	stringstream str;
+	str << boost::format("\nBiz%1%::Biz%1%()\n{ }\n\n")
+			% tableInfo_->tableName_;
+	return str.str();
+}
+

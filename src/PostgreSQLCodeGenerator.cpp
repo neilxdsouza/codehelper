@@ -440,7 +440,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 	sp_body << sp_select_fields.str();
 	//sp_body << print_sp_fields(SELECT);
 	//fprintf(fptr, "\t\t\tRANK() OVER (ORDER BY %s ) AS RowNumber\n", tableInfo_->param_list->var_name.c_str());
-	sp_body << "\t\t\tRANK() OVER (ORDER BY\n";
+	sp_body << "\t\t\t, RANK() OVER (ORDER BY\n";
 	if (tableInfo_->has_search_key>0) {
 		sp_body << print_sp_search_key_fields();
 	} else {
@@ -793,6 +793,9 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		}
 		v_ptr=v_ptr->prev;
 	}
+
+	func_body << format("\tstd::vector<boost::shared_ptr<Biz%1%> > vec_rval;\n") %
+		tableInfo_->tableName_;
 	func_body << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_select_%1%($1::int, $2::int\"\n") %
 		tableInfo_->tableName_;
 	if (tableInfo_->has_search_key) {
@@ -838,6 +841,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "\t	//char * value=PQgetvalue(res, 0, 0);\n";
 	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
 	func_body << "\t}\n";
+	func_body << "\treturn vec_rval;\n";
 	func_body << "}\n";
 	stringstream the_func;
 	the_func << func_signature.str() 

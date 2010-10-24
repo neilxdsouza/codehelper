@@ -1,0 +1,16 @@
+insert into country (country_short_name, country_name) values ('ind', 'india');
+insert into country (country_short_name, country_name) values ('usa', 'united states of america');
+insert into country (country_short_name, country_name) values ('rus', 'russia');
+insert into country (country_short_name, country_name) values ('uk', 'united kingdom');
+insert into country (country_short_name, country_name) values ('fr', 'france');
+insert into country (country_short_name, country_name) values ('ger', 'germany');
+insert into country (country_short_name, country_name) values ('ita', 'italy');
+insert into country (country_short_name, country_name) values ('brz', 'brazil');
+insert into country (country_short_name, country_name) values ('chn', 'china');
+insert into country (country_short_name, country_name) values ('uae', 'united arab emirates');
+insert into country (country_short_name, country_name) values ('ksa', 'kingdom of saudi arabia');
+insert into country (country_short_name, country_name) values ('egy', 'egypt');
+insert into country (country_short_name, country_name) values ('oma', 'oman');
+insert into country (country_short_name, country_name) values ('kwt', 'kuwait');
+insert into country (country_short_name, country_name) values ('bah', 'bahrain');
+insert into country (country_short_name, country_name) values ('sud', 'sudan');
