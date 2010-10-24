@@ -222,6 +222,16 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 			} else {
 				variables << var_type.str() << boost::format(" %1%_;\n") % 
 					v_ptr->print_improved_lower_var_name();
+
+				string orig_varname = v_ptr->var_name.c_str();
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+
+				functions << boost::format("\t%1% & Get_%2%() { return %3%_.%2%_;}\n") 
+					% v_ptr->print_cpp_var_type()
+					% v_ptr->var_name 
+					% v_ptr->print_improved_lower_var_name()
+					;
 			}
 		} else {
 			variables << var_type.str() << boost::format(" %1%_;\n") % v_ptr->var_name;

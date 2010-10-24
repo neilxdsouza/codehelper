@@ -773,7 +773,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 			"\tstd::stringstream ss_param_values[%1%];\n") 
 		% (tableInfo_->has_search_key + 2) /* int PageSize int PageIndex */ ;
 	int nActualParams = 0;
-	func_body << format("\tss_param_values[%1%] << p_PageSize;\n")
+	func_body << format("\tss_param_values[%1%] << p_PageIndex;\n")
 		% nActualParams;
 	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
 		% nActualParams++;
@@ -793,11 +793,56 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		}
 		v_ptr=v_ptr->prev;
 	}
+	func_body << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_select_%1%($1::int, $2::int\"\n") %
+		tableInfo_->tableName_;
+	if (tableInfo_->has_search_key) {
+		int count1=2;
+		struct var_list* v_ptr1=tableInfo_->param_list;
+		func_body << "\t\t\t\",";
+		while (v_ptr1) {
+			if (v_ptr1->options.search_key) {
+				func_body << boost::format("$%1%::%2%")
+					% ++count1 % print_sp_types(v_ptr1->var_type);
+				if (count1 < nActualParams ){
+					func_body << ", ";
+				} else {
+					break;
+				}
+			}
+			v_ptr1=v_ptr1->prev;
+		}
+		func_body << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+				nActualParams;
+	} else {
+		func_body << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+				nActualParams;
+	}
+
+	func_body << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
+	func_body << "\t\tint res_status = PQresultStatus(res);\n";
+	func_body << "\t\tprintf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\\n\",\n"
+				 << "\t\t\tres_status, PGRES_COMMAND_OK, PGRES_TUPLES_OK);\n";
+	func_body << "\t\tfprintf(stderr, \"insert employee failed: %s\", PQerrorMessage(conn.get()));\n";
+	func_body << "\t\tPQclear(res);\n";
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
+		string("Fix me : exit_nicely may not be required since the PGconn has a custom deleter which closes the connection\n"));
+	func_body << "\t\texit_nicely(conn.get());\n";
+	func_body << "\t} else {\n";
+	func_body << "\t	int nTuples = PQntuples(res);\n";
+	func_body << "\t	int nFields = PQnfields(res);\n";
+	func_body << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
+	func_body << "\t	for(int i=0; i<nFields; ++i){\n";
+	func_body << "\t		char * fname=PQfname(res, i);\n";
+	func_body << "\t		printf(\"fname: %s\\n\", fname);\n";
+	func_body << "\t	}\n";
+	func_body << "\t	//char * value=PQgetvalue(res, 0, 0);\n";
+	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
+	func_body << "\t}\n";
 	func_body << "}\n";
 	stringstream the_func;
 	the_func << func_signature.str() 
-		<< func_body.str();
-	the_func << "\n*/\n\n";
+		<< func_body.str()
+		<< "\n";
 	return the_func.str();
 }
 
