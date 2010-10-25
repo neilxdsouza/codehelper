@@ -71,11 +71,12 @@ std::string var_list:: print_cpp_var_type()
 		var_type_str << "int64_t";
 		break;
 		case TINYINT_TYPE:
-		var_type_str << "byte";
+		var_type_str << "char";
 		break;
-		case IMAGE_TYPE:
-		var_type_str << "Image";
-		break;
+		// unhandled in postgrs
+		//case IMAGE_TYPE:
+		//var_type_str << "Image";
+		//break;
 		case COMPOSITE_TYPE:
 		if (options.many == true) {
 			var_type_str << boost::format("std::vector<boost::shared_ptr<Biz%1%> > &")

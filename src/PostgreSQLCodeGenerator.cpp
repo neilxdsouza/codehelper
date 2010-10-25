@@ -26,6 +26,7 @@ void PostgreSQLCodeGenerator::GenerateCode()
 	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
 	GenerateStoredProcedures();
+	GenerateDB_h();
 	GenerateCppFuncs();
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
@@ -34,7 +35,6 @@ void PostgreSQLCodeGenerator::GenerateCode()
 
 void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 {
-	GenerateDB_h();
 	GenerateInsertSP();
 	GenerateSelectSP();
 	GenerateCreateSQL();
@@ -202,6 +202,7 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
 	cpp_db_impl << PrintCppSelectFunc();
+	cpp_db_impl << PrintGetSingleRecord();
 	cpp_db_impl << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
@@ -243,6 +244,7 @@ void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("#include <cstring>\n");
 	cpp_db_impl << boost::format("#include <sstream>\n");
 	cpp_db_impl << boost::format("#include \"%1%_bll.h\"\n") % tableInfo_->tableName_;
+	cpp_db_impl << boost::format("#include \"%1%_db_postgres.h\"\n") % tableInfo_->tableName_;
 	cpp_db_impl << boost::format("namespace %1% { namespace db { namespace %2% {\n")
 			% project_namespace % tableInfo_->tableName_;
 }
@@ -378,6 +380,8 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 					+ tableInfo_->tableName_ 
 					+ string("_db_postgres.h"))); 
 	std::ofstream db_h(db_h_fname.c_str(), ios_base::out|ios_base::trunc);
+	db_h << "#include <postgresql/libpq-fe.h>\n";
+	db_h << "#include <boost/shared_ptr.hpp>\n";
 	db_h << boost::format("#include \"%1%_bll.h\"\n")
 			% tableInfo_->tableName_;
 	db_h << boost::format("namespace %1% { namespace db { namespace %2% {\n")
@@ -401,6 +405,8 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 	get_func_params << "\t\t);\n";
 	get_func_signature << get_func_params.str();
 	db_h << get_func_signature.str();
+
+	db_h << PrintGetSingleRecord_h();
 	db_h << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
@@ -857,9 +863,15 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << field_pos_stream.str();
 
 	func_body << "\t\tfor (int i=0; i<nTuples; ++i) {\n";
-	stringstream convert_fields_str;
-	print_cpp_convert_db_fields_to_cpp(convert_fields_str);
-	func_body << convert_fields_str.str();
+	//stringstream convert_fields_str;
+	//print_cpp_convert_db_fields_to_cpp(convert_fields_str);
+	//func_body << convert_fields_str.str();
+	func_body << format("\t\t\tusing %1%::db::%2%::Get%2%FromReader;\n")
+			% project_namespace
+			% tableInfo_->tableName_;
+	func_body << format("\t\t\tvec_rval.push_back(Get%1%FromReader(res,i));\n")
+			% tableInfo_->tableName_
+			;
 	func_body << "\t\t}\n";
 	func_body << "\t}\n";
 	func_body << "\treturn vec_rval;\n";
@@ -1148,4 +1160,263 @@ void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp2(
 			p_sp_select_fields_with_type << "";
 		} 
 	}
+}
+
+std::string PostgreSQLCodeGenerator::PrintGetSingleRecord_h()
+{
+	stringstream get_single_record_str;
+	get_single_record_str << boost::format("\nboost::shared_ptr<Biz%1%> Get%1%FromReader(PGresult * res, int row);\n")
+		% tableInfo_->tableName_; 
+	return get_single_record_str.str();
+}
+
+std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
+{
+	using boost::format;
+	stringstream get_single_record_str;
+	get_single_record_str << boost::format("\nboost::shared_ptr<Biz%1%> Get%1%FromReader(PGresult * res, int row)\n")
+		% tableInfo_->tableName_; 
+	get_single_record_str << "{\n";
+	if(tableInfo_->param_list){
+		struct var_list* v_ptr=tableInfo_->param_list;
+		// This is for the Object within this current object object
+		while (v_ptr) {
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+				string orig_varname = v_ptr->var_name.c_str();
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				get_single_record_str <<  format("\t\tboost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+					% v_ptr->options.ref_table_name
+					% improved_name ;
+				
+				get_single_record_str << print_reader_param_with_cast(v_ptr);
+				get_single_record_str << ",\n";
+				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+				get_single_record_str << t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->var_name);
+				get_single_record_str << "\t\t\t));\n";
+				//fprintf(fptr, "\t\tl_%s.%s = l_%s;\n", tableInfo_->tableName_.c_str(), v_ptr->var_name.c_str(), 
+				//		v_ptr->var_name.c_str() );
+			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
+				/*
+				fprintf(fptr, "\t\tList<Biz%s> l_%s= new Biz%s();\n", v_ptr->options.ref_table_name.c_str(),
+					v_ptr->var_name.c_str(),
+					v_ptr->options.ref_table_name.c_str()
+					);
+				fprintf(fptr, "\t\t");
+				print_csharp_types(fptr, v_ptr->var_type);
+				fprintf(fptr, " pk_l_%s = ", v_ptr->var_name.c_str());
+				print_reader_param_with_cast(v_ptr);
+				fprintf(fptr, ";\n");
+				fprintf(fptr, "\t\tl_%s = SiteProvider.%s.Get%sByCode(pk_l_%s);\n",
+					v_ptr->var_name.c_str(), v_ptr->options.ref_table_name.c_str(),	
+					v_ptr->options.ref_table_name.c_str(),
+					v_ptr->var_name.c_str()
+					);
+				*/
+				get_single_record_str << "UNHANDLED CASE: line: " << __LINE__
+						<< ", file: " << __FILE__ 
+						<< ", function: " << __PRETTY_FUNCTION__ 
+						<< endl;
+			}
+			v_ptr=v_ptr->prev;
+		}
+
+		stringstream s1, field_pos_stream;
+		print_cpp_select_field_positions(s1, field_pos_stream);
+		field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
+		get_single_record_str << field_pos_stream.str();
+		get_single_record_str << format("\tboost::shared_ptr<Biz%s> l_%s (new Biz%s(\n")
+			% tableInfo_->tableName_.c_str() 
+			% tableInfo_->tableName_.c_str()
+			% tableInfo_->tableName_.c_str();
+		//tableInfo_->param_list->print(fptr);
+		get_single_record_str << print_reader(true, false,  "");
+
+		get_single_record_str <<  "\t\t));\n";
+
+		get_single_record_str <<  format("\treturn l_%s;\n")
+			% tableInfo_->tableName_;
+	}
+	get_single_record_str << "}\n\n";
+	return get_single_record_str.str();
+}
+
+std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_ptr)
+{
+	// this first variable 
+	std::stringstream s;
+	using boost::format;
+	char buffer[MAX_VAR_LEN];
+	if(v_ptr->options.ref_table_name==""){
+		s <<  v_ptr->var_name;
+	} else {
+		string orig_varname = v_ptr->var_name.c_str();
+		int pos = orig_varname.find("_Code");
+		string improved_name = orig_varname.substr(0, pos);
+		//sprintf(buffer, "%s_Code", improved_name.c_str());
+		s << improved_name << "_Code";
+	}
+
+	s	<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+		<< "PQgetvalue(res, row, "
+		<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
+		<< ") )\n";
+	return s.str();
+	/*
+	switch (v_ptr->var_type){
+	// IMAGE_TYPE not handled in postgres - will figure out later
+	//case IMAGE_TYPE:
+	//fprintf(fptr, "\t\t\t(Image) reader[\"%s\"]", buffer);
+	//break;
+	case TINYINT_TYPE:
+		fprintf(fptr, "\t\t\t(byte) reader[\"%s\"]", buffer);
+	break;
+	case BIGINT_TYPE:
+	fprintf(fptr, "\t\t\t(Int64) reader[\"%s\"]", buffer);
+	break;
+	case INT32_TYPE:{
+	fprintf(fptr, "\t\t\t(int) reader[\"%s\"]", buffer);
+	}
+	break;		
+	case BIT_TYPE:{
+	fprintf(fptr, "\t\t\t(bool) reader[\"%s\"]", buffer);
+	}
+	break;
+	case DATETIME_TYPE:{
+	fprintf(fptr, "\t\t\t(DateTime) reader[\"%s\"]", buffer);
+	}
+	break;
+	case NTEXT_TYPE:
+	case TEXT_TYPE:
+	case VARCHAR_TYPE:
+	case NVARCHAR_TYPE:
+	case NCHAR_TYPE:
+	fprintf(fptr, "\t\t\treader[\"%s\"].ToString()", buffer);
+	
+	break;		
+	case FLOAT_TYPE:{
+	fprintf(fptr, "\t\t\tConvert.ToSingle(  reader[\"%s\"].ToString())", 
+		buffer);
+	}
+	break;		
+	case DOUBLE_TYPE:{
+	fprintf(fptr, "\t\t\tConvert.ToDouble( reader[\"%s\"].ToString())", 
+		buffer);
+	}
+	break;
+	default:
+	fprintf(fptr, "\t\t\tUnknown Type: FILE:%s, line:%d, function: print_reader(fptr)\n",
+			__FILE__, __LINE__);
+	}
+	*/
+}
+
+
+std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname)
+{
+	using boost::format;
+	stringstream s;
+	struct var_list * v_ptr=tableInfo_->param_list;
+	if(!with_pkey){
+		v_ptr=v_ptr->prev;
+	}
+	while (v_ptr) {
+		if (v_ptr->options.many==false) {
+			char buffer[MAX_VAR_LEN];
+			if (v_ptr->options.ref_table_name!="") {
+				struct CppCodeGenerator* t_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+				if (t_ptr==0) {
+					s << format("table: %1% not found: line: %2%, file: %3%\n")
+							% v_ptr->options.ref_table_name.c_str() % __LINE__ % __FILE__;
+				} else {
+					//t_ptr->print_reader(edit_out, false, true, v_ptr->var_name);
+					//fprintf(edit_out, ",\n");
+					string orig_varname = v_ptr->var_name.c_str();
+					int pos = orig_varname.find("_Code");
+					string improved_name = orig_varname.substr(0, pos);
+					s << format("\t\t\tl_biz_%s") % improved_name;
+				}
+			} else {
+				if(rename_vars){
+					//fprintf(edit_out, "renaming var: rename_vars: %d inner_join_tabname: %s\n", 
+					//		rename_vars, inner_join_tabname.c_str());
+					string orig_varname = inner_join_tabname;
+					int pos = orig_varname.find("_Code");
+					string improved_name = orig_varname.substr(0, pos);
+					sprintf(buffer, "%s_%s", improved_name.c_str(),v_ptr->var_name.c_str());
+				}else {
+					sprintf(buffer, "%s", v_ptr->var_name.c_str());
+				}
+
+				s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+					<< "PQgetvalue(res, row, "
+					<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
+					<< ") )";
+				/*
+				switch (v_ptr->var_type){
+					case IMAGE_TYPE:
+					fprintf(edit_out, "\t\t\t(Image) reader[\"%s\"]", buffer);
+					break;
+					case TINYINT_TYPE:
+					fprintf(edit_out, "\t\t\t(byte) reader[\"%s\"]", buffer);
+					break;
+					case BIGINT_TYPE:
+					fprintf(edit_out, "\t\t\t(Int64) reader[\"%s\"]", buffer);
+					break;
+					case INT32_TYPE:{
+					fprintf(edit_out, "\t\t\t(int) reader[\"%s\"]", buffer);
+					}
+					break;		
+					case BIT_TYPE:{
+					fprintf(edit_out, "\t\t\t(bool) reader[\"%s\"]", buffer);
+					}
+					break;
+					case DATETIME_TYPE:{
+					fprintf(edit_out, "\t\t\t(DateTime) reader[\"%s\"]", buffer);
+					}
+					break;
+					case NTEXT_TYPE:
+					case TEXT_TYPE:
+					case VARCHAR_TYPE:
+					case NVARCHAR_TYPE:
+					case NCHAR_TYPE:
+					fprintf(edit_out, "\t\t\treader[\"%s\"].ToString()", buffer);
+					
+					break;		
+					case FLOAT_TYPE:{
+					fprintf(edit_out, "\t\t\tConvert.ToSingle(  reader[\"%s\"].ToString())", 
+						buffer);
+					}
+					break;		
+					case DOUBLE_TYPE:{
+					fprintf(edit_out, "\t\t\tConvert.ToDouble( reader[\"%s\"].ToString())", 
+						buffer);
+					}
+					break;
+					default:
+					fprintf(edit_out, "\t\t\tUnknown Type: FILE:%s, line:%d, function: print_reader(fptr)\n",
+							__FILE__, __LINE__);
+				}
+				*/
+					
+
+			}
+
+		} else {
+			// the list would have been constructed - just pass it to the constructor
+			s << format("\t\t\tl_biz_%1%") % v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+		if(v_ptr) {
+			// fprintf(edit_out, ",\n");
+			s << ",\n";
+		}
+	}
+	//if(rename_vars==true)
+	//	fprintf(edit_out, "\n\t\t\t/* exiting ... print_reader called with rename_vars=true*/\n");
+	return s.str();
 }

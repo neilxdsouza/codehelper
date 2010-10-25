@@ -29,6 +29,9 @@ public:
 		std::stringstream & p_sp_select_fields_with_type,
 		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
 
+	virtual std::string print_reader(bool with_pkey, 
+			bool rename_vars, std::string inner_join_tabname)=0;
+
 	//virtual void SetOutputDirectory();
 	//virtual void SetTableInfo();
 protected:
