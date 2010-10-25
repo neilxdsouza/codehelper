@@ -1,3 +1,14 @@
+Can you take the create table sql statements and create a complete web application? I.e. sql queries ( if there are foreign key relationships - automatically construct the inner joins ?) to insert, view, update then expose the SQL queries in the target language (my target language is C++) as an API which can be called from the Business layer, automatically construct the User interface ( for example - Web UI/ Text UI (ncurses ui) / GUI ) and retarget it for any database ? If you marked the fields in the create table statements as "search_key" can you automatically add the search facility in the sql stored procedure all the way up to the UI. 
+
+That's what codehelper is trying to do: Target language=C++, target UI = Web UI using wt (http://www.webtoolkit.eu/wt), target database = PostgreSQL (www.postgresql.org)
+
+git://github.com/neilxdsouza/codehelper.git 
+
+Currently it generates a makefile in the output directory which compiles with a Wt (witty) UI which can be run as a standalone web server. Still a work in progress - I've done it in C++ - but you need not be restricted to C++ (You should be able to emit code in any language once you have parsed the modified sql grammar which my parser already does). Sample inputs available in the inputs folder. To see the Web UI working you need wt (http://www.webtoolkit.eu/wt) and the extjs-2.1 library.
+Clone the repository using
+
+Prompt> git clone git://github.com/neilxdsouza/codehelper.git
+Prompt> cd codehelper
 Prompt>mkdir make-build-dir bin
 Prompt>cd inputs
 Prompt>mkdir -p output/CppCodeGenerator
@@ -12,3 +23,8 @@ Prompt>cd inputs
 Prompt>../bin/csassist.exe emp2.sql "test"
 Prompt>../bin/csassist.exe client.sql "test"
 
+The generated code is written to ouput/CppCodeGenerator. 
+
+Do send me your feedback,
+nxd_in@yahoo.com
+Neil Xavier D'Souza
