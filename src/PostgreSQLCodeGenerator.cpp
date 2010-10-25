@@ -776,11 +776,17 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << format("\tss_param_values[%1%] << p_PageIndex;\n")
 		% nActualParams;
 	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
-		% nActualParams++;
+		% nActualParams;
+	func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+	func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+				% nActualParams++;
 	func_body << format("\tss_param_values[%1%] << p_PageSize;\n")
 		% nActualParams;
 	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
-		% nActualParams++;
+		% nActualParams;
+	func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+	func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+				% nActualParams++;
 	int count;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
@@ -788,7 +794,10 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 			func_body << boost::format("\tss_param_values[%1%] << p_%2%;\n")
 				% nActualParams % v_ptr->var_name;
 			func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
-				% nActualParams++;
+				% nActualParams;
+			func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+			func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+						% nActualParams++;
 			++count;
 		}
 		v_ptr=v_ptr->prev;
