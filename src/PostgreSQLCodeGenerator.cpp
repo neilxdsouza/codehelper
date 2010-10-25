@@ -238,6 +238,7 @@ void PostgreSQLCodeGenerator::print_cpp_db_impl_header(ofstream & cpp_db_impl)
 	cpp_db_impl << boost::format("#include <boost/shared_ptr.hpp>\n");
 	cpp_db_impl << boost::format("#include <boost/scoped_ptr.hpp>\n");
 	cpp_db_impl << boost::format("#include <boost/date_time/gregorian/gregorian.hpp>\n");
+	cpp_db_impl << boost::format("#include <boost/lexical_cast.hpp>\n");
 	cpp_db_impl << boost::format("#include <cstdio>\n");
 	cpp_db_impl << boost::format("#include <cstring>\n");
 	cpp_db_impl << boost::format("#include <sstream>\n");
@@ -849,6 +850,17 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "\t	}\n";
 	func_body << "\t	//char * value=PQgetvalue(res, 0, 0);\n";
 	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
+
+	stringstream s1, field_pos_stream;
+	print_cpp_select_field_positions(s1, field_pos_stream);
+	field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
+	func_body << field_pos_stream.str();
+
+	func_body << "\t\tfor (int i=0; i<nTuples; ++i) {\n";
+	stringstream convert_fields_str;
+	print_cpp_convert_db_fields_to_cpp(convert_fields_str);
+	func_body << convert_fields_str.str();
+	func_body << "\t\t}\n";
 	func_body << "\t}\n";
 	func_body << "\treturn vec_rval;\n";
 	func_body << "}\n";
@@ -883,4 +895,257 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 		 search_key_fields_str << "";
 	}
 	return search_key_fields_str.str();
+}
+
+
+
+void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream & p_sp_select_fields,
+				std::stringstream & p_sp_select_fields_with_type)
+{
+	using boost::format;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_cpp_select_params(p_sp_select_fields,
+						p_sp_select_fields_with_type
+						, false, true, v_ptr->var_name.c_str());
+				if (v_ptr->prev) {
+					p_sp_select_fields << ";\n";
+					p_sp_select_fields_with_type << ";\n";
+				}
+			} else {
+				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
+				% tableInfo_->tableName_
+				% v_ptr->var_name;
+			// p_sp_select_fields_with_type << "p_" << v_ptr->var_name;
+			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			p_sp_select_fields_with_type 
+				<< "\t\t"
+				//<< v_ptr->print_cpp_var_type() 
+				<< "int32_t"
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+				<< "PQfnumber(res, \""
+				<< v_ptr->print_sql_var_name_for_select_return_table()  
+				<< "\");\n";
+			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
+				p_sp_select_fields_with_type << ",\n";
+			}
+		} else {
+			p_sp_select_fields <<  format("\t\t\t%1%")
+				% v_ptr->var_name;
+			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+
+			p_sp_select_fields_with_type 
+				<< "\t\t"
+				//<< v_ptr->print_cpp_var_type() 
+				<< "int32_t"
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+				<< "PQfnumber(res, \""
+				<<  v_ptr->print_sql_var_name_for_select_return_table() 
+				<< "\");\n";
+			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
+				p_sp_select_fields_with_type << "";
+			} else {
+				p_sp_select_fields_with_type << "";
+				p_sp_select_fields << "";
+			}
+		}
+		v_ptr=v_ptr->prev;
+	}
+}
+
+
+
+void PostgreSQLCodeGenerator::print_cpp_select_params(std::stringstream & p_sp_select_fields,
+		std::stringstream & p_sp_select_fields_with_type,
+		bool with_pkey, bool rename_vars, string inner_join_tabname)
+{
+	using boost::format;
+	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
+	//	% with_pkey % rename_vars % inner_join_tabname;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(!with_pkey){
+		v_ptr=v_ptr->prev;
+	}
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
+						p_sp_select_fields_with_type
+						, false, true, v_ptr->options.ref_table_name);
+			} else {
+				p_sp_select_fields << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			if(tbl_ptr){
+				p_sp_select_fields <<  ",";
+			}
+			p_sp_select_fields << format("\t\t\t%1%.%2%,\n")
+				% tableInfo_->tableName_.c_str() % v_ptr->var_name ;
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
+		} else {
+			if(rename_vars){
+				string orig_varname = inner_join_tabname;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				p_sp_select_fields << format("\t\t\t%1%.%2% as %1%_%2%")
+					% improved_name
+					% v_ptr->var_name;
+				p_sp_select_fields_with_type 
+					<< "\t\t"
+					//<< v_ptr->print_cpp_var_type() 
+					<< "int32_t"
+					<< " r_" << improved_name << "_" << v_ptr->var_name << "_fnum = " 
+					<< "PQfnumber(res, \""
+					<< "r_" << improved_name << "_" << v_ptr->var_name 
+					<< "\");\n";
+			} else {
+				p_sp_select_fields << format("\t\t\t%1%.%2%")
+					% tableInfo_->tableName_
+					% v_ptr->var_name;
+				p_sp_select_fields_with_type 
+					<< "\t\t"
+					//<< v_ptr->print_cpp_var_type() 
+					<< "int32_t"
+					<< v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+					<< "PQfnumber(res, \""
+					<< v_ptr->print_sql_var_decl_for_select_return_table() 
+					<< "\");\n";
+			}
+		}
+		v_ptr=v_ptr->prev;
+		if(v_ptr){
+			p_sp_select_fields << ",\n ";
+			p_sp_select_fields_with_type << "";
+		} 
+	}
+	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
+	//		% with_pkey % rename_vars % inner_join_tabname;
+}
+
+void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp(std::stringstream & convert_fields_str)
+{
+	using boost::format;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_cpp_convert_db_fields_to_cpp2(
+						convert_fields_str
+						, false, true, v_ptr->var_name.c_str());
+				if (v_ptr->prev) {
+					convert_fields_str << ";\n";
+				}
+			} else {
+				convert_fields_str << format("referenced table: %1% not found in table list:  ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+
+			stringstream s1;
+			
+
+			convert_fields_str 
+				<< "\t\t\t"
+				<< v_ptr->print_cpp_var_type() 
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << " = "
+				<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, i, "
+				<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
+				<< ") );\n";
+			if (v_ptr->prev) {
+				convert_fields_str << ",\n";
+			}
+		} else {
+			convert_fields_str 
+				<< "\t\t\t"
+				<< v_ptr->print_cpp_var_type() 
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << " = " 
+				<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, i, "
+				<<  v_ptr->print_sql_var_name_for_select_return_table() << "_fnum "
+				<< ") );\n";
+			if (v_ptr->prev) {
+				convert_fields_str << "";
+			} else {
+				convert_fields_str << "";
+			}
+		}
+		v_ptr=v_ptr->prev;
+	}
+}
+
+void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp2(
+		std::stringstream & p_sp_select_fields_with_type,
+		bool with_pkey, bool rename_vars, string inner_join_tabname)
+{
+	using boost::format;
+	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
+	//	% with_pkey % rename_vars % inner_join_tabname;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(!with_pkey){
+		v_ptr=v_ptr->prev;
+	}
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_cpp_convert_db_fields_to_cpp2(
+						p_sp_select_fields_with_type
+						, false, true, v_ptr->options.ref_table_name);
+			} else {
+				cerr << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+		} else {
+			if(rename_vars){
+				string orig_varname = inner_join_tabname;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				p_sp_select_fields_with_type 
+					<< "\t\t\t"
+					<< v_ptr->print_cpp_var_type() 
+					<< "int32_t"
+					<< " r_" << improved_name << "_" << v_ptr->var_name << " = " 
+					<< "PQfnumber(res, \""
+					<< "r_" << improved_name << "_" << v_ptr->var_name 
+					<< "\");\n";
+			} else {
+				p_sp_select_fields_with_type 
+					<< "\t\t\t"
+					//<< v_ptr->print_cpp_var_type() 
+					<< "int32_t"
+					<< v_ptr->print_sql_var_name_for_select_return_table() << " = " 
+					<< "PQfnumber(res, \""
+					<< v_ptr->print_sql_var_decl_for_select_return_table() 
+					<< "\");\n";
+			}
+		}
+		v_ptr=v_ptr->prev;
+		if(v_ptr){
+			p_sp_select_fields_with_type << "";
+		} 
+	}
 }

@@ -170,7 +170,7 @@ std::string var_list::print_sql_var_decl_for_select_return_table()
 	stringstream var_decl_str;
 	if (var_type==COMPOSITE_TYPE) {
 	} else {
-		var_decl_str << "p_" 
+		var_decl_str << "r_" 
 			<< var_name << " " << print_sp_types(var_type);
 		if (var_type==NVARCHAR_TYPE || var_type==VARCHAR_TYPE
 			|| var_type==NCHAR_TYPE) {
@@ -178,4 +178,16 @@ std::string var_list::print_sql_var_decl_for_select_return_table()
 		}
 	}
 	return var_decl_str.str();
+}
+
+
+std::string var_list::print_sql_var_name_for_select_return_table()
+{
+	stringstream var_name_str;
+	if (var_type==COMPOSITE_TYPE) {
+	} else {
+		var_name_str << "r_" 
+			<< var_name ;
+	}
+	return var_name_str.str();
 }
