@@ -182,13 +182,19 @@ std::string var_list::print_sql_var_decl_for_select_return_table()
 }
 
 
-std::string var_list::print_sql_var_name_for_select_return_table()
+std::string var_list::print_sql_var_name_for_select_return_table(string ref_table_name)
 {
 	stringstream var_name_str;
 	if (var_type==COMPOSITE_TYPE) {
 	} else {
-		var_name_str << "r_" 
-			<< var_name ;
+		if( ref_table_name =="" ){
+			var_name_str << "r_" 
+				<< var_name ;
+		} else {
+			var_name_str << "r_" 
+				<< ref_table_name << "_"
+				<< var_name ;
+		}
 	}
 	return var_name_str.str();
 }

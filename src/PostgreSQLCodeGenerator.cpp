@@ -945,9 +945,9 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream
 				<< "\t\t"
 				//<< v_ptr->print_cpp_var_type() 
 				<< "int32_t"
-				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name) << "_fnum = " 
 				<< "PQfnumber(res, \""
-				<< v_ptr->print_sql_var_name_for_select_return_table()  
+				<< v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name)  
 				<< "\");\n";
 			if (v_ptr->prev) {
 				p_sp_select_fields << ",\n";
@@ -963,9 +963,9 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream
 				<< "\t\t"
 				//<< v_ptr->print_cpp_var_type() 
 				<< "int32_t"
-				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table("") << "_fnum = " 
 				<< "PQfnumber(res, \""
-				<<  v_ptr->print_sql_var_name_for_select_return_table() 
+				<<  v_ptr->print_sql_var_name_for_select_return_table("") 
 				<< "\");\n";
 			if (v_ptr->prev) {
 				p_sp_select_fields << ",\n";
@@ -1036,7 +1036,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_params(std::stringstream & p_sp_s
 					<< "\t\t"
 					//<< v_ptr->print_cpp_var_type() 
 					<< "int32_t"
-					<< v_ptr->print_sql_var_name_for_select_return_table() << "_fnum = " 
+					<< v_ptr->print_sql_var_name_for_select_return_table(string("")) << "_fnum = " 
 					<< "PQfnumber(res, \""
 					<< v_ptr->print_sql_var_decl_for_select_return_table() 
 					<< "\");\n";
@@ -1081,10 +1081,10 @@ void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp(std::stringstre
 			convert_fields_str 
 				<< "\t\t\t"
 				<< v_ptr->print_cpp_var_type() 
-				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << " = "
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table("") << " = "
 				<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
 				<< "PQgetvalue(res, i, "
-				<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
+				<< v_ptr->print_sql_var_name_for_select_return_table("")  << "_fnum "
 				<< ") );\n";
 			if (v_ptr->prev) {
 				convert_fields_str << ",\n";
@@ -1093,10 +1093,10 @@ void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp(std::stringstre
 			convert_fields_str 
 				<< "\t\t\t"
 				<< v_ptr->print_cpp_var_type() 
-				<< " " << v_ptr->print_sql_var_name_for_select_return_table() << " = " 
+				<< " " << v_ptr->print_sql_var_name_for_select_return_table("") << " = " 
 				<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
 				<< "PQgetvalue(res, i, "
-				<<  v_ptr->print_sql_var_name_for_select_return_table() << "_fnum "
+				<<  v_ptr->print_sql_var_name_for_select_return_table("") << "_fnum "
 				<< ") );\n";
 			if (v_ptr->prev) {
 				convert_fields_str << "";
@@ -1151,7 +1151,7 @@ void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp2(
 					<< "\t\t\t"
 					//<< v_ptr->print_cpp_var_type() 
 					<< "int32_t"
-					<< v_ptr->print_sql_var_name_for_select_return_table() << " = " 
+					<< v_ptr->print_sql_var_name_for_select_return_table("") << " = " 
 					<< "PQfnumber(res, \""
 					<< v_ptr->print_sql_var_decl_for_select_return_table() 
 					<< "\");\n";
@@ -1196,7 +1196,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 					% v_ptr->options.ref_table_name
 					% improved_name ;
 				
-				get_single_record_str << print_reader_param_with_cast(v_ptr);
+				get_single_record_str << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
 				get_single_record_str << ",\n";
 				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
@@ -1246,28 +1246,34 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 	return get_single_record_str.str();
 }
 
-std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_ptr)
+std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_ptr, std::string ref_table_name)
 {
 	// this first variable 
 	std::stringstream s;
 	using boost::format;
 	char buffer[MAX_VAR_LEN];
-	if(v_ptr->options.ref_table_name==""){
+
+	s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+		<< "PQgetvalue(res, row, ";
+	//if(v_ptr->options.ref_table_name==""){
+	if(ref_table_name==""){
 		// this was uncommented - 26-oct-2010
-		//s <<  v_ptr->var_name;
+		s <<  "r_" << v_ptr->var_name << "_fnum ) )" ;
 	} else {
 		string orig_varname = v_ptr->var_name.c_str();
 		int pos = orig_varname.find("_Code");
 		string improved_name = orig_varname.substr(0, pos);
 		//sprintf(buffer, "%s_Code", improved_name.c_str());
 		// this was uncommented - 26-oct-2010
-		// s << improved_name << "_Code";
+		//s << improved_name << "_Code";
+		s << "r_" << improved_name << "_" << v_ptr->var_name << "_fnum) )";
 	}
 
-	s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-		<< "PQgetvalue(res, row, "
-		<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
-		<< ") )";
+	//s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+	//	<< "PQgetvalue(res, row, "
+	//	<< v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name)  << "_fnum "
+	//	<< ") )";
+
 	return s.str();
 	/*
 	switch (v_ptr->var_type){
@@ -1347,7 +1353,7 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 					string orig_varname = v_ptr->var_name.c_str();
 					int pos = orig_varname.find("_Code");
 					string improved_name = orig_varname.substr(0, pos);
-					s << format("\t\t\tl_biz_%s") % improved_name;
+					s << format("\t\t\tl_biz_%1%") % improved_name;
 				}
 			} else {
 				if(rename_vars){
@@ -1357,14 +1363,19 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 					int pos = orig_varname.find("_Code");
 					string improved_name = orig_varname.substr(0, pos);
 					sprintf(buffer, "%s_%s", improved_name.c_str(),v_ptr->var_name.c_str());
+
+					s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+						<< "PQgetvalue(res, row, "
+						<< v_ptr->print_sql_var_name_for_select_return_table(improved_name)  << "_fnum "
+						<< ") )";
 				}else {
 					sprintf(buffer, "%s", v_ptr->var_name.c_str());
+					s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+						<< "PQgetvalue(res, row, "
+						<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  << "_fnum "
+						<< ") )";
 				}
 
-				s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-					<< "PQgetvalue(res, row, "
-					<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
-					<< ") )";
 				/*
 				switch (v_ptr->var_type){
 					case IMAGE_TYPE:
@@ -1414,7 +1425,6 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 					
 
 			}
-
 		} else {
 			// the list would have been constructed - just pass it to the constructor
 			s << format("\t\t\tl_biz_%1%") % v_ptr->var_name;

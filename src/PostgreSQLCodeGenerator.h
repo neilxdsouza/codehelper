@@ -59,7 +59,7 @@ public:
 		bool with_pkey, bool rename_vars, string inner_join_tabname);
 	std::string PrintGetSingleRecord_h();
 	std::string PrintGetSingleRecord();
-	std::string print_reader_param_with_cast(var_list* v_ptr);
+	std::string print_reader_param_with_cast(var_list* v_ptr, std::string ref_table_name);
 	std::string print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);

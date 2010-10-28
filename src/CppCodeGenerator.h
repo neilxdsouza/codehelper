@@ -42,6 +42,9 @@ public:
 	void print_bll_api_constructors();
 	void print_bll_constructor_decl_with_all_fields();
 	void print_bll_constructor_decl_without_invisible_fields();
+
+	std::string print_bll_bizobj_constructor_h();
+	std::string print_bll_bizobj_constructor_cpp();
 public:
 	void print_bll_Insert_defn(std::ofstream & bll_cpp);
 	void print_bll_Constructor_defn(std::ofstream & bll_cpp);
