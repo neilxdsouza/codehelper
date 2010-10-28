@@ -910,7 +910,7 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 }
 
 
-
+/* This function and all similar functions have to be refactored */
 void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream & p_sp_select_fields,
 				std::stringstream & p_sp_select_fields_with_type)
 {
@@ -927,7 +927,8 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream
 						, false, true, v_ptr->var_name.c_str());
 				if (v_ptr->prev) {
 					p_sp_select_fields << ";\n";
-					p_sp_select_fields_with_type << ";\n";
+					// not required
+					//p_sp_select_fields_with_type << "/* is this required - I dont think so; */\n";
 				}
 			} else {
 				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
@@ -950,7 +951,8 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(std::stringstream
 				<< "\");\n";
 			if (v_ptr->prev) {
 				p_sp_select_fields << ",\n";
-				p_sp_select_fields_with_type << ",\n";
+				// not required
+				//p_sp_select_fields_with_type << "/* is this required, */\n";
 			}
 		} else {
 			p_sp_select_fields <<  format("\t\t\t%1%")
@@ -984,7 +986,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_params(std::stringstream & p_sp_s
 		bool with_pkey, bool rename_vars, string inner_join_tabname)
 {
 	using boost::format;
-	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
+	//p_sp_select_fields_with_type <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
 	//	% with_pkey % rename_vars % inner_join_tabname;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if(!with_pkey){
@@ -1178,6 +1180,11 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		% tableInfo_->tableName_; 
 	get_single_record_str << "{\n";
 	if(tableInfo_->param_list){
+		stringstream s1, field_pos_stream;
+		/* I have to fix a bug at this point */
+		print_cpp_select_field_positions(s1, field_pos_stream);
+		field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
+		get_single_record_str << field_pos_stream.str();
 		struct var_list* v_ptr=tableInfo_->param_list;
 		// This is for the Object within this current object object
 		while (v_ptr) {
@@ -1223,10 +1230,6 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 			v_ptr=v_ptr->prev;
 		}
 
-		stringstream s1, field_pos_stream;
-		print_cpp_select_field_positions(s1, field_pos_stream);
-		field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
-		get_single_record_str << field_pos_stream.str();
 		get_single_record_str << format("\tboost::shared_ptr<Biz%s> l_%s (new Biz%s(\n")
 			% tableInfo_->tableName_.c_str() 
 			% tableInfo_->tableName_.c_str()
@@ -1250,19 +1253,21 @@ std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_pt
 	using boost::format;
 	char buffer[MAX_VAR_LEN];
 	if(v_ptr->options.ref_table_name==""){
-		s <<  v_ptr->var_name;
+		// this was uncommented - 26-oct-2010
+		//s <<  v_ptr->var_name;
 	} else {
 		string orig_varname = v_ptr->var_name.c_str();
 		int pos = orig_varname.find("_Code");
 		string improved_name = orig_varname.substr(0, pos);
 		//sprintf(buffer, "%s_Code", improved_name.c_str());
-		s << improved_name << "_Code";
+		// this was uncommented - 26-oct-2010
+		// s << improved_name << "_Code";
 	}
 
-	s	<< "boost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+	s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
 		<< "PQgetvalue(res, row, "
 		<< v_ptr->print_sql_var_name_for_select_return_table()  << "_fnum "
-		<< ") )\n";
+		<< ") )";
 	return s.str();
 	/*
 	switch (v_ptr->var_type){
@@ -1322,6 +1327,10 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
 	}
+	//s << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
+	//	<< "*/\n"
+	//	<< endl;
+		
 	while (v_ptr) {
 		if (v_ptr->options.many==false) {
 			char buffer[MAX_VAR_LEN];
