@@ -44,6 +44,7 @@ char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel_Namespace"};
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
 AbstractCodeGeneratorFactory * codeGeneratorFactory;
+vector<string> dict;
 
 void Init();
 
@@ -123,12 +124,31 @@ void print_code(FILE * & edit_out)
 
 void Init()
 {
+	cout << __PRETTY_FUNCTION__ << ", FILE: " << __FILE__ << ", LINE: " << __LINE__ << endl;
 	//CreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	//ptrCreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	//TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	TableCollectionSingleton::Instance();
 	active_scope=new scope();
 	active_scope_list.push_back(active_scope);
+
+
+	using namespace std;
+	string dict_name("english-words.95");
+	ifstream dict_file(dict_name.c_str());
+	if (dict_file.is_open()) {
+		typedef istream_iterator<string> string_input;
+		copy(string_input(dict_file), string_input(),
+				back_inserter(dict));
+		cout << "dictionary contains: " << dict.size() << " words"
+			<< endl;
+		for (int i=0; i<50; ++i) {
+			int pos = dict[i].find("'");
+			string without_quote = dict[i].substr(0, pos);
+			cout << dict[i] << "|" << without_quote << endl;
+		}
+	}
+	//vector <string> dict;
 }
 
 
@@ -142,5 +162,6 @@ void ParseProgramOptions(int argc, char * argv[])
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
+
 	
 }

@@ -150,6 +150,7 @@ struct var_list
 	std::string print_sql_var_type();
 	std::string print_sql_var_decl_for_select_return_table();
 	std::string print_sql_var_name_for_select_return_table(std::string ref_table_name);
+	std::string print_random_value(int counter, int p_nRecords);
 
 	private:
 		var_list& operator=(const var_list&);

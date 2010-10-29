@@ -38,6 +38,7 @@ void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 	GenerateInsertSP();
 	GenerateSelectSP();
 	GenerateCreateSQL();
+	GenerateRandomData();
 }
 
 /*
@@ -1439,3 +1440,59 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 	//	fprintf(edit_out, "\n\t\t\t/* exiting ... print_reader called with rename_vars=true*/\n");
 	return s.str();
 }
+
+std::string PostgreSQLCodeGenerator::GenerateRandomData()
+{
+	using boost::format;
+	stringstream s;
+	struct var_list * v_ptr=tableInfo_->param_list;
+	// skip primary key
+	v_ptr=v_ptr->prev;
+	//s << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
+	//	<< "*/\n"
+	//	<< endl;
+	//
+	s << "insert into " << tableInfo_->tableName_ << "(";
+	int counter=0;
+	while (v_ptr) {
+		s << "\t" << v_ptr->var_name;
+		v_ptr = v_ptr->prev;
+		if (v_ptr) {
+			s << ",\n";
+		} else {
+			s << "\n";
+		}
+	}
+	s << "\t) values (\n";
+	int nRecords=50;
+	stringstream final;
+	for (int i=0; i<nRecords; ++i) {
+		stringstream random_data_varying;
+		v_ptr = tableInfo_->param_list->prev; // skip primary key
+		while (v_ptr) {
+			random_data_varying << "\t" << v_ptr->print_random_value(i, nRecords);
+			v_ptr = v_ptr->prev;
+			if (v_ptr) {
+				random_data_varying << ",\n";
+			} else {
+				random_data_varying << "\n";
+			}
+		}
+		random_data_varying << ");\n";
+		final << s.str() << random_data_varying.str();
+	}
+
+	
+	string sp_random_data_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_random_data_postgres.sql"))); 
+	std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!random_data_sp){
+		string err_msg="unable to open " + sp_random_data_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	random_data_sp << final.str();
+	return final.str();
+}
+
