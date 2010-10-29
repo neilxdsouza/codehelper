@@ -298,7 +298,7 @@ std::string var_list::print_random_value(int counter, int p_nRecords)
 		case DATETIME_TYPE:{
 			//var_type_str << "boost::gregorian::date";
 			int year = 2000 + (rand() % 10);
-			int month = rand() %12;
+			int month = (rand() %12) + 1;
 			int day;
 			if(month == 2 ) {
 				if (year %100 ==0) {
