@@ -18,16 +18,22 @@ public:
 	virtual void GenerateCode()=0;
 
 	virtual void print_sp_select_params(std::stringstream & p_sp_select_fields,
+		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
+
+	virtual void print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,
 		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
 
-	virtual void print_cpp_select_params(std::stringstream & p_sp_select_fields,
-			std::stringstream & p_sp_select_fields_with_type,
-			bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
 
 	virtual void print_cpp_convert_db_fields_to_cpp2(
 		std::stringstream & p_sp_select_fields_with_type,
 		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
+
+
+	virtual void print_sp_return_table_fields(std::stringstream & p_sp_select_fields_with_type)=0;
+	virtual void print_sp_return_table_fields2(
+			std::stringstream & p_sp_select_fields_with_type,
+			bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
 
 	virtual std::string print_reader(bool with_pkey, 
 			bool rename_vars, std::string inner_join_tabname)=0;

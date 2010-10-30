@@ -42,15 +42,13 @@ public:
 	std::string print_sp_search_key_fields();
 	std::string print_sp_search_key_whereclause();
 
-	void print_sp_select_fields(std::stringstream & p_sp_select_fields,
-			std::stringstream & p_sp_select_fields_with_type);
+	void print_sp_select_fields(std::stringstream & p_sp_select_fields);
 	void print_sp_select_params(std::stringstream & p_sp_select_fields, 
-			std::stringstream & p_sp_select_fields_with_type,
 			bool with_pkey, bool rename_vars, string inner_join_tabname);
 
-	void print_cpp_select_field_positions(std::stringstream & p_sp_select_fields,
+	void print_cpp_select_field_positions(
 					std::stringstream & p_sp_select_fields_with_type);
-	void print_cpp_select_params(std::stringstream & p_sp_select_fields,
+	void print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,
 		bool with_pkey, bool rename_vars, string inner_join_tabname);
 	void print_cpp_convert_db_fields_to_cpp(std::stringstream& convert_fields_str);
@@ -62,6 +60,11 @@ public:
 	std::string print_reader_param_with_cast(var_list* v_ptr, std::string ref_table_name);
 	std::string print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname);
 	std::string GenerateRandomData();
+
+	void print_sp_return_table_fields(std::stringstream & p_sp_select_fields_with_type);
+	void print_sp_return_table_fields2(
+			std::stringstream & p_sp_select_fields_with_type,
+			bool with_pkey, bool rename_vars, string inner_join_tabname);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);
