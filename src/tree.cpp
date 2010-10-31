@@ -391,3 +391,113 @@ std::string var_list::print_random_value(int counter, int p_nRecords)
 }
 
 
+std::string var_list::print_psql_to_cpp_conversion(std::string ref_table_name)
+{
+	// this first variable 
+	std::stringstream s;
+	using boost::format;
+
+	s << boost::format("\n/* %1%, %2%, %3%: ref_table_name: %4% */\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ % ref_table_name;
+
+	switch (var_type){
+		case INT32_TYPE:{
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;		
+		case TEXT_TYPE:
+		case VARCHAR_TYPE:
+		case NVARCHAR_TYPE:
+		case NCHAR_TYPE:
+		case NTEXT_TYPE: {
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;		
+		case FLOAT_TYPE: {
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;		
+		case DOUBLE_TYPE: {
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;
+		case BIT_TYPE: {
+			s	<< "(PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) == \"t\"? true : false)" ;
+			} else {
+				s << "r_" << ref_table_name 
+					<< "_" << var_name << "_fnum) == \"t\"? true : false)";
+			}
+		}
+		break;
+		case DATETIME_TYPE:
+		{
+			s	<< "boost::gregorian::from_simple_string( string( "
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) ))" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) ))";
+			}
+		}
+		break;
+		case BIGINT_TYPE: {
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;
+		case TINYINT_TYPE: {
+			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+				<< "PQgetvalue(res, row, ";
+			if(ref_table_name==""){
+				s <<  "r_" << var_name << "_fnum ) )" ;
+			} else {
+				s << "r_" << ref_table_name << "_" << var_name << "_fnum) )";
+			}
+		}
+		break;
+		// unhandled in postgrs
+		//case IMAGE_TYPE:
+		//var_type_str << "Image";
+		//break;
+		case COMPOSITE_TYPE:
+			s << "unhandled case: " << __FILE__ << ", " << __LINE__ << ", func: "
+				<< __PRETTY_FUNCTION__ << endl;
+		break;
+
+		default:
+			s << "unhandled case: " << __FILE__ << ", " << __LINE__ << ", func: "
+				<< __PRETTY_FUNCTION__ << endl;
+	}
+	return s.str();
+}

@@ -1247,7 +1247,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 					% improved_name ;
 				
 				//get_single_record_str << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
-				get_single_record_str << print_reader_param_with_cast(v_ptr, string(""));
+				get_single_record_str << "\t\t\t/*3*/" << print_reader_param_with_cast(v_ptr, string(""));
 				get_single_record_str << ",\n";
 				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
@@ -1303,16 +1303,17 @@ std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_pt
 	std::stringstream s;
 	using boost::format;
 
-	s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-		<< "PQgetvalue(res, row, ";
-	if(ref_table_name==""){
-		s <<  "r_" << v_ptr->var_name << "_fnum ) )" ;
-	} else {
-		string orig_varname = v_ptr->var_name.c_str();
-		int pos = orig_varname.find("_Code");
-		string improved_name = orig_varname.substr(0, pos);
-		s << "r_" << improved_name << "_" << v_ptr->var_name << "_fnum) )";
-	}
+	// s	<< "\t\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+	// 	<< "PQgetvalue(res, row, ";
+	// if(ref_table_name==""){
+	// 	s <<  "r_" << v_ptr->var_name << "_fnum ) )" ;
+	// } else {
+	// 	string orig_varname = v_ptr->var_name.c_str();
+	// 	int pos = orig_varname.find("_Code");
+	// 	string improved_name = orig_varname.substr(0, pos);
+	// 	s << "r_" << improved_name << "_" << v_ptr->var_name << "_fnum) )";
+	// }
+	s << v_ptr->print_psql_to_cpp_conversion(ref_table_name);
 	return s.str();
 }
 
@@ -1351,15 +1352,18 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 					string orig_varname = inner_join_tabname;
 					int pos = orig_varname.find("_Code");
 					string improved_name = orig_varname.substr(0, pos);
-					s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-						<< "PQgetvalue(res, row, "
-						<< v_ptr->print_sql_var_name_for_select_return_table(improved_name)  << "_fnum "
-						<< ") )";
+					//s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+					//	<< "PQgetvalue(res, row, "
+					//	<< v_ptr->print_sql_var_name_for_select_return_table(improved_name)  << "_fnum "
+					//	<< ") )";
+					s << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(improved_name);
 				}else {
-					s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-						<< "PQgetvalue(res, row, "
-						<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  << "_fnum "
-						<< ") )";
+					//s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
+					//	<< "PQgetvalue(res, row, "
+					//	<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  << "_fnum "
+					//	<< ") )";
+
+					s << "\t\t/*2*/ " << v_ptr->print_psql_to_cpp_conversion(string(""));
 				}
 			}
 		} else {
