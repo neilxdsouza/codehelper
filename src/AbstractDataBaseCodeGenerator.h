@@ -18,7 +18,7 @@ public:
 	virtual void GenerateCode()=0;
 
 	virtual void print_sp_select_params(std::stringstream & p_sp_select_fields,
-		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;
 
 	virtual void print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,

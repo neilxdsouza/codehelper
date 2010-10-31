@@ -42,7 +42,7 @@ public:
 	static std::stringstream makefile_objs;
 	std::vector<std::string> vec_handler_decls;
 	std::vector<std::string> vec_handler_defns;
-
+	std::string print_cpp_search_key_args();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

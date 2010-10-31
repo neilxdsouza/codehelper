@@ -397,8 +397,8 @@ std::string var_list::print_psql_to_cpp_conversion(std::string ref_table_name)
 	std::stringstream s;
 	using boost::format;
 
-	s << boost::format("\n/* %1%, %2%, %3%: ref_table_name: %4% */\n") %
-		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ % ref_table_name;
+	//s << boost::format("\n/* %1%, %2%, %3%: ref_table_name: %4% */\n") %
+	//	__FILE__ % __LINE__ % __PRETTY_FUNCTION__ % ref_table_name;
 
 	switch (var_type){
 		case INT32_TYPE:{

@@ -650,16 +650,23 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields
 				)
 {
+	// We will treat this function as recursion level 0
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
+				% tableInfo_->tableName_
+				% v_ptr->var_name;
 			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 					(TableCollectionSingleton::Instance()
 					 	.my_find_table(v_ptr->options.ref_table_name)));
+			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
+			}
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
-						false, true, v_ptr->var_name.c_str());
+						false, true, v_ptr->var_name.c_str(), 1);
 				if (v_ptr->prev) {
 					p_sp_select_fields << ",\n";
 				}
@@ -669,12 +676,6 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				exit(1);
 			}
 			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
-			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
-				% tableInfo_->tableName_
-				% v_ptr->var_name;
-			if (v_ptr->prev) {
-				p_sp_select_fields << ",\n";
-			}
 		} else {
 			p_sp_select_fields <<  format("\t\t\t%1%")
 				% v_ptr->var_name;
@@ -730,11 +731,11 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 
 
 void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_select_fields,
-		bool with_pkey, bool rename_vars, string inner_join_tabname)
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)
 {
 	using boost::format;
-	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
-	//	% with_pkey % rename_vars % inner_join_tabname;
+	p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% :recursion_level: %4%*/\n")
+		% with_pkey % rename_vars % inner_join_tabname % recursion_level;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
@@ -746,16 +747,16 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
-						false, true, v_ptr->options.ref_table_name);
+						false, true, v_ptr->options.ref_table_name, recursion_level+1);
 			} else {
 				p_sp_select_fields << format("referenced table: %1% not found in table list: ... exiting")
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
 			if(tbl_ptr){
-				p_sp_select_fields <<  ",";
+				p_sp_select_fields <<  ",\n";
 			}
-			p_sp_select_fields << format("\t\t\t%1%.%2%,\n")
+			p_sp_select_fields << format("\t\t\t/*7*/%1%.%2% as %1%_%2%")
 				% tableInfo_->tableName_.c_str() % v_ptr->var_name ;
 			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		} else {
@@ -775,7 +776,7 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			p_sp_select_fields << ",\n ";
-		} 
+		}
 	}
 	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
 	//		% with_pkey % rename_vars % inner_join_tabname;
@@ -1242,7 +1243,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 				string orig_varname = v_ptr->var_name.c_str();
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
-				get_single_record_str <<  format("\t\tboost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+				get_single_record_str <<  format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
 					% v_ptr->options.ref_table_name
 					% improved_name ;
 				
@@ -1281,7 +1282,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 			v_ptr=v_ptr->prev;
 		}
 
-		get_single_record_str << format("\tboost::shared_ptr<Biz%s> l_%s (new Biz%s(\n")
+		get_single_record_str << format("\t/*5*/boost::shared_ptr<Biz%s> l_%s (new Biz%s(\n")
 			% tableInfo_->tableName_.c_str() 
 			% tableInfo_->tableName_.c_str()
 			% tableInfo_->tableName_.c_str();

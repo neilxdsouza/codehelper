@@ -14,6 +14,7 @@ std::stringstream WtUIGenerator::navigation_nodes;
 std::stringstream WtUIGenerator::header_files;
 std::stringstream WtUIGenerator::makefile_objs;
 extern vector <TableInfoType *> vec_table_info;
+extern char project_namespace[];
 
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
@@ -31,7 +32,7 @@ void WtUIGenerator::GenerateCode()
 		% __PRETTY_FUNCTION__;
 	//ui << GenerateUIScaffolding();
 	GenerateForms();
-	makefile_objs << boost::format("%1%_ui.o ") % tableInfo_->tableName_;
+	makefile_objs << boost::format("%1%_ui.o %1%_db_postgres.o ") % tableInfo_->tableName_;
 	
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
@@ -541,6 +542,13 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_cpp << ui_class_headers.str();
 	ui_cpp << boost::format("#include \"%1%_ui.h\"\n")
 			% tableInfo_->tableName_ ;
+
+	ui_cpp << boost::format("#include \"%1%_db_postgres.h\"\n\n")
+			% tableInfo_->tableName_ ;
+
+	ui_cpp << boost::format("#include <vector>\n\n");
+	ui_cpp << boost::format("#include <string>\n\n");
+	ui_cpp << boost::format("#include <boost/shared_ptr.hpp>\n\n");
 	ui_cpp << ui_class_defn.str();
 
 
@@ -574,7 +582,12 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			% aTableInfo->tableName_;
 	decl << boost::format("\tWt::WTable *table_%1%;\n")
 			% aTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
+			% aTableInfo->tableName_;
 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+			% aTableInfo->tableName_;
+
+	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if (v_ptr->options.ref_table_name!="") {
@@ -660,6 +673,18 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 		}
 	}
 
+	if (called_recursively==false) {
+		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % aTableInfo->tableName_;
+
+		string search_key_args_str =  print_cpp_search_key_args() ;
+		if (search_key_args_str != "") {
+			defn << ",\n";
+			defn << search_key_args_str;
+		}
+		defn << ");\n";
+	}
+
 	defn << boost::format("\ttw->addTab(wcw_%1%, \"%1%\");\n")
 				% aTableInfo->tableName_;
 
@@ -740,4 +765,41 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr)
 
 	func_defn << "}\n";
 	return func_defn.str();
+}
+
+
+std::string WtUIGenerator::print_cpp_search_key_args()
+{
+	stringstream search_key_fields_str;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(tableInfo_->has_search_key){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				//search_key_fields_str <<  boost::format("\t\t");
+				//search_key_fields_str << print_cpp_types(v_ptr->var_type);
+				switch (v_ptr->var_type) {
+				case TEXT_TYPE:
+				case VARCHAR_TYPE:
+				case NVARCHAR_TYPE:
+				case NCHAR_TYPE:
+				case NTEXT_TYPE:
+					search_key_fields_str << "std::string (\"%\")";
+				break;
+				default:
+					search_key_fields_str << boost::format(" unhandled file: %1% line: %2% func: %3%")
+						% __FILE__ % __LINE__ % __PRETTY_FUNCTION__;
+				}
+				++count;
+				if(count<tableInfo_->has_search_key){
+					search_key_fields_str <<  ",\n";
+				} else 
+					search_key_fields_str << "\n";
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_fields_str << "";
+	}
+	return search_key_fields_str.str();
 }
