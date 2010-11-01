@@ -65,6 +65,10 @@ public:
 	void print_sp_return_table_fields2(
 			std::stringstream & p_sp_select_fields_with_type,
 			bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level);
+
+	std::string print_sp_select_inner_joins();
+	void print_sp_select_inner_joins2(stringstream & p_inner_join_str,
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

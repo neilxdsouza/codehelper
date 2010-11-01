@@ -456,6 +456,10 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		sp_body << "\t\t\t\t" << print_sp_pkey_field();
 	}
 	sp_body << "\n\t\t\t) AS RowNumber\n";
+	sp_body << boost::format("\t\tFROM %1%\n")
+			% tableInfo_->tableName_;
+	sp_body << print_sp_select_inner_joins();
+	/*
 	v_ptr=tableInfo_->param_list;
 	int loop_counter=0;
 	while(v_ptr){
@@ -478,6 +482,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		v_ptr=v_ptr->prev;
 		++loop_counter;
 	}
+	*/
 	// print out search keys
 	sp_body << print_sp_search_key_whereclause();
 	sp_body << boost::format ( "\t) sp_select_%s\n") 
@@ -653,6 +658,7 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 	// We will treat this function as recursion level 0
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	int recursion_level = 0;
 	while(v_ptr){
 		p_sp_select_fields <<  format("\t\t\t%1%")
 			% v_ptr->var_name;
@@ -673,7 +679,7 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 			//}
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
-						false, true, v_ptr->var_name.c_str(), 1);
+						false, true, v_ptr->var_name, recursion_level+1);
 				if (v_ptr->prev) {
 					p_sp_select_fields << ",\n";
 				}
@@ -1442,3 +1448,79 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 	return final.str();
 }
 
+std::string PostgreSQLCodeGenerator::print_sp_select_inner_joins()
+{
+	stringstream inner_join_str;
+	struct var_list * v_ptr = tableInfo_->param_list;
+	v_ptr = tableInfo_->param_list;
+	int loop_counter = 0;
+	int recursion_level = 0;
+	while(v_ptr){
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			string orig_varname = v_ptr->var_name;
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos) ;
+			inner_join_str << boost::format(
+				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
+				v_ptr->options.ref_table_name %
+				improved_name %
+				tableInfo_->tableName_%
+				v_ptr->var_name %
+				improved_name %
+				v_ptr->options.ref_field_name;
+			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+					 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_select_inner_joins2(inner_join_str,
+						false, true, v_ptr->var_name, recursion_level+1);
+			} else {
+				cerr << format("referenced table: %1% not found in table list:  ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+		}
+		v_ptr=v_ptr->prev;
+		++loop_counter;
+	}
+	return inner_join_str.str();
+}
+
+void PostgreSQLCodeGenerator::print_sp_select_inner_joins2(stringstream & p_inner_join_str,
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)
+{
+	p_inner_join_str << boost::format("/* file: %1%, line: %2%: func: %3% with params */\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			string orig_varname = v_ptr->var_name;
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos) ;
+			p_inner_join_str << boost::format(
+				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
+				v_ptr->options.ref_table_name %
+				improved_name %
+				tableInfo_->tableName_%
+				v_ptr->var_name %
+				improved_name %
+				v_ptr->options.ref_field_name;
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+						 	.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_select_inner_joins2(
+						p_inner_join_str
+						, false, true, v_ptr->options.ref_table_name, recursion_level+1);
+			} else {
+				cerr << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+		} 
+		v_ptr=v_ptr->prev;
+		//if(v_ptr){
+		//	p_inner_join_str << "";
+		//} 
+	}
+}

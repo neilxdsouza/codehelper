@@ -38,6 +38,9 @@ public:
 	virtual std::string print_reader(bool with_pkey, 
 			bool rename_vars, std::string inner_join_tabname)=0;
 
+	virtual void print_sp_select_inner_joins2(stringstream & p_inner_join_str,
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;
+
 	//virtual void SetOutputDirectory();
 	//virtual void SetTableInfo();
 protected:
