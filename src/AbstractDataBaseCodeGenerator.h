@@ -4,6 +4,7 @@
 #include "std_headers.h"
 #include "tree.h"
 
+
 struct AbstractDataBaseCodeGenerator
 {
 public:
@@ -22,7 +23,7 @@ public:
 
 	virtual void print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,
-		bool with_pkey, bool rename_vars, string inner_join_tabname)=0;
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;
 
 
 	virtual void print_cpp_convert_db_fields_to_cpp2(
@@ -35,8 +36,10 @@ public:
 			std::stringstream & p_sp_select_fields_with_type,
 			bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;
 
-	virtual std::string print_reader(bool with_pkey, 
-			bool rename_vars, std::string inner_join_tabname)=0;
+	virtual void print_reader(bool with_pkey,
+			bool rename_vars, std::string inner_join_tabname,
+			std::vector< boost::shared_ptr<std::stringstream> > & p_vec_reader_str,
+			int recursion_level, bool descend)=0;
 
 	virtual void print_sp_select_inner_joins2(stringstream & p_inner_join_str,
 		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;

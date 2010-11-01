@@ -660,24 +660,15 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 	struct var_list* v_ptr=tableInfo_->param_list;
 	int recursion_level = 0;
 	while(v_ptr){
-		p_sp_select_fields <<  format("\t\t\t%1%")
-			% v_ptr->var_name;
-		if (v_ptr->prev) {
-			p_sp_select_fields << ",\n";
-		} else {
-			p_sp_select_fields << "";
-		}
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			//p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
-			//	% tableInfo_->tableName_
-			//	% v_ptr->var_name;
+			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
+				% tableInfo_->tableName_
+				% v_ptr->var_name;
 			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 					(TableCollectionSingleton::Instance()
 					 	.my_find_table(v_ptr->options.ref_table_name)));
-			//if (v_ptr->prev) {
-			//	p_sp_select_fields << ",\n";
-			//}
 			if(tbl_ptr){
+				p_sp_select_fields << ",\n";
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
 						false, true, v_ptr->var_name, recursion_level+1);
 				if (v_ptr->prev) {
@@ -689,8 +680,15 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				exit(1);
 			}
 			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
-		} /* else { */
-		/* } */
+		}  else { 
+			p_sp_select_fields <<  format("\t\t\t%1%")
+				% v_ptr->var_name;
+			if (v_ptr->prev) {
+				p_sp_select_fields << ",\n";
+			} else {
+				p_sp_select_fields << "";
+			}
+		}
 		v_ptr=v_ptr->prev;
 	}
 }
@@ -1002,6 +1000,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 				std::stringstream & p_sp_select_fields_with_type)
 {
 	using boost::format;
+	int recursion_level=0;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while(v_ptr){
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
@@ -1018,7 +1017,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_cpp_select_params(
 						p_sp_select_fields_with_type
-						, false, true, v_ptr->var_name);
+						, false, true, v_ptr->var_name, recursion_level+1);
 			} else {
 				cerr << format("referenced table: %1% not found in table list:  ... exiting")
 					% v_ptr->options.ref_table_name;
@@ -1057,11 +1056,12 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 
 void PostgreSQLCodeGenerator::print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,
-		bool with_pkey, bool rename_vars, string inner_join_tabname)
+		bool with_pkey, bool rename_vars, string inner_join_tabname,
+		int recursion_level)
 {
 	using boost::format;
-	p_sp_select_fields_with_type <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
-		% with_pkey % rename_vars % inner_join_tabname;
+	p_sp_select_fields_with_type <<  format("/*Entering %4% called with params: %1% %2% %3% */\n")
+		% with_pkey % rename_vars % inner_join_tabname % __PRETTY_FUNCTION__;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if(!with_pkey){
 		p_sp_select_fields_with_type << "/* skipping field : " 
@@ -1069,6 +1069,28 @@ void PostgreSQLCodeGenerator::print_cpp_select_params(
 		v_ptr=v_ptr->prev;
 	}
 	while(v_ptr){
+		if(rename_vars){
+			string orig_varname = inner_join_tabname;
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos);
+			p_sp_select_fields_with_type 
+				<< "\t\t"
+				//<< v_ptr->print_cpp_var_type() 
+				<< "int32_t"
+				<< " r_" << improved_name << "_" << v_ptr->var_name << "_fnum = " 
+				<< "PQfnumber(res, \""
+				<< "r_" << improved_name << "_" << v_ptr->var_name 
+				<< "\");\n";
+		} else {
+			p_sp_select_fields_with_type 
+				<< "\t\t"
+				//<< v_ptr->print_cpp_var_type() 
+				<< "int32_t"
+				<< v_ptr->print_sql_var_name_for_select_return_table(string("")) << "_fnum = " 
+				<< "PQfnumber(res, \""
+				<< v_ptr->print_sql_var_decl_for_select_return_table() 
+				<< "\");\n";
+		}
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 						(TableCollectionSingleton::Instance()
@@ -1076,13 +1098,13 @@ void PostgreSQLCodeGenerator::print_cpp_select_params(
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_cpp_select_params(
 						p_sp_select_fields_with_type
-						, false, true, v_ptr->options.ref_table_name);
+						, false, true, v_ptr->options.ref_table_name, recursion_level+1);
 			} else {
 				cerr << format("referenced table: %1% not found in table list: ... exiting")
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
-		} else {
+		} /*else {
 			if(rename_vars){
 				string orig_varname = inner_join_tabname;
 				int pos = orig_varname.find("_Code");
@@ -1106,6 +1128,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_params(
 					<< "\");\n";
 			}
 		}
+		*/
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			p_sp_select_fields_with_type << "";
@@ -1235,13 +1258,22 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord_h()
 	return get_single_record_str.str();
 }
 
+// This function probably needs a helper function which has a vector<string> 
+// reference parameter which stores the recursively traversed bll
+// objects on this (using it like a stack)
 std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 {
+	cout << boost::format("/* file: %1%, line: %2%: func: %3% : tableName_: %4%*/\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__  % tableInfo_ -> tableName_;
 	using boost::format;
 	stringstream get_single_record_str;
 	get_single_record_str << boost::format("\nboost::shared_ptr<Biz%1%> Get%1%FromReader(PGresult * res, int row)\n")
 		% tableInfo_->tableName_; 
 	get_single_record_str << "{\n";
+	vector<boost::shared_ptr<stringstream> > vec_reader_str;
+	boost::shared_ptr<stringstream> dummy(new stringstream);
+	vec_reader_str.push_back(dummy);
+	int recursion_level = 0;
 	if(tableInfo_->param_list){
 		stringstream field_pos_stream;
 		/* I have to fix a bug at this point */
@@ -1255,20 +1287,23 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 				string orig_varname = v_ptr->var_name.c_str();
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
-				get_single_record_str <<  format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+				if (vec_reader_str.size() <= recursion_level +1) {
+					boost::shared_ptr<stringstream> dummy(new stringstream);
+					vec_reader_str.push_back(dummy);
+				}
+				(*vec_reader_str[recursion_level+1]) <<  format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
 					% v_ptr->options.ref_table_name
 					% improved_name ;
 				
-				//get_single_record_str << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
-				get_single_record_str << "\t\t\t/*3*/" << print_reader_param_with_cast(v_ptr, string(""));
-				get_single_record_str << ",\n";
+				//vec_reader_str[recursion_level] << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
+				(*vec_reader_str[recursion_level+1]) << "\t\t\t/*3*/" << print_reader_param_with_cast(v_ptr, string(""));
+				(*vec_reader_str[recursion_level+1]) << ",\n";
 				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
-				get_single_record_str << t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->var_name);
-				get_single_record_str << "\t\t\t));\n";
-				//fprintf(fptr, "\t\tl_%s.%s = l_%s;\n", tableInfo_->tableName_.c_str(), v_ptr->var_name.c_str(), 
-				//		v_ptr->var_name.c_str() );
+				cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
+				/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->var_name, vec_reader_str, recursion_level+1, true);
+				(*vec_reader_str[recursion_level+1]) << "\t\t\t));\n";
 			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
 				/*
 				fprintf(fptr, "\t\tList<Biz%s> l_%s= new Biz%s();\n", v_ptr->options.ref_table_name.c_str(),
@@ -1286,7 +1321,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 					v_ptr->var_name.c_str()
 					);
 				*/
-				get_single_record_str << "UNHANDLED CASE: line: " << __LINE__
+				(*vec_reader_str[recursion_level]) << "UNHANDLED CASE: line: " << __LINE__
 						<< ", file: " << __FILE__ 
 						<< ", function: " << __PRETTY_FUNCTION__ 
 						<< endl;
@@ -1294,19 +1329,21 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 			v_ptr=v_ptr->prev;
 		}
 
-		get_single_record_str << format("\t/*5*/boost::shared_ptr<Biz%s> l_%s (new Biz%s(\n")
-			% tableInfo_->tableName_.c_str() 
-			% tableInfo_->tableName_.c_str()
-			% tableInfo_->tableName_.c_str();
-		//tableInfo_->param_list->print(fptr);
-		get_single_record_str << print_reader(true, false,  "");
+		(*vec_reader_str[recursion_level]) << format("\t/*5*/boost::shared_ptr<Biz%1%> l_biz_%1% (new Biz%1%(\n")
+			% tableInfo_->tableName_;
+		cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
+		/*(*vec_reader_str[recursion_level]) << */ print_reader(true, false,  "", vec_reader_str, recursion_level, false);
 
-		get_single_record_str <<  "\t\t));\n";
+		(*vec_reader_str[recursion_level]) <<  "\t\t));\n";
 
-		get_single_record_str <<  format("\treturn l_%s;\n")
+		(*vec_reader_str[recursion_level]) <<  format("\treturn l_biz_%1%;\n")
 			% tableInfo_->tableName_;
 	}
-	get_single_record_str << "}\n\n";
+	(*vec_reader_str[recursion_level]) << "}\n\n";
+
+	for(int i=vec_reader_str.size()-1; i>=0; --i) {
+		get_single_record_str << (*vec_reader_str[i]).str();
+	}
 	return get_single_record_str.str();
 }
 
@@ -1331,7 +1368,9 @@ std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_pt
 }
 
 
-std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname)
+void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname,
+		std::vector<boost::shared_ptr<std::stringstream> >& p_vec_reader_str, int recursion_level,
+		bool descend)
 {
 	using boost::format;
 	stringstream s;
@@ -1339,9 +1378,19 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
 	}
-	//s << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
-	//	<< "*/\n"
-	//	<< endl;
+	cout << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
+		<< " recursion_level: " << recursion_level 
+		<< " tableName_: " << tableInfo_->tableName_
+		<< "*/\n"
+		<< endl;
+	if (recursion_level > 10 ) {
+		cerr << " recursion_level too high - probably a runaway ... exiting: FILE: " 
+			<< __FILE__
+			<< ", line: " << __LINE__ 
+			<< ", func: " << __PRETTY_FUNCTION__ 
+			;
+		exit(1);
+	}
 		
 	while (v_ptr) {
 		if (v_ptr->options.many==false) {
@@ -1351,12 +1400,24 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 				if (t_ptr==0) {
 					s << format("table: %1% not found: line: %2%, file: %3%\n")
-							% v_ptr->options.ref_table_name.c_str() % __LINE__ % __FILE__;
+							% v_ptr->options.ref_table_name % __LINE__ % __FILE__;
 				} else {
 					string orig_varname = v_ptr->var_name.c_str();
 					int pos = orig_varname.find("_Code");
 					string improved_name = orig_varname.substr(0, pos);
 					s << format("\t\t\tl_biz_%1%") % improved_name;
+					if (descend) {
+						string orig_varname = v_ptr->var_name.c_str();
+						int pos = orig_varname.find("_Code");
+						string improved_name = orig_varname.substr(0, pos);
+						boost::shared_ptr<stringstream> dummy(new stringstream);
+						p_vec_reader_str.push_back(dummy);
+						(*p_vec_reader_str[recursion_level+1]) << format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+							% v_ptr->options.ref_table_name
+							% improved_name ;
+						t_ptr->dbCodeGenerator_->print_reader(true, false,  "", p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
+						(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
+					}
 				}
 			} else {
 				if(rename_vars){
@@ -1391,7 +1452,7 @@ std::string PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_va
 	}
 	//if(rename_vars==true)
 	//	fprintf(edit_out, "\n\t\t\t/* exiting ... print_reader called with rename_vars=true*/\n");
-	return s.str();
+	(*p_vec_reader_str[recursion_level]) <<  s.str();
 }
 
 std::string PostgreSQLCodeGenerator::GenerateRandomData()

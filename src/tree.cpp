@@ -231,7 +231,7 @@ std::string var_list::print_random_value(int counter, int p_nRecords)
 		case NVARCHAR_TYPE:
 		case NCHAR_TYPE:
 			//random_value_str << "'" << var_name << "_" << counter << "'";
-			cout << __PRETTY_FUNCTION__ << ", dict.size(): " << dict.size() << endl;
+			//cout << __PRETTY_FUNCTION__ << ", dict.size(): " << dict.size() << endl;
 			if (dict.size()==0) {
 				random_value_str << "'";
 				for (int i=0; i<arr_len; ++i) {

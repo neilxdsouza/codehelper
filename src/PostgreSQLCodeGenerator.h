@@ -50,7 +50,7 @@ public:
 					std::stringstream & p_sp_select_fields_with_type);
 	void print_cpp_select_params(
 		std::stringstream & p_sp_select_fields_with_type,
-		bool with_pkey, bool rename_vars, string inner_join_tabname);
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level);
 	void print_cpp_convert_db_fields_to_cpp(std::stringstream& convert_fields_str);
 	void print_cpp_convert_db_fields_to_cpp2(
 		std::stringstream & p_sp_select_fields_with_type,
@@ -58,7 +58,9 @@ public:
 	std::string PrintGetSingleRecord_h();
 	std::string PrintGetSingleRecord();
 	std::string print_reader_param_with_cast(var_list* v_ptr, std::string ref_table_name);
-	std::string print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname);
+	void print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname, 
+		std::vector<boost::shared_ptr<std::stringstream> > & p_vec_reader_str, int recursion_level,
+		bool descend);
 	std::string GenerateRandomData();
 
 	void print_sp_return_table_fields(std::stringstream & p_sp_select_fields_with_type);
