@@ -654,16 +654,23 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while(v_ptr){
+		p_sp_select_fields <<  format("\t\t\t%1%")
+			% v_ptr->var_name;
+		if (v_ptr->prev) {
+			p_sp_select_fields << ",\n";
+		} else {
+			p_sp_select_fields << "";
+		}
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
-				% tableInfo_->tableName_
-				% v_ptr->var_name;
+			//p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
+			//	% tableInfo_->tableName_
+			//	% v_ptr->var_name;
 			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 					(TableCollectionSingleton::Instance()
 					 	.my_find_table(v_ptr->options.ref_table_name)));
-			if (v_ptr->prev) {
-				p_sp_select_fields << ",\n";
-			}
+			//if (v_ptr->prev) {
+			//	p_sp_select_fields << ",\n";
+			//}
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
 						false, true, v_ptr->var_name.c_str(), 1);
@@ -676,15 +683,8 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				exit(1);
 			}
 			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
-		} else {
-			p_sp_select_fields <<  format("\t\t\t%1%")
-				% v_ptr->var_name;
-			if (v_ptr->prev) {
-				p_sp_select_fields << ",\n";
-			} else {
-				p_sp_select_fields << "";
-			}
-		}
+		} /* else { */
+		/* } */
 		v_ptr=v_ptr->prev;
 	}
 }
@@ -694,15 +694,20 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 {
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	int recursion_level = 0;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			if (v_ptr->prev) {
+				p_sp_select_fields_with_type << ",\n";
+			}
 			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 					(TableCollectionSingleton::Instance()
 					 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
 						p_sp_select_fields_with_type
-						, false, true, v_ptr->var_name.c_str());
+						, false, true, v_ptr->var_name, recursion_level);
 				if (v_ptr->prev) {
 					p_sp_select_fields_with_type << ",\n";
 				}
@@ -711,12 +716,12 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
-			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+			//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 			// p_sp_select_fields_with_type << "p_" << v_ptr->var_name;
-			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
-			if (v_ptr->prev) {
-				p_sp_select_fields_with_type << ",\n";
-			}
+			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			//if (v_ptr->prev) {
+			//	p_sp_select_fields_with_type << ",\n";
+			//}
 		} else {
 			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 			if (v_ptr->prev) {
@@ -742,10 +747,13 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 	}
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+			p_sp_select_fields << format("\t\t\t/*7*/%1%.%2% as %1%_%2%")
+				% tableInfo_->tableName_.c_str() % v_ptr->var_name ;
 			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
+				p_sp_select_fields <<  ",\n";
 				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
 						false, true, v_ptr->options.ref_table_name, recursion_level+1);
 			} else {
@@ -753,11 +761,6 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
-			if(tbl_ptr){
-				p_sp_select_fields <<  ",\n";
-			}
-			p_sp_select_fields << format("\t\t\t/*7*/%1%.%2% as %1%_%2%")
-				% tableInfo_->tableName_.c_str() % v_ptr->var_name ;
 			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		} else {
 			if(rename_vars){
@@ -785,42 +788,45 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 
 void PostgreSQLCodeGenerator::print_sp_return_table_fields2(
 		std::stringstream & p_sp_select_fields_with_type,
-		bool with_pkey, bool rename_vars, string inner_join_tabname)
+		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)
 {
 	using boost::format;
 	//p_sp_select_fields <<  format("/*Entering print_sp_select_params called with params: %1% %2% %3% */\n")
 	//	% with_pkey % rename_vars % inner_join_tabname;
+	p_sp_select_fields_with_type << boost::format("\n/* file: %1%, line: %2%: func: %3%*/\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
 	}
 	while(v_ptr){
+		if(rename_vars){
+			string orig_varname = inner_join_tabname;
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos);
+			p_sp_select_fields_with_type << 
+				"r_" << improved_name << "_" << v_ptr->var_name << " " <<
+				v_ptr->print_sql_var_type();
+		} else {
+			p_sp_select_fields_with_type << 
+				v_ptr->print_sql_var_decl_for_select_return_table();
+		}
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
 			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
+				p_sp_select_fields_with_type << ",\n";
 				tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
 						p_sp_select_fields_with_type
-						, false, true, v_ptr->options.ref_table_name);
+						, false, true, v_ptr->options.ref_table_name, recursion_level+1);
 			} else {
 				std::cerr << format("referenced table: %1% not found in table list: ... exiting\n")
 					% v_ptr->options.ref_table_name;
 				exit(1);
 			}
-		} else {
-			if(rename_vars){
-				string orig_varname = inner_join_tabname;
-				int pos = orig_varname.find("_Code");
-				string improved_name = orig_varname.substr(0, pos);
-				p_sp_select_fields_with_type << 
-					"r_" << improved_name << "_" << v_ptr->var_name << " " <<
-					v_ptr->print_sql_var_type();
-			} else {
-				p_sp_select_fields_with_type << 
-					v_ptr->print_sql_var_decl_for_select_return_table();
-			}
-		}
+		} /*else { */
+		/*} */
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
 			p_sp_select_fields_with_type << ",\n";
