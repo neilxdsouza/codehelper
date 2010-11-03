@@ -1301,8 +1301,9 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
-				cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
-				/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->var_name, vec_reader_str, recursion_level+1, true);
+				(*vec_reader_str[recursion_level+1]) << "/* calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ 
+					<< "tableName_: "  << tableInfo_->tableName_  << " */" << endl ;
+				/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, vec_reader_str, recursion_level+1, true);
 				(*vec_reader_str[recursion_level+1]) << "\t\t\t));\n";
 			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
 				/*
@@ -1332,7 +1333,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		(*vec_reader_str[recursion_level]) << format("\t/*5*/boost::shared_ptr<Biz%1%> l_biz_%1% (new Biz%1%(\n")
 			% tableInfo_->tableName_;
 		cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
-		/*(*vec_reader_str[recursion_level]) << */ print_reader(true, false,  "", vec_reader_str, recursion_level, false);
+		/*(*vec_reader_str[recursion_level]) << */ print_reader(true, true,  "", vec_reader_str, recursion_level, false);
 
 		(*vec_reader_str[recursion_level]) <<  "\t\t));\n";
 
@@ -1372,6 +1373,9 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 		std::vector<boost::shared_ptr<std::stringstream> >& p_vec_reader_str, int recursion_level,
 		bool descend)
 {
+
+	(*p_vec_reader_str[recursion_level] ) << boost::format("/* file: %1%, line: %2%: func: %3%: recursion_level: %4%, inner_join_tabname: %5%*/\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ % recursion_level % inner_join_tabname;
 	using boost::format;
 	stringstream s;
 	struct var_list * v_ptr=tableInfo_->param_list;
@@ -1415,7 +1419,9 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 						(*p_vec_reader_str[recursion_level+1]) << format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
 							% v_ptr->options.ref_table_name
 							% improved_name ;
-						t_ptr->dbCodeGenerator_->print_reader(true, false,  "", p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
+						/* fix problem here: inner_join_tabname has _Code in it - figure out where it comes from */
+						(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) << ",";
+						t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
 						(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
 					}
 				}

@@ -416,7 +416,8 @@ std::string var_list::print_psql_to_cpp_conversion(std::string ref_table_name)
 		case NVARCHAR_TYPE:
 		case NCHAR_TYPE:
 		case NTEXT_TYPE: {
-			s	<< "boost::lexical_cast< " << print_cpp_var_type() << " > ("
+			s	<< "/* from here ref_table_name: " << ref_table_name << " */ "
+				"boost::lexical_cast< " << print_cpp_var_type() << " > ("
 				<< "PQgetvalue(res, row, ";
 			if(ref_table_name==""){
 				s <<  "r_" << var_name << "_fnum ) )" ;
