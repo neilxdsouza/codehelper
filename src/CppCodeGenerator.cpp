@@ -37,7 +37,7 @@ void CppCodeGenerator::GenerateBLL()
 		string bll_h_fname (string(outputDirPrefix_.c_str()
 					+ string("/")
 					+ tableInfo_->tableName_
-					+ string("_bll.h"))); 
+					+ string(" -lpq_bll.h"))); 
 		std::ofstream bll_h(bll_h_fname.c_str(), ios_base::out|ios_base::trunc);
 		if(!bll_h){
 			string err_msg="unable to open " + bll_h_fname + "for writing";
@@ -344,7 +344,7 @@ void CppCodeGenerator::print_bll_api_defns(std::ofstream & bll_cpp)
 
 void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 {
-	cpp_body << "int main()\n";
+	cpp_body << "/* \nint main()\n";
 	cpp_body << "{\n";
 	cpp_body << boost::format("\tBiz%1% test_%1%;\n")
 			% tableInfo_->tableName_;
@@ -390,7 +390,7 @@ void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 	}
 	cpp_body << boost::format("\ttest_%1%.Insert();\n")
 		% tableInfo_->tableName_;
-	cpp_body << "}\n";
+	cpp_body << "}\n*/\n";
 }
 
 void CppCodeGenerator::FinalCleanUp()

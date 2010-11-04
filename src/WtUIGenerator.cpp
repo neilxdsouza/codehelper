@@ -32,7 +32,7 @@ void WtUIGenerator::GenerateCode()
 		% __PRETTY_FUNCTION__;
 	//ui << GenerateUIScaffolding();
 	GenerateForms();
-	makefile_objs << boost::format("%1%_ui.o %1%_db_postgres.o ") % tableInfo_->tableName_;
+	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
 	
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 		% __PRETTY_FUNCTION__;
@@ -683,6 +683,24 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			defn << search_key_args_str;
 		}
 		defn << ");\n";
+
+		stringstream load_table_view_str;
+
+		struct var_list* v_ptr=aTableInfo->param_list;
+		{
+			int counter =0;
+			for (; v_ptr; v_ptr=v_ptr->prev) {
+				// I need to fix this - like add a function which states "simple_variable" - 
+				// functional programming style - as mentioned in the LISP books
+				if (v_ptr->options.ref_table_name == "") {
+					load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
+						aTableInfo->tableName_ % counter++ % v_ptr->var_name;
+				}
+			}
+		}
+		load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
+		load_table_view_str << "\t}\n";
+		defn << load_table_view_str.str();
 	}
 
 	defn << boost::format("\ttw->addTab(wcw_%1%, \"%1%\");\n")
@@ -733,7 +751,7 @@ void WtUIGenerator::GenerateMakefile()
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
 		<< makefile_objs.str() << endl;
-	makefile_str << "LINK_LIBS = -lwt -lwtext -lwthttp"
+	makefile_str << "LINK_LIBS = -lwt -lwtext -lwthttp -lpq"
 		<< endl;
 	makefile_str << endl
 		<< "test_ui: $(OBJS) wt_ui.o " << endl
