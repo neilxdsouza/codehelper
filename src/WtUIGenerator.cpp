@@ -548,6 +548,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 	ui_cpp << boost::format("#include <vector>\n\n");
 	ui_cpp << boost::format("#include <string>\n\n");
+	ui_cpp << boost::format("#include <sstream>\n\n");
 	ui_cpp << boost::format("#include <boost/shared_ptr.hpp>\n\n");
 	ui_cpp << ui_class_defn.str();
 
@@ -699,6 +700,20 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			}
 		}
 		load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
+		v_ptr=aTableInfo->param_list;
+		load_table_view_str << "\t\tstd::stringstream temp1;\n";
+		{
+			int counter =0;
+			for (; v_ptr; v_ptr=v_ptr->prev) {
+				if (v_ptr->options.ref_table_name == "") {
+					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
+						v_ptr->var_name;
+					load_table_view_str << format("\t\ttable_%1%_view->elementAt(i, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+						aTableInfo->tableName_ % counter++ ;
+					load_table_view_str << "\t\ttemp1.str(\"\");\n";
+				}
+			}
+		}
 		load_table_view_str << "\t}\n";
 		defn << load_table_view_str.str();
 	}
