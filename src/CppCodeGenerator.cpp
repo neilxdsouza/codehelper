@@ -37,7 +37,7 @@ void CppCodeGenerator::GenerateBLL()
 		string bll_h_fname (string(outputDirPrefix_.c_str()
 					+ string("/")
 					+ tableInfo_->tableName_
-					+ string(" -lpq_bll.h"))); 
+					+ string("_bll.h"))); 
 		std::ofstream bll_h(bll_h_fname.c_str(), ios_base::out|ios_base::trunc);
 		if(!bll_h){
 			string err_msg="unable to open " + bll_h_fname + "for writing";
