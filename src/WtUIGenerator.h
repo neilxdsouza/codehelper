@@ -27,12 +27,13 @@ public:
 	void AddNavigationNode(std::string  label, std::string  func_name);
 	void AddIncludeFile(std::string  p_include_file);
 	string GenerateUIInsertForm();
-	void GenerateUITab(std::stringstream & decl, std::stringstream & defn,
+	void GenerateUITab(std::stringstream & headers, 
+				std::stringstream & decl, std::stringstream & defn,
 				bool called_recursively,
 				vector<TableInfoType *> p_vecTableInfo);
 	void GenerateForms();
 	void GenerateMakefile();
-	string print_ChoiceHandler(struct var_list * p_vptr);
+	string print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl);
 
 	static std::stringstream class_vars;
 	static std::stringstream class_functions_decl;

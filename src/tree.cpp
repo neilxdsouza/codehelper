@@ -502,3 +502,39 @@ std::string var_list::print_psql_to_cpp_conversion(std::string ref_table_name)
 	}
 	return s.str();
 }
+
+std::string TableInfoType::print_cpp_search_key_args()
+{
+	stringstream search_key_fields_str;
+	struct var_list* v_ptr=param_list;
+	if(has_search_key){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.search_key){
+				//search_key_fields_str <<  boost::format("\t\t");
+				//search_key_fields_str << print_cpp_types(v_ptr->var_type);
+				switch (v_ptr->var_type) {
+				case TEXT_TYPE:
+				case VARCHAR_TYPE:
+				case NVARCHAR_TYPE:
+				case NCHAR_TYPE:
+				case NTEXT_TYPE:
+					search_key_fields_str << "std::string (\"%\")";
+				break;
+				default:
+					search_key_fields_str << boost::format(" unhandled file: %1% line: %2% func: %3%")
+						% __FILE__ % __LINE__ % __PRETTY_FUNCTION__;
+				}
+				++count;
+				if(count<has_search_key){
+					search_key_fields_str <<  ",\n";
+				} else 
+					search_key_fields_str << "\n";
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_fields_str << "";
+	}
+	return search_key_fields_str.str();
+}

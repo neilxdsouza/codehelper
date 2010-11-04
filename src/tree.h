@@ -191,6 +191,7 @@ struct TableInfoType
 
 	// main functions which print out an entire class
 	//void print_detail(FILE * fptr);
+	std::string print_cpp_search_key_args();
 
 
 	private:

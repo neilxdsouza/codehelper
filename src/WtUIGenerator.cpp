@@ -451,7 +451,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 	vector <TableInfoType *> vecTableInfo;
 	vecTableInfo.push_back(tableInfo_);
-	GenerateUITab(ui_class_decl, ui_class_defn, false, vecTableInfo);
+	GenerateUITab(ui_class_headers, ui_class_decl, ui_class_defn, false, vecTableInfo);
 	
 	/*
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
@@ -568,11 +568,13 @@ void WtUIGenerator::AddIncludeFile(std::string  p_include_file)
 	header_files << p_include_file ;
 }
 
-void WtUIGenerator::GenerateUITab(std::stringstream & decl,
+void WtUIGenerator::GenerateUITab( std::stringstream & headers,
+				std::stringstream & decl,
 				std::stringstream & defn, 
 				bool called_recursively,
 				vector<TableInfoType *> p_vecTableInfo)
 {
+	using boost::format;
 	TableInfoType * aTableInfo = p_vecTableInfo.back();
 	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
@@ -636,6 +638,8 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 						% v_ptr->var_name;
 			decl <<  boost::format("\tWt::WPushButton * wpb_choose_%1%;\n")
 						% v_ptr->var_name;
+			decl << format("\tWt::WTable *table_%1%_view;\n") %
+						v_ptr->options.ref_table_name;
 			defn << 
 				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
@@ -656,7 +660,7 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			vec_handler_decls.push_back(handle_func_decl.str());
 			
 			stringstream handle_func_defn;
-			handle_func_defn << print_ChoiceHandler(v_ptr);
+			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */);
 			vec_handler_defns.push_back(handle_func_defn.str());
 			
 		} else if (v_ptr->var_type==DATETIME_TYPE) {
@@ -678,7 +682,7 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % aTableInfo->tableName_;
 
-		string search_key_args_str =  print_cpp_search_key_args() ;
+		string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
 		if (search_key_args_str != "") {
 			defn << ",\n";
 			defn << search_key_args_str;
@@ -699,11 +703,13 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 				}
 			}
 		}
+
 		load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
 		v_ptr=aTableInfo->param_list;
 		load_table_view_str << "\t\tstd::stringstream temp1;\n";
+
 		{
-			int counter =0;
+			int counter =1; // start at row 2 - titles in row 1
 			for (; v_ptr; v_ptr=v_ptr->prev) {
 				if (v_ptr->options.ref_table_name == "") {
 					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
@@ -715,6 +721,7 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 			}
 		}
 		load_table_view_str << "\t}\n";
+
 		defn << load_table_view_str.str();
 	}
 
@@ -722,7 +729,7 @@ void WtUIGenerator::GenerateUITab(std::stringstream & decl,
 				% aTableInfo->tableName_;
 
 	if (p_vecTableInfo.size()>0) {
-		GenerateUITab(decl, defn, true, p_vecTableInfo);
+		GenerateUITab(headers, decl, defn, true, p_vecTableInfo);
 	}
 	if (called_recursively==false) {
 		decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
@@ -782,7 +789,7 @@ void WtUIGenerator::GenerateMakefile()
 }
 
 
-string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr)
+string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl)
 {
 	stringstream func_defn;
 	func_defn << boost::format("void %2%_ui::HandleChoose%1%()\n{\n")
@@ -793,6 +800,60 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr)
 		% p_vptr->var_name;
 	func_defn << boost::format("\tok->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
 		% p_vptr->var_name;
+
+
+	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
+	// should check for null here and exit
+
+	stringstream inc_file;
+	inc_file << boost::format("#include \"%1%_bll.h\"\n")
+				% aTableInfo->tableName_;
+	inc_file << boost::format("#include \"%1%_db_postgres.h\"\n")
+				% aTableInfo->tableName_;
+	decl << inc_file.str();
+	func_defn << boost::format("/* file: %1%, line: %2%: func: %3% added include files */\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
+	func_defn<< boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % aTableInfo->tableName_;
+	string search_key_args_str =  aTableInfo->print_cpp_search_key_args() ;
+	if (search_key_args_str != "") {
+		func_defn << ",\n";
+		func_defn << search_key_args_str;
+	}
+	func_defn << ");\n";
+
+	func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
+		p_vptr->options.ref_table_name % p_vptr->var_name;
+	struct var_list* v_ptr=aTableInfo->param_list;
+	{
+		int counter =0;
+		for (; v_ptr; v_ptr=v_ptr->prev) {
+			// I need to fix this - like add a function which states "simple_variable" - 
+			// functional programming style - as mentioned in the LISP books
+			if (v_ptr->options.ref_table_name == "") {
+				func_defn << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
+					p_vptr->options.ref_table_name % counter++ % v_ptr->var_name;
+			}
+		}
+	}
+
+	func_defn << format("\tfor (int i=0; i<page1_%1%.size(); ++i) {\n") %
+		p_vptr->options.ref_table_name;
+	v_ptr=aTableInfo->param_list;
+	func_defn << "\t\tstd::stringstream temp1;\n";
+	{
+		int counter =1; // start at row 2 - titles in row 1
+		for (; v_ptr; v_ptr=v_ptr->prev) {
+			if (v_ptr->options.ref_table_name == "") {
+				func_defn << boost::format("\t\ttemp1 << page1_%2%[i]->%1%_;\n") %
+					v_ptr->var_name % p_vptr->options.ref_table_name;
+				func_defn << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+					p_vptr->options.ref_table_name % counter++ ;
+				func_defn << "\t\ttemp1.str(\"\");\n";
+			}
+		}
+	}
+	func_defn << "\t}\n";
 	func_defn << boost::format("\twd_choose_%1%->exec();\n")
 		% p_vptr->var_name;
 
@@ -801,6 +862,7 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr)
 }
 
 
+/*
 std::string WtUIGenerator::print_cpp_search_key_args()
 {
 	stringstream search_key_fields_str;
@@ -836,3 +898,4 @@ std::string WtUIGenerator::print_cpp_search_key_args()
 	}
 	return search_key_fields_str.str();
 }
+*/
