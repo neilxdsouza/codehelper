@@ -129,8 +129,8 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 				h_header << boost::format("#include <vector>\n");
 				emitted_vector_header = true;
 			}
-			h_header << boost::format("#include \"%1%_bll.h\"\n") %
-					v_ptr->options.ref_table_name;
+			//h_header << boost::format("#include \"%1%_bll.h\" /*1*/\n") %
+			//		v_ptr->options.ref_table_name;
 		} else {
 			var_type << print_cpp_types(v_ptr->var_type);
 			if (!emitted_string_header) {
@@ -209,17 +209,21 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 				continue;
 			}
 			if (v_ptr->options.many==true) {
+				h_header << boost::format("#include \"%1%_bll.h\" /*1*/\n") %
+						v_ptr->options.ref_table_name;
 				string orig_varname = v_ptr->var_name.c_str();
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
 				variables << var_type.str() << boost::format(" biz_vec_%1%_;\n") % improved_name;
 				functions << "\t";
-				functions << boost::format("%2% & Get_%1%() { return biz_vec%1%_;}\n") 
+				functions << boost::format("%2% & Get_%1%() { return biz_vec_%1%_;}\n") 
 					% improved_name % var_type.str() ;
 				functions << "\t";
 				functions << boost::format("void Set_%1%(%2% & value) { biz_vec_%1%_= value;}\n") 
 					% improved_name % var_type.str();
 			} else {
+				h_header << boost::format("#include \"%1%_bll.h\" /*1*/\n") %
+						v_ptr->options.ref_table_name;
 				variables << var_type.str() << boost::format(" biz_%1%_;\n") % 
 					v_ptr->print_improved_lower_var_name();
 
@@ -406,8 +410,22 @@ void CppCodeGenerator::print_bll_api_constructors()
 		print_bll_constructor_decl_without_invisible_fields();
 	h_body << print_bll_empty_constructor_decl();
 
-	if(tableInfo_->has_composite_objs){	
-		h_body << print_bll_bizobj_constructor_h();
+	if (tableInfo_->has_composite_objs) {
+		struct var_list* v_ptr=tableInfo_->param_list;
+		int count=0;
+		while (v_ptr) {
+			if (v_ptr->options.ref_table_name != "") {
+				if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
+				} else {
+					++count;
+				}
+			}
+			v_ptr = v_ptr->prev;
+		}
+		if (count >0 ) {
+			h_body << "/* count : " << count << " */\n";
+			h_body << print_bll_bizobj_constructor_h();
+		}
 	}
 }
 
@@ -460,14 +478,31 @@ void CppCodeGenerator::print_bll_constructor_decl_without_invisible_fields()
 	h_body << "\t);\n";
 }
 
+// At this point I realise that this is wrong
+// print_bll_bizobj_constructor_cpp and print_bll_bizobj_constructor_h 
+// should both be invoked from the same place -
+// which means I need to do some serious code refactoring
 void CppCodeGenerator::print_bll_Constructor_defn(std::ofstream & bll_cpp)
 {
 	print_bll_Constructor_with_all_fields();
 	if (tableInfo_->nInvisible>0)
 		print_bll_Constructor_without_invisible_fields();
 	cpp_body << print_bll_empty_constructor_defn();
-	if(tableInfo_->has_composite_objs){	
-		cpp_body << print_bll_bizobj_constructor_cpp();
+	if (tableInfo_->has_composite_objs) {
+		struct var_list* v_ptr=tableInfo_->param_list;
+		int count=0;
+		while (v_ptr) {
+			if (v_ptr->options.ref_table_name != "") {
+				if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
+				} else {
+					++count;
+				}
+			}
+			v_ptr = v_ptr->prev;
+		}
+		if (count >0 ) {
+			cpp_body << print_bll_bizobj_constructor_cpp();
+		}
 	}
 }
 
@@ -620,7 +655,7 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_h()
 			string improved_name = orig_varname.substr(0, pos);
 			if(v_ptr->options.many){
 				bll_bizobj_constructor_h << 
-					format ("vector<boost::shared_ptr<Biz%1%> > l_biz_%2%") 
+					format ("std::vector<boost::shared_ptr<Biz%1%> > l_biz_%2%") 
 						% v_ptr->options.ref_table_name
 						% improved_name;
 			} else {
@@ -675,7 +710,7 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 			string improved_name = orig_varname.substr(0, pos);
 			if(v_ptr->options.many){
 				bizobj_constructor_body << 
-					format ("vector<boost::shared_ptr<Biz%1%> > l_biz_%2%") 
+					format ("std::vector<boost::shared_ptr<Biz%1%> > l_biz_vec_%2%") 
 						% v_ptr->options.ref_table_name
 						% improved_name;
 			} else {
@@ -699,7 +734,7 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 			int pos = orig_varname.find("_Code");
 			string improved_name = orig_varname.substr(0, pos);
 			if (v_ptr->options.many) {
-				bizobj_constructor_body << format ("\t\tbiz_vec_%1% ( l_biz_vec_%1%)") % improved_name;
+				bizobj_constructor_body << format ("\t\tbiz_vec_%1%_ ( l_biz_vec_%1%)") % improved_name;
 			} else {
 				bizobj_constructor_body << format ("\t\tbiz_%1%_ ( l_biz_%2%)") % v_ptr->print_improved_lower_var_name()
 						% improved_name;
