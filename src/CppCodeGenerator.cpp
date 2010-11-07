@@ -435,12 +435,30 @@ void CppCodeGenerator::print_bll_constructor_decl_with_all_fields()
 	h_body << boost::format("\tBiz%1%(\n")
 			% tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	bool output_comma = false;
 	while (v_ptr) {
-		h_body << "\t\t" << v_ptr->print_cpp_var_type()
-			<< " " << v_ptr->print_cpp_var_param_name();
+		if (v_ptr->options.ref_table_name != "" 
+			&& v_ptr->options.many==false) {
+			if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
+				h_body << format("\t\t/* skip: line: %1%, file: %2%, func: %3%*/\n") %
+					__LINE__ % __FILE__ % __PRETTY_FUNCTION__;
+				output_comma = false;
+			} else {
+				h_body << format("\t\t/* dont skip: line: %1%, file: %2%, func: %3%*/\n") %
+					__LINE__ % __FILE__ % __PRETTY_FUNCTION__;
+				h_body << "\t\t" << v_ptr->print_cpp_var_type()
+					<< " " << v_ptr->print_cpp_var_param_name();
+				output_comma = true;
+			}
+		} else {
+			h_body << "\t\t" << v_ptr->print_cpp_var_type()
+				<< " " << v_ptr->print_cpp_var_param_name();
+			output_comma = true;
+		}
 		v_ptr=v_ptr->prev;		
-		if(v_ptr){
+		if(v_ptr && output_comma==true){
 			h_body << ",\n";
+			output_comma = false;
 		}
 	}
 	h_body << "\t);\n";

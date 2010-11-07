@@ -463,30 +463,6 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 	sp_body << boost::format("\t\tFROM %1%\n")
 			% tableInfo_->tableName_;
 	sp_body << print_sp_select_inner_joins();
-	/*
-	v_ptr=tableInfo_->param_list;
-	int loop_counter=0;
-	while(v_ptr){
-		if(loop_counter==0)
-			sp_body << boost::format("\t\tFROM %1%\n")
-				% tableInfo_->tableName_;
-		else if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			string orig_varname = v_ptr->var_name.c_str();
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos) ;
-			sp_body << boost::format(
-				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
-				v_ptr->options.ref_table_name %
-				improved_name %
-				tableInfo_->tableName_%
-				v_ptr->var_name %
-				improved_name %
-				v_ptr->options.ref_field_name;
-		}
-		v_ptr=v_ptr->prev;
-		++loop_counter;
-	}
-	*/
 	// print out search keys
 	sp_body << print_sp_search_key_whereclause();
 	sp_body << boost::format ( "\t) sp_select_%s\n") 
@@ -665,25 +641,28 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 	int recursion_level = 0;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
-				% tableInfo_->tableName_
-				% v_ptr->var_name;
-			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
-					(TableCollectionSingleton::Instance()
-					 	.my_find_table(v_ptr->options.ref_table_name)));
-			if(tbl_ptr){
-				p_sp_select_fields << ",\n";
-				tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
-						false, true, v_ptr->var_name, recursion_level+1);
-				if (v_ptr->prev) {
-					p_sp_select_fields << ",\n";
-				}
+			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
-				p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
-					% v_ptr->options.ref_table_name;
-				exit(1);
+				p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
+					% tableInfo_->tableName_
+					% v_ptr->var_name;
+				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					p_sp_select_fields << ",\n";
+					tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
+							false, true, v_ptr->var_name, recursion_level+1);
+					if (v_ptr->prev) {
+						p_sp_select_fields << ",\n";
+					}
+				} else {
+					p_sp_select_fields << format("referenced table: %1% not found in table list:  ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
+				}
+				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 			}
-			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 		}  else { 
 			p_sp_select_fields <<  format("\t\t\t%1%")
 				% v_ptr->var_name;
@@ -705,31 +684,34 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 	int recursion_level = 0;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
-			if (v_ptr->prev) {
-				p_sp_select_fields_with_type << ",\n";
-			}
-			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
-					(TableCollectionSingleton::Instance()
-					 	.my_find_table(v_ptr->options.ref_table_name)));
-			if(tbl_ptr){
-				tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
-						p_sp_select_fields_with_type
-						, false, true, v_ptr->var_name, recursion_level);
+			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			} else {
+				p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 				if (v_ptr->prev) {
 					p_sp_select_fields_with_type << ",\n";
 				}
-			} else {
-				cerr << format("referenced table: %1% not found in table list:  ... exiting")
-					% v_ptr->options.ref_table_name;
-				exit(1);
-			}
-			//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
-			// p_sp_select_fields_with_type << "p_" << v_ptr->var_name;
-			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
-			//if (v_ptr->prev) {
-			//	p_sp_select_fields_with_type << ",\n";
-			//}
+				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
+							p_sp_select_fields_with_type
+							, false, true, v_ptr->var_name, recursion_level);
+					if (v_ptr->prev) {
+						p_sp_select_fields_with_type << ",\n";
+					}
+				} else {
+					cerr << format("referenced table: %1% not found in table list:  ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
+				}
+				//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+				// p_sp_select_fields_with_type << "p_" << v_ptr->var_name;
+				//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+				//if (v_ptr->prev) {
+				//	p_sp_select_fields_with_type << ",\n";
+				//}
+				}
 		} else {
 			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 			if (v_ptr->prev) {
@@ -1008,33 +990,38 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while(v_ptr){
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-			p_sp_select_fields_with_type 
-				<< "\t\t"
-				<< "int32_t"
-				<< " " << v_ptr->print_sql_var_name_for_select_return_table(string("")) << "_fnum = " 
-				<< "PQfnumber(res, \""
-				<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  
-				<< "\");\n";
-			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
-					(TableCollectionSingleton::Instance()
-					 	.my_find_table(v_ptr->options.ref_table_name)));
-			if(tbl_ptr){
-				tbl_ptr->dbCodeGenerator_->print_cpp_select_params(
-						p_sp_select_fields_with_type
-						, false, true, v_ptr->var_name, recursion_level+1);
+			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				v_ptr=v_ptr->prev;
+				continue;
 			} else {
-				cerr << format("referenced table: %1% not found in table list:  ... exiting")
-					% v_ptr->options.ref_table_name;
-				exit(1);
-			}
-			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
-			// p_sp_select_fields_with_type 
-			// 	<< "\t\t"
-			// 	<< "int32_t"
-			// 	<< " " << v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name) << "_fnum = " 
-			// 	<< "PQfnumber(res, \""
-			// 	<< v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name)  
-			// 	<< "\");\n";
+				p_sp_select_fields_with_type 
+					<< "\t\t"
+					<< "int32_t"
+					<< " " << v_ptr->print_sql_var_name_for_select_return_table(string("")) << "_fnum = " 
+					<< "PQfnumber(res, \""
+					<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  
+					<< "\");\n";
+				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_cpp_select_params(
+							p_sp_select_fields_with_type
+							, false, true, v_ptr->var_name, recursion_level+1);
+				} else {
+					cerr << format("referenced table: %1% not found in table list:  ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
+				}
+				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+				// p_sp_select_fields_with_type 
+				// 	<< "\t\t"
+				// 	<< "int32_t"
+				// 	<< " " << v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name) << "_fnum = " 
+				// 	<< "PQfnumber(res, \""
+				// 	<< v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name)  
+				// 	<< "\");\n";
+				}
 		} else {
 			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 
@@ -1285,47 +1272,34 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
 		get_single_record_str << field_pos_stream.str();
 		struct var_list* v_ptr=tableInfo_->param_list;
-		// This is for the Object within this current object object
+		// This is for the Object within this current object 
 		while (v_ptr) {
 			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-				string orig_varname (v_ptr->var_name);
-				int pos = orig_varname.find("_Code");
-				string improved_name = orig_varname.substr(0, pos);
-				if (vec_reader_str.size() <= recursion_level +1) {
-					boost::shared_ptr<stringstream> dummy(new stringstream);
-					vec_reader_str.push_back(dummy);
+				if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				} else {
+					string orig_varname (v_ptr->var_name);
+					int pos = orig_varname.find("_Code");
+					string improved_name = orig_varname.substr(0, pos);
+					if (vec_reader_str.size() <= recursion_level +1) {
+						boost::shared_ptr<stringstream> dummy(new stringstream);
+						vec_reader_str.push_back(dummy);
+					}
+					(*vec_reader_str[recursion_level+1]) <<  format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+						% v_ptr->options.ref_table_name
+						% improved_name ;
+					
+					//vec_reader_str[recursion_level] << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
+					(*vec_reader_str[recursion_level+1]) << "\t\t\t/*3*/" << print_reader_param_with_cast(v_ptr, string(""));
+					(*vec_reader_str[recursion_level+1]) << ",\n";
+					struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+					(*vec_reader_str[recursion_level+1]) << "/* calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ 
+						<< "tableName_: "  << tableInfo_->tableName_  << " */" << endl ;
+					/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, vec_reader_str, recursion_level+1, true);
+					(*vec_reader_str[recursion_level+1]) << "\t\t\t));\n";
 				}
-				(*vec_reader_str[recursion_level+1]) <<  format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
-					% v_ptr->options.ref_table_name
-					% improved_name ;
-				
-				//vec_reader_str[recursion_level] << print_reader_param_with_cast(v_ptr, v_ptr->options.ref_table_name);
-				(*vec_reader_str[recursion_level+1]) << "\t\t\t/*3*/" << print_reader_param_with_cast(v_ptr, string(""));
-				(*vec_reader_str[recursion_level+1]) << ",\n";
-				struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
-						(TableCollectionSingleton::Instance()
-						 	.my_find_table(v_ptr->options.ref_table_name)));
-				(*vec_reader_str[recursion_level+1]) << "/* calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ 
-					<< "tableName_: "  << tableInfo_->tableName_  << " */" << endl ;
-				/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, vec_reader_str, recursion_level+1, true);
-				(*vec_reader_str[recursion_level+1]) << "\t\t\t));\n";
 			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
-				/*
-				fprintf(fptr, "\t\tList<Biz%s> l_%s= new Biz%s();\n", v_ptr->options.ref_table_name.c_str(),
-					v_ptr->var_name.c_str(),
-					v_ptr->options.ref_table_name.c_str()
-					);
-				fprintf(fptr, "\t\t");
-				print_csharp_types(fptr, v_ptr->var_type);
-				fprintf(fptr, " pk_l_%s = ", v_ptr->var_name.c_str());
-				print_reader_param_with_cast(v_ptr);
-				fprintf(fptr, ";\n");
-				fprintf(fptr, "\t\tl_%s = SiteProvider.%s.Get%sByCode(pk_l_%s);\n",
-					v_ptr->var_name.c_str(), v_ptr->options.ref_table_name.c_str(),	
-					v_ptr->options.ref_table_name.c_str(),
-					v_ptr->var_name.c_str()
-					);
-				*/
 				// (*vec_reader_str[recursion_level]) << "UNHANDLED CASE: line: " << __LINE__
 				// 		<< ", file: " << __FILE__ 
 				// 		<< ", function: " << __PRETTY_FUNCTION__ 
@@ -1539,27 +1513,30 @@ std::string PostgreSQLCodeGenerator::print_sp_select_inner_joins()
 	int recursion_level = 0;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			string orig_varname = v_ptr->var_name;
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos) ;
-			inner_join_str << boost::format(
-				"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
-				v_ptr->options.ref_table_name %
-				improved_name %
-				tableInfo_->tableName_%
-				v_ptr->var_name %
-				improved_name %
-				v_ptr->options.ref_field_name;
-			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
-					(TableCollectionSingleton::Instance()
-					 	.my_find_table(v_ptr->options.ref_table_name)));
-			if(tbl_ptr){
-				tbl_ptr->dbCodeGenerator_->print_sp_select_inner_joins2(inner_join_str,
-						false, true, v_ptr->var_name, recursion_level+1);
+			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
-				cerr << format("referenced table: %1% not found in table list:  ... exiting")
-					% v_ptr->options.ref_table_name;
-				exit(1);
+				string orig_varname = v_ptr->var_name;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos) ;
+				inner_join_str << boost::format(
+					"\t\tINNER JOIN %1% %2% ON %3%.%4%=%5%.%6% \n") %
+					v_ptr->options.ref_table_name %
+					improved_name %
+					tableInfo_->tableName_%
+					v_ptr->var_name %
+					improved_name %
+					v_ptr->options.ref_field_name;
+				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_sp_select_inner_joins2(inner_join_str,
+							false, true, v_ptr->var_name, recursion_level+1);
+				} else {
+					cerr << format("referenced table: %1% not found in table list:  ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
+				}
 			}
 		}
 		v_ptr=v_ptr->prev;
