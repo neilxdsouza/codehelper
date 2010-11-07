@@ -414,7 +414,7 @@ void CppCodeGenerator::print_bll_api_constructors()
 		struct var_list* v_ptr=tableInfo_->param_list;
 		int count=0;
 		while (v_ptr) {
-			if (v_ptr->options.ref_table_name != "") {
+			if (v_ptr->options.ref_table_name != "" && v_ptr->options.many==false) {
 				if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
 				} else {
 					++count;
@@ -492,7 +492,7 @@ void CppCodeGenerator::print_bll_Constructor_defn(std::ofstream & bll_cpp)
 		struct var_list* v_ptr=tableInfo_->param_list;
 		int count=0;
 		while (v_ptr) {
-			if (v_ptr->options.ref_table_name != "") {
+			if (v_ptr->options.ref_table_name != "" && v_ptr->options.many==false) {
 				if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
 				} else {
 					++count;
