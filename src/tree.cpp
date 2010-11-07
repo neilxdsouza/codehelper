@@ -458,7 +458,7 @@ std::string var_list::print_psql_to_cpp_conversion(std::string ref_table_name)
 		break;
 		case DATETIME_TYPE:
 		{
-			s	<< "boost::gregorian::from_simple_string( string( "
+			s	<< "boost::gregorian::from_simple_string( std::string( "
 				<< "PQgetvalue(res, row, ";
 			if(ref_table_name==""){
 				s <<  "r_" << var_name << "_fnum ) ))" ;

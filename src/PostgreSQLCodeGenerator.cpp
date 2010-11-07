@@ -167,14 +167,18 @@ string PostgreSQLCodeGenerator::print_sp_fields( print_sp_params_mode mode)
 		}
 		sp_fields << tab_indent << boost::format("%1%") % v_ptr->var_name;
 		v_ptr=v_ptr->prev;
-		// because of the Window function rank() ... over order by ...
-		// we need the extra comma
-		//if(v_ptr){
-		//	sp_fields << ",\n";
-		//} else {
-		//	sp_fields << "\n";
-		//}
-		sp_fields << ",\n";
+		if (mode==INSERT) {
+			if(v_ptr){
+				sp_fields << ",\n";
+			} else {
+				sp_fields << "\n";
+			}
+		} else {
+			// because of the Window function rank() ... over order by ...
+			// we need the extra comma
+			sp_fields << ",\n";
+		}
+
 	}
 	return sp_fields.str();
 }
@@ -979,7 +983,7 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 				search_key_fields_str <<  boost::format("\t\t");
 				search_key_fields_str << print_cpp_types(v_ptr->var_type);
 				search_key_fields_str <<  boost::format(" p_%1%") 
-					% v_ptr->var_name.c_str();
+					% v_ptr->var_name;
 				++count;
 				if(count<tableInfo_->has_search_key){
 					search_key_fields_str <<  ",\n";
@@ -1150,7 +1154,7 @@ void PostgreSQLCodeGenerator::print_cpp_convert_db_fields_to_cpp(std::stringstre
 			if(tbl_ptr){
 				tbl_ptr->dbCodeGenerator_->print_cpp_convert_db_fields_to_cpp2(
 						convert_fields_str
-						, false, true, v_ptr->var_name.c_str());
+						, false, true, v_ptr->var_name);
 				if (v_ptr->prev) {
 					convert_fields_str << ";\n";
 				}
@@ -1263,8 +1267,8 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord_h()
 // objects on this (using it like a stack)
 std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 {
-	cout << boost::format("/* file: %1%, line: %2%: func: %3% : tableName_: %4%*/\n") %
-		__FILE__ % __LINE__ % __PRETTY_FUNCTION__  % tableInfo_ -> tableName_;
+	//cout << boost::format("/* file: %1%, line: %2%: func: %3% : tableName_: %4%*/\n") %
+	//	__FILE__ % __LINE__ % __PRETTY_FUNCTION__  % tableInfo_ -> tableName_;
 	using boost::format;
 	stringstream get_single_record_str;
 	get_single_record_str << boost::format("\nboost::shared_ptr<Biz%1%> Get%1%FromReader(PGresult * res, int row)\n")
@@ -1284,7 +1288,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		// This is for the Object within this current object object
 		while (v_ptr) {
 			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-				string orig_varname = v_ptr->var_name.c_str();
+				string orig_varname (v_ptr->var_name);
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
 				if (vec_reader_str.size() <= recursion_level +1) {
@@ -1322,18 +1326,29 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 					v_ptr->var_name.c_str()
 					);
 				*/
-				(*vec_reader_str[recursion_level]) << "UNHANDLED CASE: line: " << __LINE__
-						<< ", file: " << __FILE__ 
-						<< ", function: " << __PRETTY_FUNCTION__ 
-						<< endl;
+				// (*vec_reader_str[recursion_level]) << "UNHANDLED CASE: line: " << __LINE__
+				// 		<< ", file: " << __FILE__ 
+				// 		<< ", function: " << __PRETTY_FUNCTION__ 
+				// 		<< endl;
+				string orig_varname (v_ptr->var_name);
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				if (vec_reader_str.size() <= recursion_level +1) {
+					boost::shared_ptr<stringstream> dummy(new stringstream);
+					vec_reader_str.push_back(dummy);
+				}
+				
+				(*vec_reader_str[recursion_level+1]) <<  format("\t\t/*4*/std::vector<boost::shared_ptr<Biz%1%> > l_dummy_biz_vec_%2%;\n")
+					% v_ptr->options.ref_table_name
+					% improved_name ;
 			}
 			v_ptr=v_ptr->prev;
 		}
 
 		(*vec_reader_str[recursion_level]) << format("\t/*5*/boost::shared_ptr<Biz%1%> l_biz_%1% (new Biz%1%(\n")
 			% tableInfo_->tableName_;
-		cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
-		/*(*vec_reader_str[recursion_level]) << */ print_reader(true, true,  "", vec_reader_str, recursion_level, false);
+		//cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
+		print_reader(true, true,  "", vec_reader_str, recursion_level, false);
 
 		(*vec_reader_str[recursion_level]) <<  "\t\t));\n";
 
@@ -1448,7 +1463,7 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 			}
 		} else {
 			// the list would have been constructed - just pass it to the constructor
-			s << format("\t\t\tl_biz_%1%") % v_ptr->var_name;
+			s << format("\t\tl_dummy_biz_vec_%1%") % v_ptr->var_name;
 		}
 		v_ptr=v_ptr->prev;
 		if(v_ptr) {
