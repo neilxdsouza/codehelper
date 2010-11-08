@@ -632,15 +632,14 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 
 
 
-void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields
-				)
+void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_select_fields)
 {
 	// We will treat this function as recursion level 0
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	int recursion_level = 0;
 	while(v_ptr){
-		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
 				p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
@@ -649,7 +648,7 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
 							.my_find_table(v_ptr->options.ref_table_name)));
-				if(tbl_ptr){
+				if (tbl_ptr) {
 					p_sp_select_fields << ",\n";
 					tbl_ptr->dbCodeGenerator_->print_sp_select_params(p_sp_select_fields,
 							false, true, v_ptr->var_name, recursion_level+1);
@@ -663,7 +662,8 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				}
 				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 			}
-		}  else { 
+		} else if (v_ptr->var_type == COMPOSITE_TYPE) { 
+		} else { 
 			p_sp_select_fields <<  format("\t\t\t%1%")
 				% v_ptr->var_name;
 			if (v_ptr->prev) {
@@ -682,13 +682,17 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 	using boost::format;
 	struct var_list* v_ptr=tableInfo_->param_list;
 	int recursion_level = 0;
+	bool print_comma = false;
 	while(v_ptr){
-		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				//v_ptr = v_ptr->prev;
+				//continue;
+				print_comma = false;
 			} else {
 				p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 				if (v_ptr->prev) {
-					p_sp_select_fields_with_type << ",\n";
+					p_sp_select_fields_with_type << "/*2*/,\n";
 				}
 				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
@@ -711,16 +715,24 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 				//if (v_ptr->prev) {
 				//	p_sp_select_fields_with_type << ",\n";
 				//}
-				}
+			}
+		} else if (v_ptr->var_type==COMPOSITE_TYPE) { 
+				//v_ptr = v_ptr->prev;
+				//continue;
+				print_comma = false;
 		} else {
 			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
-			if (v_ptr->prev) {
-				p_sp_select_fields_with_type << ",\n";
-			} else {
-				p_sp_select_fields_with_type << "";
-			}
+			//if (v_ptr->prev) {
+			//	p_sp_select_fields_with_type << "/*1*/,\n";
+			//} else {
+			//	p_sp_select_fields_with_type << "";
+			//}
+			print_comma = true;
 		}
 		v_ptr=v_ptr->prev;
+		if (v_ptr && print_comma) {
+			p_sp_select_fields_with_type << "/*1*/,\n";
+		}
 	}
 }
 
@@ -1420,12 +1432,14 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 								% v_ptr->options.ref_table_name
 								% improved_name ;
 							/* fix problem here: inner_join_tabname has _Code in it - figure out where it comes from */
-							(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) << ",";
+							(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " 
+								<< v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) 
+								<< ",";
 							t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
 							(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
 						}
 					}
-					}
+				}
 			} else {
 				if(rename_vars){
 					//fprintf(edit_out, "renaming var: rename_vars: %d inner_join_tabname: %s\n", 
@@ -1475,10 +1489,15 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 	//
 	s << "insert into " << tableInfo_->tableName_ << "(";
 	int counter=0;
+	bool print_comma = false;
 	while (v_ptr) {
-		s << "\t" << v_ptr->var_name;
+		if (v_ptr->var_type == COMPOSITE_TYPE) { 
+		} else {
+			s << "\t" << v_ptr->var_name;
+			print_comma=true;
+		}
 		v_ptr = v_ptr->prev;
-		if (v_ptr) {
+		if (v_ptr && print_comma) {
 			s << ",\n";
 		} else {
 			s << "\n";
@@ -1490,10 +1509,16 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 	for (int i=0; i<nRecords; ++i) {
 		stringstream random_data_varying;
 		v_ptr = tableInfo_->param_list->prev; // skip primary key
+		bool print_comma = false;
 		while (v_ptr) {
-			random_data_varying << "\t" << v_ptr->print_random_value(i, nRecords);
+			if (v_ptr->var_type == COMPOSITE_TYPE) { 
+				print_comma = false;
+			} else {
+				random_data_varying << "\t" << v_ptr->print_random_value(i, nRecords);
+				print_comma = true;
+			}
 			v_ptr = v_ptr->prev;
-			if (v_ptr) {
+			if (v_ptr && print_comma) {
 				random_data_varying << ",\n";
 			} else {
 				random_data_varying << "\n";
