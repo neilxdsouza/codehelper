@@ -991,6 +991,14 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 	while(v_ptr){
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				p_sp_select_fields_with_type 
+					<< "\t\t"
+					//<< v_ptr->print_cpp_var_type() 
+					<< "int32_t"
+					<< " " << v_ptr->print_sql_var_name_for_select_return_table("") << "_fnum = " 
+					<< "PQfnumber(res, \""
+					<<  v_ptr->print_sql_var_name_for_select_return_table("") 
+					<< "\");\n";
 				v_ptr=v_ptr->prev;
 				continue;
 			} else {
@@ -1388,32 +1396,36 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 	while (v_ptr) {
 		if (v_ptr->options.many==false) {
 			if (v_ptr->options.ref_table_name!="") {
-				struct CppCodeGenerator* t_ptr = (dynamic_cast<CppCodeGenerator*>
-						(TableCollectionSingleton::Instance()
-						 	.my_find_table(v_ptr->options.ref_table_name)));
-				if (t_ptr==0) {
-					s << format("table: %1% not found: line: %2%, file: %3%\n")
-							% v_ptr->options.ref_table_name % __LINE__ % __FILE__;
+				if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+					s << "\t\t/*2*/ " << v_ptr->print_psql_to_cpp_conversion(string(""));
 				} else {
-					string orig_varname = v_ptr->var_name.c_str();
-					int pos = orig_varname.find("_Code");
-					string improved_name = orig_varname.substr(0, pos);
-					s << format("\t\t\tl_biz_%1%") % improved_name;
-					if (descend) {
+					struct CppCodeGenerator* t_ptr = (dynamic_cast<CppCodeGenerator*>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+					if (t_ptr==0) {
+						s << format("table: %1% not found: line: %2%, file: %3%\n")
+								% v_ptr->options.ref_table_name % __LINE__ % __FILE__;
+					} else {
 						string orig_varname = v_ptr->var_name.c_str();
 						int pos = orig_varname.find("_Code");
 						string improved_name = orig_varname.substr(0, pos);
-						boost::shared_ptr<stringstream> dummy(new stringstream);
-						p_vec_reader_str.push_back(dummy);
-						(*p_vec_reader_str[recursion_level+1]) << format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
-							% v_ptr->options.ref_table_name
-							% improved_name ;
-						/* fix problem here: inner_join_tabname has _Code in it - figure out where it comes from */
-						(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) << ",";
-						t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
-						(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
+						s << format("\t\t\tl_biz_%1%") % improved_name;
+						if (descend) {
+							string orig_varname = v_ptr->var_name.c_str();
+							int pos = orig_varname.find("_Code");
+							string improved_name = orig_varname.substr(0, pos);
+							boost::shared_ptr<stringstream> dummy(new stringstream);
+							p_vec_reader_str.push_back(dummy);
+							(*p_vec_reader_str[recursion_level+1]) << format("\t\t/*4*/boost::shared_ptr<Biz%1%> l_biz_%2%(new Biz%1%(\n")
+								% v_ptr->options.ref_table_name
+								% improved_name ;
+							/* fix problem here: inner_join_tabname has _Code in it - figure out where it comes from */
+							(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) << ",";
+							t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
+							(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
+						}
 					}
-				}
+					}
 			} else {
 				if(rename_vars){
 					//fprintf(edit_out, "renaming var: rename_vars: %d inner_join_tabname: %s\n", 
