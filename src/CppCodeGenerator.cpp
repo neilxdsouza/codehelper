@@ -199,16 +199,25 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 
 		if (v_ptr->options.ref_table_name!="") {
 			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
-				variables.str("");
-				functions.str("");
-				var_type.str("");
-				variables.clear();
-				functions.clear();
-				var_type.clear();
-				v_ptr=v_ptr->prev;
-				continue;
-			}
-			if (v_ptr->options.many==true) {
+				//variables << "/* --from here : " << __FILE__ << ", " << __LINE__ 
+				//	<< ", " << __PRETTY_FUNCTION__ << "*/ "
+				//	<< endl;
+				variables << v_ptr->print_cpp_var_type() << boost::format(" %1%_;\n") % v_ptr->var_name;
+				functions << "\t";
+				functions << boost::format("%2% Get_%1%() { return %1%_;}\n") 
+					% v_ptr->var_name % v_ptr->print_cpp_var_type();
+				functions << "\t";
+				functions << boost::format("void Set_%1%(%2%  value) { %1%_= value;}\n") 
+					% v_ptr->var_name % v_ptr->print_cpp_var_type();
+				//variables.str("");
+				//functions.str("");
+				//var_type.str("");
+				//variables.clear();
+				//functions.clear();
+				//var_type.clear();
+				//v_ptr=v_ptr->prev;
+				//continue;
+			} else if (v_ptr->options.many==true) {
 				h_header << boost::format("#include \"%1%_bll.h\" /*1*/\n") %
 						v_ptr->options.ref_table_name;
 				string orig_varname = v_ptr->var_name.c_str();
@@ -442,7 +451,9 @@ void CppCodeGenerator::print_bll_constructor_decl_with_all_fields()
 			if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
 				h_body << format("\t\t/* skip: line: %1%, file: %2%, func: %3%*/\n") %
 					__LINE__ % __FILE__ % __PRETTY_FUNCTION__;
-				output_comma = false;
+				h_body << "\t\t" << v_ptr->print_cpp_var_type()
+					<< " " << v_ptr->print_cpp_var_param_name();
+				output_comma = true;
 			} else {
 				h_body << format("\t\t/* dont skip: line: %1%, file: %2%, func: %3%*/\n") %
 					__LINE__ % __FILE__ % __PRETTY_FUNCTION__;
@@ -550,7 +561,8 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 	v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
 		bool skip_comma = false;
-		if (v_ptr->options.ref_table_name == "") {
+		if (v_ptr->options.ref_table_name == "" ||
+			ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			cpp_body <<  "\t" << v_ptr->print_cpp_var_name() 
 				<< "("
 				<< v_ptr->print_cpp_var_param_name()
@@ -569,7 +581,9 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 	cpp_body << "\n{\n";
 	v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
-		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
+		if ( v_ptr->options.ref_table_name != "" && v_ptr->options.many == false
+			&&	
+			(!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) )) {
 			cpp_body << boost::format("\tbiz_%1%_->%2%_ = %3%;\n") 
 				% v_ptr->print_improved_lower_var_name()
 				% v_ptr->var_name 
