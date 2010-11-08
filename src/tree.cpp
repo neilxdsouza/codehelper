@@ -97,11 +97,15 @@ std::string var_list:: print_cpp_var_type()
 
 std::string var_list::print_cpp_var_param_name()
 {
-	if(var_type==COMPOSITE_TYPE) {
-		if (options.many==true) {
-			return string("p_vec") + var_name;
+	if (options.ref_table_name != "" ) {
+		if(var_type==COMPOSITE_TYPE) {
+			if (options.many==true) {
+				return string("p_biz_vec_") + var_name;
+			} else {
+				return string("p_") + var_name;
+			}
 		} else {
-			return string("p_") + var_name;
+				return string("p_") + var_name;
 		}
 	} else {
 		return string("p_") + var_name;
@@ -113,11 +117,14 @@ std::string var_list::print_cpp_var_name()
 	/*{
 		return var_name;
 	}*/
-	if(var_type==COMPOSITE_TYPE) {
+	if(var_type==COMPOSITE_TYPE || options.ref_table_name!="") {
+		string orig_varname = var_name;
+		int pos = orig_varname.find("_Code");
+		string improved_name = orig_varname.substr(0, pos);
 		if (options.many==true) {
-			return string("vec") + var_name + string("_") ;
+			return string("biz_vec_") + improved_name + string("_") ;
 		} else {
-			return var_name + string("_") ;
+			return string("biz_") + improved_name + string("_") ;
 		}
 	} else {
 		return var_name + string("_") ;

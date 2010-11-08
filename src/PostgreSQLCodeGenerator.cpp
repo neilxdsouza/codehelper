@@ -683,27 +683,28 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 	struct var_list* v_ptr=tableInfo_->param_list;
 	int recursion_level = 0;
 	bool print_comma = false;
-	while(v_ptr){
+	while (v_ptr) {
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				//v_ptr = v_ptr->prev;
 				//continue;
+				p_sp_select_fields_with_type << "/* print_comma = false */ ";
 				print_comma = false;
 			} else {
 				p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
-				if (v_ptr->prev) {
-					p_sp_select_fields_with_type << "/*2*/,\n";
-				}
+				//if (v_ptr->prev) {
+				//	p_sp_select_fields_with_type << "/*2*/\n";
+				//}
 				struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
 						(TableCollectionSingleton::Instance()
 							.my_find_table(v_ptr->options.ref_table_name)));
-				if(tbl_ptr){
+				if (tbl_ptr) {
 					tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
 							p_sp_select_fields_with_type
 							, false, true, v_ptr->var_name, recursion_level);
-					if (v_ptr->prev) {
-						p_sp_select_fields_with_type << ",\n";
-					}
+					//if (v_ptr->prev) {
+					//	p_sp_select_fields_with_type << "/*77*/ ,\n";
+					//}
 				} else {
 					cerr << format("referenced table: %1% not found in table list:  ... exiting")
 						% v_ptr->options.ref_table_name;
@@ -717,11 +718,11 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 				//}
 			}
 		} else if (v_ptr->var_type==COMPOSITE_TYPE) { 
-				//v_ptr = v_ptr->prev;
-				//continue;
+				//p_sp_select_fields_with_type << "/*22*/\n";
 				print_comma = false;
 		} else {
-			p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
+			p_sp_select_fields_with_type << "/*3*/ "
+				<< v_ptr->print_sql_var_decl_for_select_return_table();
 			//if (v_ptr->prev) {
 			//	p_sp_select_fields_with_type << "/*1*/,\n";
 			//} else {
@@ -731,7 +732,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 		}
 		v_ptr=v_ptr->prev;
 		if (v_ptr && print_comma) {
-			p_sp_select_fields_with_type << "/*1*/,\n";
+			p_sp_select_fields_with_type << "/*11*/,\n";
 		}
 	}
 }
@@ -798,6 +799,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields2(
 	p_sp_select_fields_with_type << boost::format("\n/* file: %1%, line: %2%: func: %3%*/\n") %
 		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	p_sp_select_fields_with_type << "/*6*/ ,\n";
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
 	}
@@ -807,7 +809,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields2(
 			int pos = orig_varname.find("_Code");
 			string improved_name = orig_varname.substr(0, pos);
 			p_sp_select_fields_with_type << 
-				"r_" << improved_name << "_" << v_ptr->var_name << " " <<
+				"/*44*/ r_" << improved_name << "_" << v_ptr->var_name << " " <<
 				v_ptr->print_sql_var_type();
 		} else {
 			p_sp_select_fields_with_type << 
@@ -818,7 +820,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields2(
 						(TableCollectionSingleton::Instance()
 						 	.my_find_table(v_ptr->options.ref_table_name)));
 			if(tbl_ptr){
-				p_sp_select_fields_with_type << ",\n";
+				//p_sp_select_fields_with_type << ",\n";
 				tbl_ptr->dbCodeGenerator_->print_sp_return_table_fields2(
 						p_sp_select_fields_with_type
 						, false, true, v_ptr->options.ref_table_name, recursion_level+1);
@@ -831,7 +833,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields2(
 		/*} */
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
-			p_sp_select_fields_with_type << ",\n";
+			p_sp_select_fields_with_type << "/*5*/ ,\n";
 		} 
 	}
 	//p_sp_select_fields << format( "/*Exiting print_sp_select_params called with params: %1% %2% %3% */\n")
