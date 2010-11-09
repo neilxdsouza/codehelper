@@ -34,4 +34,33 @@ CREATE TABLE Division(
       Deleted bit: null invisible
 );
 
+CREATE TABLE Designation (
+	Designation_Code int : primary_key,
+	Designation_Title varchar(150): not null,
+	DesignationGroup_Code int: not null references DesignationGroup(DesignationGroup_Code)
+	);
+
+CREATE TABLE DesignationGroup (
+	DesignationGroup_Code int : primary_key,
+	DesignationGroup_Title varchar(150): not null
+	);
+
+CREATE TABLE TimeCost (
+	TimeCost_Code int: primary_key,
+	DesignationGroup_Code int: references DesignationGroup(DesignationGroup_Code),
+	Hourly_Rate double: not null
+	);
+
+CREATE TABLE Activity (
+	Activity_Code int: primary_key,
+	Activity_Name varchar(150): not null,
+	Activity_Description varchar(2000): not null
+	);
+
+CREATE TABLE DesignationActivity (
+	DesignationActivity_Code int: primary_key,
+	Activity_Code int: references Activity(Activity_Code),
+	DesignationGroup_Code int: references DesignationGroup(DesignationGroup_Code)
+	);
+
 
