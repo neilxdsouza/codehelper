@@ -332,7 +332,7 @@ void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 	cpp_db_impl << "\nPGconn * GetPGConn()\n{\n";
 	cpp_db_impl << "\tconst char  *conninfo;\n";
 	cpp_db_impl << "\tPGconn      *conn;\n";
-	cpp_db_impl << "\tconninfo = \"dbname=nxd port=5433\";\n";
+	cpp_db_impl << "\tconninfo = \"dbname=nxd port=5432\";\n";
 	cpp_db_impl << "\tconn = PQconnectdb(conninfo);\n";
 	cpp_db_impl << "\tif (PQstatus(conn) != CONNECTION_OK)\n";
 	cpp_db_impl << "\t{\n";

@@ -662,6 +662,15 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			stringstream handle_func_defn;
 			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */);
 			vec_handler_defns.push_back(handle_func_defn.str());
+
+			stringstream xfer_func_decl;
+			xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
+				v_ptr->var_name;
+			vec_handler_decls.push_back(xfer_func_decl.str());
+			
+			stringstream xfer_func_defn;
+			xfer_func_defn << print_XferFunction(v_ptr, headers  /* required for header files of composite objects */);
+			vec_handler_defns.push_back(xfer_func_defn.str());
 			
 		} else if (v_ptr->var_type==DATETIME_TYPE) {
 			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
@@ -709,13 +718,13 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		load_table_view_str << "\t\tstd::stringstream temp1;\n";
 
 		{
-			int counter =1; // start at row 2 - titles in row 1
+			int counter =0; // start at row 2 - titles in row 1
 			for (; v_ptr; v_ptr=v_ptr->prev) {
 				if (v_ptr->options.ref_table_name == "") {
 					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
 						v_ptr->var_name;
-					load_table_view_str << format("\t\ttable_%1%_view->elementAt(i, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
-						aTableInfo->tableName_ % counter++ ;
+					load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+						aTableInfo->tableName_ % counter++;
 					load_table_view_str << "\t\ttemp1.str(\"\");\n";
 				}
 			}
@@ -842,9 +851,16 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	v_ptr=aTableInfo->param_list;
 	func_defn << "\t\tstd::stringstream temp1;\n";
 	{
-		int counter =1; // start at row 2 - titles in row 1
+		int counter =0; // start at row 2 - titles in row 1
 		for (; v_ptr; v_ptr=v_ptr->prev) {
-			if (v_ptr->options.ref_table_name == "") {
+			if (v_ptr == aTableInfo->param_list) {
+				func_defn << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
+					p_vptr->options.ref_table_name % counter++;
+				func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_));\n") %
+					tableInfo_->tableName_ % p_vptr->options.ref_table_name % p_vptr->var_name   ;
+				func_defn << boost::format("\t\tb->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
+					% p_vptr->var_name;
+			} else if (v_ptr->options.ref_table_name == "") {
 				func_defn << boost::format("\t\ttemp1 << page1_%2%[i]->%1%_;\n") %
 					v_ptr->var_name % p_vptr->options.ref_table_name;
 				func_defn << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
@@ -899,3 +915,24 @@ std::string WtUIGenerator::print_cpp_search_key_args()
 	return search_key_fields_str.str();
 }
 */
+
+
+string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringstream & decl)
+{
+	stringstream func_defn;
+	using boost::format;
+	func_defn << format("void %2%_ui::XferChoice%1%(int32_t p_%1% )\n{\n")
+		% p_vptr->var_name % tableInfo_->tableName_;
+
+
+	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
+	// should check for null here and exit
+	func_defn << "\tstd::stringstream temp;\n";
+	func_defn << format("\ttemp <<  p_%1%;\n") % p_vptr->var_name;
+	func_defn << format("\twt_%1%_value->setText(Wt::WString::tr(temp.str()));\n") %
+		p_vptr->var_name;
+	
+	func_defn << "}\n";
+	return func_defn.str();
+}
+
