@@ -60,6 +60,7 @@ public:
 	std::string print_reader_param_with_cast(var_list* v_ptr, std::string ref_table_name);
 	void print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname, 
 		std::vector<boost::shared_ptr<std::stringstream> > & p_vec_reader_str, int recursion_level,
+		std::stringstream & dummy_defns,
 		bool descend);
 	std::string GenerateRandomData();
 

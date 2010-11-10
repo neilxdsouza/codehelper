@@ -39,7 +39,8 @@ public:
 	virtual void print_reader(bool with_pkey,
 			bool rename_vars, std::string inner_join_tabname,
 			std::vector< boost::shared_ptr<std::stringstream> > & p_vec_reader_str,
-			int recursion_level, bool descend)=0;
+			int recursion_level, std::stringstream & dummy_defns, 
+			bool descend)=0;
 
 	virtual void print_sp_select_inner_joins2(stringstream & p_inner_join_str,
 		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;

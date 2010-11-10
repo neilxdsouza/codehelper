@@ -1276,16 +1276,18 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord_h()
 // objects on this (using it like a stack)
 std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 {
-	//cout << boost::format("/* file: %1%, line: %2%: func: %3% : tableName_: %4%*/\n") %
-	//	__FILE__ % __LINE__ % __PRETTY_FUNCTION__  % tableInfo_ -> tableName_;
 	using boost::format;
 	stringstream get_single_record_str;
+	//get_single_record_str << boost::format("/* file: %1%, line: %2%: func: %3% : tableName_: %4%*/\n") %
+	//	__FILE__ % __LINE__ % __PRETTY_FUNCTION__  % tableInfo_ -> tableName_;
 	get_single_record_str << boost::format("\nboost::shared_ptr<Biz%1%> Get%1%FromReader(PGresult * res, int row)\n")
 		% tableInfo_->tableName_; 
 	get_single_record_str << "{\n";
 	vector<boost::shared_ptr<stringstream> > vec_reader_str;
 	boost::shared_ptr<stringstream> dummy(new stringstream);
 	vec_reader_str.push_back(dummy);
+
+	std::stringstream dummy_defns;
 	int recursion_level = 0;
 	if(tableInfo_->param_list){
 		stringstream field_pos_stream;
@@ -1318,7 +1320,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 								.my_find_table(v_ptr->options.ref_table_name)));
 					(*vec_reader_str[recursion_level+1]) << "/* calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ 
 						<< "tableName_: "  << tableInfo_->tableName_  << " */" << endl ;
-					/*(*vec_reader_str[recursion_level]) << */ t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, vec_reader_str, recursion_level+1, true);
+					t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, vec_reader_str, recursion_level+1, dummy_defns, true);
 					(*vec_reader_str[recursion_level+1]) << "\t\t\t));\n";
 				}
 			} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
@@ -1333,7 +1335,8 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 					boost::shared_ptr<stringstream> dummy(new stringstream);
 					vec_reader_str.push_back(dummy);
 				}
-				
+				get_single_record_str << boost::format("/* file dummy: %1%, line: %2%: func: %3%*/\n") %
+					__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
 				(*vec_reader_str[recursion_level+1]) <<  format("\t\t/*4*/std::vector<boost::shared_ptr<Biz%1%> > l_dummy_biz_vec_%2%;\n")
 					% v_ptr->options.ref_table_name
 					% improved_name ;
@@ -1344,7 +1347,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		(*vec_reader_str[recursion_level]) << format("\t/*5*/boost::shared_ptr<Biz%1%> l_biz_%1% (new Biz%1%(\n")
 			% tableInfo_->tableName_;
 		//cout << "calling print_reader : from line : " << __LINE__ << ", func:" << __PRETTY_FUNCTION__ << "tableName_: "  << tableInfo_->tableName_ << endl;
-		print_reader(true, true,  "", vec_reader_str, recursion_level, false);
+		print_reader(true, true,  "", vec_reader_str, recursion_level, dummy_defns, false);
 
 		(*vec_reader_str[recursion_level]) <<  "\t\t));\n";
 
@@ -1353,6 +1356,7 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 	}
 	(*vec_reader_str[recursion_level]) << "}\n\n";
 
+	get_single_record_str << "\n/* dummy_defns */\n" << dummy_defns.str() << endl;
 	for(int i=vec_reader_str.size()-1; i>=0; --i) {
 		get_single_record_str << (*vec_reader_str[i]).str();
 	}
@@ -1382,6 +1386,7 @@ std::string PostgreSQLCodeGenerator::print_reader_param_with_cast(var_list* v_pt
 
 void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std::string inner_join_tabname,
 		std::vector<boost::shared_ptr<std::stringstream> >& p_vec_reader_str, int recursion_level,
+		std::stringstream & dummy_defns,
 		bool descend)
 {
 
@@ -1437,7 +1442,8 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 							(*p_vec_reader_str[recursion_level+1]) << "\t\t/*1*/ " 
 								<< v_ptr->print_psql_to_cpp_conversion(inner_join_tabname) 
 								<< ",";
-							t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str, recursion_level+1, descend /* which must be true*/ );
+							t_ptr->dbCodeGenerator_->print_reader(false, true,  v_ptr->options.ref_table_name, p_vec_reader_str
+									, recursion_level+1, dummy_defns, descend /* which must be true*/ );
 							(*p_vec_reader_str[recursion_level+1]) << "));/* close */\n";
 						}
 					}
@@ -1466,6 +1472,16 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 		} else {
 			// the list would have been constructed - just pass it to the constructor
 			s << format("\t\tl_dummy_biz_vec_%1%") % v_ptr->var_name;
+			string orig_varname (v_ptr->var_name);
+			int pos = orig_varname.find("_Code");
+			string improved_name = orig_varname.substr(0, pos);
+			dummy_defns << "/* recursion_level: " << recursion_level << " */\n" ;
+			if (recursion_level > 0) {
+				// otherwise it would be printed from the lowest level table
+				dummy_defns <<  format("\t\t/*44*/std::vector<boost::shared_ptr<Biz%1%> > l_dummy_biz_vec_%2%;\n")
+						% v_ptr->options.ref_table_name
+						% improved_name ;
+			}
 		}
 		v_ptr=v_ptr->prev;
 		if(v_ptr) {
