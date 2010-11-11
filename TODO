@@ -1,0 +1,17 @@
+11-nov-2010
+1. Program options - take database, portnumber, password, username as parameters - use boost where possible - almost done today itself
+2. Toplogical sort of graph - so that we output the create table/ random data inputs in correct order  and drop functions also
+3. Automatic search  -> for all tables, single reference, depth level 1, pull all search fields into search dialog
+4. Automatic Edit/Update
+5. Choose view - should load form and activate edit buttons
+6. Form chooser should transfer back text and value (ideally text should be 2nd field in table - ie. after primary key)
+7. Automatic Insert
+8. Play with layout of form using HBoxLayout, VBoxLayout , BoxLayout
+9. Table list view - any single referenced field marked as view , we should search referenced table for fields marked as view and expose
+10. Figure out how to apply CSS to the Wt widgets
+11. Figure out how to pass a c++ function as a parameter (Template metaprogramming?)
+12. create website
+	- landing page
+	- wiki user guide
+	- Features page
+	- Investor's page
