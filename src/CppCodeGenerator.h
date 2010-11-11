@@ -30,6 +30,7 @@ CppCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 	void GenerateBLL();
 	void GenerateBLLDefn_h(std::ofstream & bll_h);
 	void GenerateBLLDefn_cpp(std::ofstream & bll_cpp);
+	void RunPreCodeGenerationChecks();
 public:
 	void print_bll_h_header(std::ofstream & bll_h);
 	void print_bll_api_decls(std::ofstream & bll_h);

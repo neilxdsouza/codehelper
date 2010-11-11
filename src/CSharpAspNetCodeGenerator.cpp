@@ -2967,3 +2967,5 @@ void CSharpAspNetCodeGenerator::FinalCleanUp()
 {
 }
 
+void CSharpAspNetCodeGenerator::RunPreCodeGenerationChecks()
+{ }

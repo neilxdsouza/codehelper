@@ -64,3 +64,22 @@ void table_decl_stmt::GenerateCode(FILE * & fptr)
 	}
 	codeGenerator_->uiGenerator_->FinalCleanUp();
 }
+
+void table_decl_stmt::RunPreCodeGenerationChecks()
+{
+	//struct TableInfoType * ti_ptr = codeGenerator_->tableInfo_;
+	//struct var_list *v_ptr = ti_ptr->param_list;
+	//// Make this a virtual function and implement in CppCodeGenerator
+	//while (v_ptr) {
+	//	if (v_ptr->options.many) {
+	//			struct CppCodeGenerator* tbl_ptr = (dynamic_cast<CppCodeGenerator*>
+	//					(TableCollectionSingleton::Instance()
+	//						.my_find_table(v_ptr->options.ref_table_name)));
+	//	}
+	//	v_ptr = v_ptr->prev;
+	//}
+	codeGenerator_->RunPreCodeGenerationChecks();
+	if (prev) {
+		prev->RunPreCodeGenerationChecks();
+	}
+}

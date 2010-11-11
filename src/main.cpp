@@ -119,6 +119,7 @@ int lookup_func(string table_name_index)
 void print_code(FILE * & edit_out)
 {
 	printf("ENTER print_code\n");
+	tree_root->RunPreCodeGenerationChecks();
 	tree_root->GenerateCode(edit_out);
 }
 

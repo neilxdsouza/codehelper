@@ -802,3 +802,22 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 	bizobj_constructor_body << format ("\n{ }\n");
 	return bizobj_constructor_body.str();
 }
+
+void CppCodeGenerator::RunPreCodeGenerationChecks()
+{
+	cout << boost::format("/* file: %1%, line: %2%: func: %3%*/\n") %
+		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
+
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.many) {
+			struct CppCodeGenerator * t_ptr = (dynamic_cast<CppCodeGenerator*>
+					(TableCollectionSingleton::Instance()
+						.my_find_table(v_ptr->options.ref_table_name)));
+			if (t_ptr) {
+				t_ptr->tableInfo_->nReferencedAsMulti++;
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
+}

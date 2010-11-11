@@ -363,6 +363,9 @@ string WtUIGenerator::PrintNavigationDecl()
 void WtUIGenerator::AddNavigationNode(std::string  label, std::string  func_name)
 {
 	//navigation_nodes << "// Hello,World\n";
+	navigation_nodes << boost::format("\t/* tableInfo_->tableName_ : %1%, nReferencedAsMulti: %2% */\n") %
+		tableInfo_->tableName_  %
+		tableInfo_->nReferencedAsMulti;
 	navigation_nodes << "\tcreateNavigationNode(\""
 	 		<< label << "\", rootNode,\n"
 	 		<< "\t\t\t&good1::" << func_name << ");\n";
@@ -511,7 +514,9 @@ string WtUIGenerator::GenerateUIInsertForm()
 	stringstream func_name;
 	func_name << boost::format("formInsert%1%")
 					% tableInfo_->tableName_;
-	AddNavigationNode(tableInfo_->tableName_, func_name.str());
+	if (tableInfo_->nReferencedAsMulti==0) {
+		AddNavigationNode(tableInfo_->tableName_, func_name.str());
+	}
 	
 	form_code << "\tsetCentralWidget(canvas);\n";
 	form_code << boost::format("}\n");

@@ -18,7 +18,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 	: 
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 	has_multi(0), has_search_key(0), nInvisible(0),
-	vec_var_list(p_vec_var_list)
+	vec_var_list(p_vec_var_list), nReferencedAsMulti(0)
 {
 	printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	

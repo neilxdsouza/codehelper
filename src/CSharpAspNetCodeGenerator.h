@@ -22,6 +22,7 @@ CSharpAspNetCodeGenerator(TableInfoType * p_TableInfoType_ptr,
 	{ }
 
 	void GenerateCode(FILE * fptr);
+	void RunPreCodeGenerationChecks();
 	void FinalCleanUp();
 
 	// helper functions used by main functions above

@@ -184,6 +184,7 @@ struct TableInfoType
 	int has_multi;
 	int has_search_key;
 	int nInvisible;
+	int nReferencedAsMulti;
 	vector<var_list*> vec_var_list;
 	void print_lower_fname(FILE * fptr);
 	TableInfoType(string name, struct var_list*  elist

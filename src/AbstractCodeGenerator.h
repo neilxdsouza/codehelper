@@ -27,6 +27,7 @@ struct AbstractCodeGenerator
 	//virtual void print_ui(FILE * fptr)=0;
 	virtual void GenerateCode(FILE * fptr)=0;
 	virtual void FinalCleanUp()=0;
+	virtual void RunPreCodeGenerationChecks()=0;
 
  
 	protected:

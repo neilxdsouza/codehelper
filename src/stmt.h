@@ -25,6 +25,7 @@ struct stmt
 	datatype type;
 	int line_number;
 	virtual void GenerateCode(FILE * & fptr)=0;
+	virtual void RunPreCodeGenerationChecks()=0;
 	stmt(datatype dtype=ERROR_TYPE, int lline_number=0)
 		:next(0), prev(0), type(dtype), line_number(lline_number)
 	{ }
@@ -51,6 +52,8 @@ struct err_stmt: public stmt
 			if(prev) prev->GenerateCode(fptr);
 		}
 	}
+	virtual void RunPreCodeGenerationChecks()
+	{ }
 	private:
 	err_stmt& operator=(const err_stmt&);	
 	err_stmt(const err_stmt&);	
@@ -70,6 +73,7 @@ struct table_decl_stmt: public stmt
 			 vector<var_list*>& vec_var_list);
 
 	void GenerateCode(FILE * & fptr);
+	virtual void RunPreCodeGenerationChecks();
 
 	private:
 	table_decl_stmt& operator=(const table_decl_stmt&);	
