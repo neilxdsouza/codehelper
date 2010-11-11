@@ -94,6 +94,14 @@ PRIMARY_KEY {
 	return PRIMARY_KEY;
 }
 
+UI_SELECT {
+	return UI_SELECT;
+}
+
+UI_VIEW {
+	return UI_VIEW;
+}
+
 
 ")"	{
 	return ')';

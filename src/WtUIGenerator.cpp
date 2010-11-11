@@ -711,9 +711,11 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			for (; v_ptr; v_ptr=v_ptr->prev) {
 				// I need to fix this - like add a function which states "simple_variable" - 
 				// functional programming style - as mentioned in the LISP books
-				if (v_ptr->options.ref_table_name == "") {
-					load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
-						aTableInfo->tableName_ % counter++ % v_ptr->var_name;
+				if (v_ptr->options.ui_view) {
+					if (v_ptr->options.ref_table_name == "") {
+						load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
+							aTableInfo->tableName_ % counter++ % v_ptr->var_name;
+					}
 				}
 			}
 		}
@@ -725,12 +727,14 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		{
 			int counter =0; // start at row 2 - titles in row 1
 			for (; v_ptr; v_ptr=v_ptr->prev) {
-				if (v_ptr->options.ref_table_name == "") {
-					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
-						v_ptr->var_name;
-					load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
-						aTableInfo->tableName_ % counter++;
-					load_table_view_str << "\t\ttemp1.str(\"\");\n";
+				if (v_ptr->options.ui_view) {
+					if (v_ptr->options.ref_table_name == "") {
+						load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
+							v_ptr->var_name;
+						load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+							aTableInfo->tableName_ % counter++;
+						load_table_view_str << "\t\ttemp1.str(\"\");\n";
+					}
 				}
 			}
 		}
@@ -844,9 +848,11 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 		for (; v_ptr; v_ptr=v_ptr->prev) {
 			// I need to fix this - like add a function which states "simple_variable" - 
 			// functional programming style - as mentioned in the LISP books
-			if (v_ptr->options.ref_table_name == "") {
-				func_defn << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
-					p_vptr->options.ref_table_name % counter++ % v_ptr->var_name;
+			if (v_ptr->options.ui_select) {
+				if (v_ptr->options.ref_table_name == "") {
+					func_defn << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
+						p_vptr->options.ref_table_name % counter++ % v_ptr->var_name;
+				}
 			}
 		}
 	}
@@ -858,19 +864,21 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	{
 		int counter =0; // start at row 2 - titles in row 1
 		for (; v_ptr; v_ptr=v_ptr->prev) {
-			if (v_ptr == aTableInfo->param_list) {
-				func_defn << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
-					p_vptr->options.ref_table_name % counter++;
-				func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_));\n") %
-					tableInfo_->tableName_ % p_vptr->options.ref_table_name % p_vptr->var_name   ;
-				func_defn << boost::format("\t\tb->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
-					% p_vptr->var_name;
-			} else if (v_ptr->options.ref_table_name == "") {
-				func_defn << boost::format("\t\ttemp1 << page1_%2%[i]->%1%_;\n") %
-					v_ptr->var_name % p_vptr->options.ref_table_name;
-				func_defn << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
-					p_vptr->options.ref_table_name % counter++ ;
-				func_defn << "\t\ttemp1.str(\"\");\n";
+			if (v_ptr->options.ui_select) {
+				if (v_ptr == aTableInfo->param_list) {
+					func_defn << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
+						p_vptr->options.ref_table_name % counter++;
+					func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_));\n") %
+						tableInfo_->tableName_ % p_vptr->options.ref_table_name % p_vptr->var_name   ;
+					func_defn << boost::format("\t\tb->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
+						% p_vptr->var_name;
+				} else if (v_ptr->options.ref_table_name == "") {
+					func_defn << boost::format("\t\ttemp1 << page1_%2%[i]->%1%_;\n") %
+						v_ptr->var_name % p_vptr->options.ref_table_name;
+					func_defn << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+						p_vptr->options.ref_table_name % counter++ ;
+					func_defn << "\t\ttemp1.str(\"\");\n";
+				}
 			}
 		}
 	}

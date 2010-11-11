@@ -68,9 +68,11 @@
      PRIMARY_KEY = 284,
      VISIBLE = 285,
      INVISIBLE = 286,
-     TABLE = 287,
-     NAME = 288,
-     INUMBER = 289
+     UI_VIEW = 287,
+     UI_SELECT = 288,
+     TABLE = 289,
+     NAME = 290,
+     INUMBER = 291
    };
 #endif
 
@@ -93,7 +95,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 97 "src/integrated_sql_gram.hpp"
+#line 99 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

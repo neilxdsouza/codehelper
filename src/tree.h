@@ -42,19 +42,24 @@ struct options_list_type
 	validator_types validator;
 	bool primary_key;
 	bool visible;
+	bool ui_select;
+	bool ui_view;
 
 	options_list_type(string l_ref_table_name, string l_ref_field_name, 
 			  bool l_many, bool l_null, bool l_unique, bool l_search_key, 
-			  validator_types l_validator, bool l_primary_key, bool l_visible)
+			  validator_types l_validator, bool l_primary_key, bool l_visible, 
+			  bool l_ui_select, bool l_ui_view)
 		: ref_table_name(l_ref_table_name), ref_field_name(l_ref_field_name),
 		  many(l_many), null(l_null), unique(l_unique), search_key(l_search_key),
-		  validator(l_validator), primary_key(l_primary_key), visible(l_visible)
+		  validator(l_validator), primary_key(l_primary_key), visible(l_visible),
+		  ui_select(l_ui_select), ui_view(l_ui_view)
 	{ }
 
 	options_list_type()
 		: ref_table_name(), ref_field_name(),
 		  many(false), null(false), unique(false), search_key(false),
-		  validator(none), primary_key(false), visible(true)
+		  validator(none), primary_key(false), visible(true),
+		  ui_select(false), ui_view(false)
 	{ }
 			   
 	public:
@@ -69,6 +74,8 @@ struct options_list_type
 		search_key = false;
 		primary_key=false;
 		visible=true;
+		ui_select = false;
+		ui_view = false;
 	}
 };
 

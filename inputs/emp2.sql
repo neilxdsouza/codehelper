@@ -1,17 +1,17 @@
 create table Country(
-	Country_Code int: PRIMARY_KEY,
-	Country_Short_Name varchar(5): UNIQUE,
+	Country_Code int: PRIMARY_KEY UI_VIEW UI_SELECT,
+	Country_Short_Name varchar(5): UNIQUE UI_VIEW UI_SELECT,
 	Country_Name varchar(250): UNIQUE);
 
 CREATE TABLE ClientGroup(
-	ClientGroup_Code int : PRIMARY_KEY,
-	ClientGroup_Name varchar(250) : UNIQUE
+	ClientGroup_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
+	ClientGroup_Name varchar(250) : UNIQUE  UI_VIEW UI_SELECT
 );
 
 
 CREATE TABLE Client(
-	Client_Code int : PRIMARY_KEY,
-	Client_Name varchar(250):  UNIQUE SEARCH_KEY,
+	Client_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
+	Client_Name varchar(250):  UNIQUE SEARCH_KEY UI_VIEW UI_SELECT,
 	ClientGroup_Code int: REFERENCES ClientGroup(ClientGroup_Code),
 	Address1 varchar(500) :NULL,
 	Address2 varchar(500) :NULL,
@@ -29,8 +29,8 @@ CREATE TABLE Client(
 
 
 CREATE TABLE ClientContactPerson(
-	ClientContactPerson_Code int:  PRIMARY_KEY,
-	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY,
+	ClientContactPerson_Code int:  PRIMARY_KEY UI_VIEW UI_SELECT,
+	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY UI_VIEW UI_SELECT,
 	Client_Code int: REFERENCES Client(Client_Code),
 	Designation varchar(150): NULL,
 	Email1 varchar(250): not null,
@@ -42,13 +42,13 @@ CREATE TABLE ClientContactPerson(
 
 
 CREATE TABLE Employee(
-      Employee_Code int: primary_key,
+      Employee_Code int: primary_key UI_VIEW UI_SELECT,
+      ForeName varchar(250) : not null UI_VIEW UI_SELECT,
+      MiddleName varchar(250) : not null UI_VIEW UI_SELECT,
+      LastName varchar(250) : not null UI_VIEW UI_SELECT,
       EmployeeStatus composite:	references many EmployeeStatus(Employee_Code),
       Gender bit : not null,
       Title varchar(150) : not null,
-      ForeName varchar(250) : not null,
-      MiddleName varchar(250) : not null,
-      LastName varchar(250) : not null,
       Prefered_Name varchar(150) : not null,
       Date_of_Birth datetime : not null,
       Previous_Employee_Code int : not null,
@@ -56,8 +56,8 @@ CREATE TABLE Employee(
 );
  
 CREATE TABLE EmployeeStatus(
-      EmployeeStatus_Code int : primary_key,
-      Employee_Code int : not null references Employee(Employee_Code),
+      EmployeeStatus_Code int : primary_key UI_VIEW UI_SELECT,
+      Employee_Code int : not null references Employee(Employee_Code) UI_VIEW UI_SELECT,
       Position_Code int : not null,
       Date_appointed_to_Position datetime : not null,
       Division_Code int : not null,
@@ -68,8 +68,8 @@ CREATE TABLE EmployeeStatus(
 
 
 CREATE TABLE Division(
-      Division_Code int : primary_key,
-      Division_Name varchar(150) : not  null,
+      Division_Code int : primary_key UI_VIEW UI_SELECT,
+      Division_Name varchar(150) : not  null UI_VIEW UI_SELECT,
       Division_Head int : not null,
       Part_of_Division int : not null,
       Lft int : not null invisible,
@@ -78,14 +78,14 @@ CREATE TABLE Division(
 );
 
 CREATE TABLE Designation (
-	Designation_Code int : primary_key,
-	Designation_Title varchar(150): not null,
+	Designation_Code int : primary_key UI_VIEW UI_SELECT,
+	Designation_Title varchar(150): not null UI_VIEW UI_SELECT,
 	DesignationGroup_Code int: not null references DesignationGroup(DesignationGroup_Code)
 	);
 
 CREATE TABLE DesignationGroup (
-	DesignationGroup_Code int : primary_key,
-	DesignationGroup_Title varchar(150): not null
+	DesignationGroup_Code int : primary_key UI_VIEW UI_SELECT,
+	DesignationGroup_Title varchar(150): not null UI_VIEW UI_SELECT
 	);
 
 CREATE TABLE TimeCost (
@@ -95,56 +95,56 @@ CREATE TABLE TimeCost (
 	);
 
 CREATE TABLE Activity (
-	Activity_Code int: primary_key,
-	Activity_Name varchar(150): not null,
+	Activity_Code int: primary_key UI_VIEW UI_SELECT,
+	Activity_Name varchar(150): not null UI_VIEW UI_SELECT,
 	Activity_Description varchar(2000): not null
 	);
 
 CREATE TABLE DesignationActivity (
-	DesignationActivity_Code int: primary_key,
-	Activity_Code int: references Activity(Activity_Code),
+	DesignationActivity_Code int: primary_key UI_VIEW UI_SELECT,
+	Activity_Code int: references Activity(Activity_Code) UI_VIEW UI_SELECT,
 	DesignationGroup_Code int: references DesignationGroup(DesignationGroup_Code)
 	);
 
 create Table Currency (
 	Currency_Code int: primary_key,
-	Currency_Short_Name varchar(5): not null,
+	Currency_Short_Name varchar(5): not null UI_VIEW UI_SELECT,
 	Currency_Name varchar(200): null);
 
 create Table Exchange_Master(
-	Exchange_Master_Code int: primary_key,
-	Currency_Code int: references Currency(Currency_Code),
+	Exchange_Master_Code int: primary_key UI_VIEW UI_SELECT,
+	Currency_Code int: references Currency(Currency_Code) UI_VIEW UI_SELECT,
 	Exchange_Details composite: references many Exchange_Details(Exchange_Details_Code),
-	Exchange_Master_Date datetime: not null,
+	Exchange_Master_Date datetime: not null UI_VIEW UI_SELECT,
 	Exchange_Master_Comments varchar(250): not null
 	);
 
 create table Exchange_Details(
-	Exchange_Details_Code int: primary_key ,
+	Exchange_Details_Code int: primary_key   UI_VIEW UI_SELECT,
 	Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
-	Exchange_Rate double: not null,
-	Exchange_Details_Date datetime: not null,
+	Exchange_Rate double: not null UI_VIEW UI_SELECT,
+	Exchange_Details_Date datetime: not null UI_VIEW UI_SELECT,
 	Comments varchar(250): not null);
 
 create Table Project_Type(
-	Project_Type_Code int: primary_key,
-	Project_Type_Short_Description varchar(100): not null,
+	Project_Type_Code int: primary_key UI_VIEW UI_SELECT,
+	Project_Type_Short_Description varchar(100): not null UI_VIEW UI_SELECT,
 	Project_Type_Description varchar(1000): not null);
 
 create Table Project_Status(
-	Project_Status_Code int: primary_key,
-	Project_Status_Description varchar(250): not null
+	Project_Status_Code int: primary_key UI_VIEW UI_SELECT,
+	Project_Status_Description varchar(250): not null UI_VIEW UI_SELECT
 	);
 
 CREATE TABLE Project (
-	Project_Code int: primary_key,
-	Project_Number varchar(20): unique,
-	Project_Name varchar(250): unique,
+	Project_Code int: primary_key UI_VIEW UI_SELECT,
+	Project_Number varchar(20): unique UI_VIEW UI_SELECT,
+	Project_Name varchar(250): unique UI_VIEW UI_SELECT,
 	Project_Short_Description varchar(2000): not null,
 	Project_Entry_Date datetime: not null,
 	Project_Start_Date datetime: null,
 	Project_End_Date datetime: null,
-	Project_Commission_Date datetime: not null,
+	Project_Commission_Date datetime: not null UI_VIEW UI_SELECT,
 	Project_Lost_Date datetime: not null,
 	Project_Description varchar(5000): null,
 	Revenue_Start_Date datetime: not null,
