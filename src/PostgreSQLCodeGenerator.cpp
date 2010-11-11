@@ -978,6 +978,10 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 			% tableInfo_->tableName_
 			;
 	func_body << "\t\t}\n";
+	// This has to be fixed by using a shared pointer with 
+	// a custom deleter - this works for now as the live server 
+	// is leaking memory like a sieve
+	func_body << "\tPQclear(res);\n";
 	func_body << "\t}\n";
 	func_body << "\treturn vec_rval;\n";
 	func_body << "}\n";
