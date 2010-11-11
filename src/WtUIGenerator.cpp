@@ -3,6 +3,8 @@
 
 #include "std_using.h"
 #include "utils.h"
+#include "global_options.h"
+using global_options::project_namespace;
 
 using namespace std;
 
@@ -14,7 +16,8 @@ std::stringstream WtUIGenerator::navigation_nodes;
 std::stringstream WtUIGenerator::header_files;
 std::stringstream WtUIGenerator::makefile_objs;
 extern vector <TableInfoType *> vec_table_info;
-extern char project_namespace[];
+//extern char project_namespace[];
+extern std::string project_namespace;
 
 WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
@@ -783,7 +786,7 @@ bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name)
 }
 */
 
-extern std::string input_file_name;
+using global_options::input_file_name;
 
 void WtUIGenerator::GenerateMakefile()
 {

@@ -2,16 +2,19 @@
 #include "error.h"
 #include "utils.h"
 #include "CppCodeGenerator.h"
+#include "global_options.h"
 
 #include "PostgreSQLCodeGeneratorFactory.h"
 #include "PostgreSQLCodeGenerator.h"
 #include "TableCollectionSingleton.hpp"
 
 #include "std_using.h"
+#include "global_options.h"
 
 using boost::format;
 using boost::io::group;
-extern char project_namespace[];
+//extern char project_namespace[];
+using global_options::project_namespace;
 
 PostgreSQLCodeGenerator::PostgreSQLCodeGenerator(TableInfoType * p_tabInfo,
 						 std::string & p_output_dir_path)
@@ -332,7 +335,8 @@ void PostgreSQLCodeGenerator::PrintGetConn(ofstream & cpp_db_impl)
 	cpp_db_impl << "\nPGconn * GetPGConn()\n{\n";
 	cpp_db_impl << "\tconst char  *conninfo;\n";
 	cpp_db_impl << "\tPGconn      *conn;\n";
-	cpp_db_impl << "\tconninfo = \"dbname=nxd port=5432\";\n";
+	cpp_db_impl << "\tconninfo = \"dbname=" << global_options::database_name 
+		<< " port=" << global_options::database_port << "\";\n";
 	cpp_db_impl << "\tconn = PQconnectdb(conninfo);\n";
 	cpp_db_impl << "\tif (PQstatus(conn) != CONNECTION_OK)\n";
 	cpp_db_impl << "\t{\n";

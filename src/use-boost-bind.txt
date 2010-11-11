@@ -1,0 +1,18 @@
+I'd propose to use boost::bind:
+for(int i = 0; i < numRecords; ++i) {
+  // Build your table here, including the buttons:
+  WPushButton *b = new WPushButton("Show Record", this);
+  b->clicked().connect(boost::bind(&MyClass::showRecordDetails, this, i));
+}
+
+void MyClass::showRecordDetails(int recordnumber)
+{
+  // Update other form with information from 'recordnumber'
+ ...;
+}
+
+In many cases, boost::bind() is a nice alternative to WSignalMapper.
+
+BR,
+Wim.
+

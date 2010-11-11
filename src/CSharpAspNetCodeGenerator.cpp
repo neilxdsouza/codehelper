@@ -2,8 +2,11 @@
 #include "TableCollectionSingleton.hpp"
 #include "CSharpAspNetCodeGenerator.h"
 #include "utils.h"
+#include "global_options.h"
 
-extern char project_namespace[];
+//extern char project_namespace[];
+//extern std::string project_namespace;
+using global_options::project_namespace;
 extern int line_no;
 //extern vector <AbstractCodeGenerator*> table_info_table;
 //static TableCollectionSingleton<CSharpAspNetCodeGenerator> * pInstance_=0;

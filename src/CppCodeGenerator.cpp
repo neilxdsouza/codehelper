@@ -5,10 +5,13 @@
 #include "utils.h"
 #include "error.h"
 #include "std_using.h"
+#include "global_options.h"
 
 using boost::format;
 using boost::io::group;
-extern char project_namespace[];
+//extern char project_namespace[];
+//extern std::string project_namespace;
+using global_options::project_namespace;
 
 void CppCodeGenerator::GenerateCode(FILE * fptr)
 {

@@ -21,6 +21,7 @@
 #include "stmt.h"
 #include "ForwardDecl.h"
 #include "std_using.h"
+#include "global_options.h"
 
 //AbstractCodeGenerator.h
 //ForwardDecl.h
@@ -40,7 +41,7 @@ int yyparse();
 extern int no_errors;
 
 #define MAX_NAMESPACE_WORD 1023
-char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel_Namespace"};
+//char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel_Namespace"};
 string rhs_name_space_name;
 void print_code(FILE * &edit_out);
 AbstractCodeGeneratorFactory * codeGeneratorFactory;
@@ -53,19 +54,19 @@ void Init();
 	struct stmt * tree_root=0;
 
 void ParseProgramOptions(int argc, char* argv[]);
-std::string input_file_name;
+//std::string input_file_name;
 
 int main(int argc, char* argv[], char* envp[])
 {
 
 	ParseProgramOptions(argc, argv);
-	if(argc!=3) {
-		cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
-		exit(0);
-	}
+	//if(argc!=3) {
+	//	cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
+	//	exit(0);
+	//}
 	Init();
-	input_file_name = argv[1];
-	rhs_name_space_name=argv[2];
+	//input_file_name = argv[1];
+	//rhs_name_space_name=argv[2];
 	
 	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
 	//PostgreSQLCodeGenerator psqlCodeGenerator;
@@ -81,7 +82,7 @@ int main(int argc, char* argv[], char* envp[])
 	codeGeneratorFactory = &cppCodeGeneratorFactory;
 	
 	
-	FILE * yyin=fopen(argv[1],"r");
+	FILE * yyin=fopen(global_options::input_file_name.c_str(),"r");
 	yyrestart(yyin);
 	if(yyparse()){
 		cout << "Errors in parsing: " << no_errors << endl;
@@ -152,17 +153,57 @@ void Init()
 	//vector <string> dict;
 }
 
+namespace global_options {
+std::string database_name;
+int database_port;
+std::string database_password;
+std::string project_namespace;
+std::string input_file_name;
+
+//char project_namespace[MAX_NAMESPACE_WORD]={"TopLevel_Namespace"};
+}
 
 void ParseProgramOptions(int argc, char * argv[])
 {
+
 	namespace po = boost::program_options;
+	using namespace global_options;
+	try {
 	po::options_description desc("Allowed options");
 	desc.add_options()
 		("help", "produce this help message")
-		("top-level-namespace", "Top level namespace of the project - for example MyProject");
+		("top-level-namespace-name", po::value<string>(&project_namespace)->default_value(string("top_level_namespace")), "Top level namespace of the project - for example MyProject")
+		("database-name,n", po::value<string>(&database_name)->default_value(string("nxd")), "name of the database to connect to")
+		("database-password,w", po::value<string>(&database_password)->default_value(string("nxd")), "database password")
+		("database-port,p", po::value<int>(&database_port)->default_value(5432), "port number the database is running on")
+		("input-file,f", po::value<string>(&input_file_name), "input file");
+	po::positional_options_description p;
+	p.add("input-file", -1);
 	po::variables_map vm;
-	po::store(po::parse_command_line(argc, argv, desc), vm);
+	po::store(po::command_line_parser(argc, argv).options(desc).positional(p).run(), vm);
 	po::notify(vm);
 
+	if (vm.count("help")) {
+		cout << "Usage " << argv[0] << " [options]\n";
+		cout << desc;
+	}
+
+	//if(argc!=3) {
+	//	cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
+	//	exit(0);
+	//}
+	cout << "top-level-namespace-name: " << project_namespace << endl;
+	cout << "database_port:" << database_port << endl;
+	cout << "database_password:" << database_password << endl;
+	cout << "database_name:" << database_name << endl;
+	cout << "input_file:" << input_file_name << endl;
+	}
+
+	catch (std::exception & e) {
+		cout << e.what() << endl;
+		return ;
+	}
+
+	//exit(0);
 	
 }
