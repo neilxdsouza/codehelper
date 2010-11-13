@@ -61,7 +61,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "good1::good1(const WEnvironment & env)\n";
 	uiScaffolding << "	: WApplication(env)\n";
 	uiScaffolding << "{\n";
-	uiScaffolding << "	setTitle(\"Wt-Ext, including a kitchen sink\");\n";
+	uiScaffolding << "	setTitle(\"Timesheet Application Program\");\n";
 	uiScaffolding << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	useStyleSheet(\"good1.css\");\n";

@@ -127,6 +127,7 @@ void print_code(FILE * & edit_out)
 	tree_root->GenerateCode(edit_out);
 	GraphType g(global_variables::nGraphNodes);
 	ConstructGraph(g, tree_root);
+	TestGraph(g);
 }
 
 void Init()
