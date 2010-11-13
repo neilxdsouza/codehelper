@@ -1,13 +1,34 @@
-create table Country(
-	Country_Code int: PRIMARY_KEY UI_VIEW UI_SELECT,
-	Country_Short_Name varchar(5): UNIQUE UI_VIEW UI_SELECT,
-	Country_Name varchar(250): UNIQUE);
 
-CREATE TABLE ClientGroup(
-	ClientGroup_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
-	ClientGroup_Name varchar(250) : UNIQUE  UI_VIEW UI_SELECT
+CREATE TABLE Project (
+	Project_Code int: primary_key UI_VIEW UI_SELECT,
+	Project_Number varchar(20): unique UI_VIEW UI_SELECT,
+	Project_Name varchar(250): unique UI_VIEW UI_SELECT,
+	Project_Short_Description varchar(2000): not null,
+	Project_Entry_Date datetime: not null,
+	Project_Start_Date datetime: null,
+	Project_End_Date datetime: null,
+	Project_Commission_Date datetime: not null UI_VIEW UI_SELECT,
+	Project_Lost_Date datetime: not null,
+	Project_Description varchar(5000): null,
+	Revenue_Start_Date datetime: not null,
+	Project_Status_Code int: references Project_Status(Project_Status_Code),
+	Employee_Code int: references Employee(Employee_Code),
+	ClientContactPerson_Code int: references ClientContactPerson(ClientContactPerson_Code),
+	Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
+	Project_Type_Code int: references Project_Type(Project_Type_Code)
+	);
+
+CREATE TABLE ClientContactPerson(
+	ClientContactPerson_Code int:  PRIMARY_KEY UI_VIEW UI_SELECT,
+	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY UI_VIEW UI_SELECT,
+	Client_Code int: REFERENCES Client(Client_Code),
+	Designation varchar(150): NULL,
+	Email1 varchar(250): not null,
+	Email2 varchar(250): null,
+	Phone varchar(50): NULL,
+	Extention varchar(50): NULL,
+	Mobile varchar(50): NULL
 );
-
 
 CREATE TABLE Client(
 	Client_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
@@ -26,19 +47,18 @@ CREATE TABLE Client(
 	isInternal bit: NULL
 );
 
+create table Country(
+	Country_Code int: PRIMARY_KEY UI_VIEW UI_SELECT,
+	Country_Short_Name varchar(5): UNIQUE UI_VIEW UI_SELECT,
+	Country_Name varchar(250): UNIQUE);
 
-
-CREATE TABLE ClientContactPerson(
-	ClientContactPerson_Code int:  PRIMARY_KEY UI_VIEW UI_SELECT,
-	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY UI_VIEW UI_SELECT,
-	Client_Code int: REFERENCES Client(Client_Code),
-	Designation varchar(150): NULL,
-	Email1 varchar(250): not null,
-	Email2 varchar(250): null,
-	Phone varchar(50): NULL,
-	Extention varchar(50): NULL,
-	Mobile varchar(50): NULL
+CREATE TABLE ClientGroup(
+	ClientGroup_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
+	ClientGroup_Name varchar(250) : UNIQUE  UI_VIEW UI_SELECT
 );
+
+
+
 
 
 CREATE TABLE Employee(
@@ -134,23 +154,4 @@ create Table Project_Type(
 create Table Project_Status(
 	Project_Status_Code int: primary_key UI_VIEW UI_SELECT,
 	Project_Status_Description varchar(250): not null UI_VIEW UI_SELECT
-	);
-
-CREATE TABLE Project (
-	Project_Code int: primary_key UI_VIEW UI_SELECT,
-	Project_Number varchar(20): unique UI_VIEW UI_SELECT,
-	Project_Name varchar(250): unique UI_VIEW UI_SELECT,
-	Project_Short_Description varchar(2000): not null,
-	Project_Entry_Date datetime: not null,
-	Project_Start_Date datetime: null,
-	Project_End_Date datetime: null,
-	Project_Commission_Date datetime: not null UI_VIEW UI_SELECT,
-	Project_Lost_Date datetime: not null,
-	Project_Description varchar(5000): null,
-	Revenue_Start_Date datetime: not null,
-	Project_Status_Code int: references Project_Status(Project_Status_Code),
-	Employee_Code int: references Employee(Employee_Code),
-	ClientContactPerson_Code int: references ClientContactPerson(ClientContactPerson_Code),
-	Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
-	Project_Type_Code int: references Project_Type(Project_Type_Code)
 	);

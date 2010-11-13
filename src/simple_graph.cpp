@@ -6,6 +6,7 @@
 #include "tree.h"
 #include "TableCollectionSingleton.hpp"
 #include "AbstractCodeGenerator.h"
+#include "global_variables.h"
 
 //GraphEdgeType::GraphEdgeType()
 //	: endNode_(0), next_(0)
@@ -101,6 +102,59 @@ void TestGraph(struct GraphType & p_graph)
 			std::cout << target_node->tiPtr_->tableName_ << " must come before " << 
 				p_graph.graphNodes_[i]->tiPtr_->tableName_ << std::endl;
 		}
+	}
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
+}
+
+void TopologicalSort(struct GraphType & p_graph)
+{
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
+	vector<int> vec_visited_node(p_graph.graphNodes_.size());
+	global_variables::topologicalOrder.resize(p_graph.graphNodes_.size());
+	for (int i=0; i< vec_visited_node.size(); ++i) {
+		vec_visited_node[i] = 0;
+	}
+	int place = vec_visited_node.size() - 1;
+	for (int v =0; v<p_graph.graphNodes_.size(); ++v) {
+		if (vec_visited_node[v] == 0) {
+			Sort(p_graph, v, place, vec_visited_node);
+		}
+	}
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
+}
+
+void Sort(GraphType & p_graph, int v, int & place, vector<int> & p_vec_visited_node)
+{
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
+	p_vec_visited_node[v]++;
+
+	GraphEdgeType *e = p_graph.graphNodes_[v]->edge_;
+	while (e) {
+		int w = e->endNode_;
+		if (p_vec_visited_node[w] == 0) {
+			Sort(p_graph, w, place, p_vec_visited_node);
+		}
+		e = e->next_;
+	}
+	global_variables::topologicalOrder[place--] = v;
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
+}
+
+void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_VerticesInTopologicalOrder)
+{
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
+	for(int i=p_VerticesInTopologicalOrder.size()-1; i>=0 ; --i) {
+		int graph_node_index = p_VerticesInTopologicalOrder[i];
+		cout << "graph_node_index: " << graph_node_index << endl;
+		if (graph_node_index < 0 || graph_node_index > p_VerticesInTopologicalOrder.size()-1) {
+			stringstream err_msg;
+			err_msg << "error in TopologicalSort implementation: " 
+				<< endl;
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg.str());
+			exit(1);
+		}
+		GraphNodeType * gn = p_graph.graphNodes_[graph_node_index];
+		std::cout << gn->tiPtr_->tableName_ << endl;
 	}
 	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
 }

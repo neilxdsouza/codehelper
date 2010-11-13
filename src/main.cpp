@@ -128,6 +128,11 @@ void print_code(FILE * & edit_out)
 	GraphType g(global_variables::nGraphNodes);
 	ConstructGraph(g, tree_root);
 	TestGraph(g);
+	TopologicalSort(g);
+	for(int i=0; i<global_variables::topologicalOrder.size(); ++i) {
+		cout << global_variables::topologicalOrder[i] << endl;
+	}
+	PrintSqlScriptInTopologicalOrder(g, global_variables::topologicalOrder);
 }
 
 void Init()

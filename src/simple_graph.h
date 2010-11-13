@@ -28,7 +28,10 @@ struct GraphType
 };
 
 void ConstructGraph(struct GraphType & p_graph, struct stmt * st_ptr);
+void Sort(GraphType & p_graph, int v, int & place, vector<int> & p_vec_visited_node);
 void TestGraph(struct GraphType & p_graph);
+void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_VerticesInTopologicalOrder);
+void TopologicalSort(struct GraphType & p_graph);
 
 #endif /* __SIMPLE_GRAPH_H */
 
