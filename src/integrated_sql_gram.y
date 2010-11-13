@@ -14,6 +14,7 @@
 #include "scope.h"
 #include "tree.h"
 #include "stmt.h"
+#include "global_variables.h"
 //#include "stmt.h"
 
 	extern int line_no;
@@ -100,6 +101,7 @@ statement:	CREATE TABLE NAME '(' decl_comma_list ')' ';' {
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
 				vec_var_list);
 		vec_var_list.clear();
+		global_variables::nGraphNodes++;
 	 }
 	 ;
 

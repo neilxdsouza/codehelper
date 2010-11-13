@@ -22,6 +22,9 @@
 #include "ForwardDecl.h"
 #include "std_using.h"
 #include "global_options.h"
+#include "global_variables.h"
+
+#include "simple_graph.h"
 
 //AbstractCodeGenerator.h
 //ForwardDecl.h
@@ -122,6 +125,8 @@ void print_code(FILE * & edit_out)
 	printf("ENTER print_code\n");
 	tree_root->RunPreCodeGenerationChecks();
 	tree_root->GenerateCode(edit_out);
+	GraphType g(global_variables::nGraphNodes);
+	ConstructGraph(g, tree_root);
 }
 
 void Init()
