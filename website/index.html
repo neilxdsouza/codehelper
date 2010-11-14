@@ -1,0 +1,49 @@
+<html>
+<head>
+	<title>
+		ProgHelp lets you build Web applications very, very quickly
+	</title>
+
+<meta name="description" content="ProgHelp is a rapid web application builder that allows you to create ERP-like applications as fast as you can write create table sql statements"
+/>
+<meta name="keywords" content="proghelp, codehelper, web application, database web application">
+
+	<link rel="stylesheet" href="/css/site.css">
+
+	<script type="text/javascript">
+	  var _gaq = _gaq || [];
+	  _gaq.push(['_setAccount', 'UA-19687493-1']);
+	  _gaq.push(['_trackPageview']);
+	  (function() {
+	    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	  })();
+	</script>
+</head>
+<body id="home">
+	<div id="container">
+	<p>Welcome! ProgHelp (Programmer Helper) is a tool written to help you build Web Applications requiring a Database Back-End very quickly. Think ERP-like applications. </p>
+<p>It will build a web application for you as fast as you can write create table statements.</p>
+
+<p>ProgHelp is still a work in progress, but you may find it useful</p>
+<p>ProgHelp currently generates code in C++, targets the PostgreSQL database and   uses the Wt toolkit as a web UI</p>
+
+	<ul>Here are some things that it does
+		<li>Writes create table statements</li>
+		<li>Writes Stored Procedures </li>
+		<li>Creates Random data for the tables for testing</li>
+		<li>Writes a database extraction layer (DAL)</li>
+		<li>Writes a Business Logic Layer (BLL) which accesses the Database layer to retrieve data</li>
+		<li>Writes the Web User Interface (UI) forms which use the BLL to display, add, modify (CRU) data from the Web UI</li>
+		<li>If the input file has certain fields marked as search keys, it automatically implements the search facility right from the stored procedure to the UI (implementing at UI is still in progress, but will happen very soon)</li>
+		<li>Looks at the foreign key relationships and builds Dialog boxes to choose values</li>
+		<li>Writes the Makefile for you, so that you can test the web application quickly</li>
+	</ul>
+
+
+	</div>	
+	
+	
+</body>
+</html>
