@@ -418,6 +418,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/Ext/TabWidget>\n";
 	ui_class_headers << "#include <Wt/Ext/TableView>\n";
 	ui_class_headers << "#include <Wt/Ext/TextEdit>\n";
+	ui_class_headers << "#include <Wt/Ext/LineEdit>\n";
 	ui_class_headers << "#include <Wt/Ext/ToolBar>\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <iostream>\n";
@@ -655,9 +656,12 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
 						% counter % v_ptr->var_name % aTableInfo->tableName_;
 			defn << 
-				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString::tr(\"Choose %2%\"),\n" 
+				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString(\" ... \"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 2));\n")
 						% counter % v_ptr->var_name % aTableInfo->tableName_;
+			defn << 
+				boost::format("\twpb_choose_%2%->setToolTip( Wt::WString(\"Choose \") + Wt::WString::tr(\"%2%\"));\n" )
+						% counter % v_ptr->var_name;
 			defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::disable);\n")
 				% v_ptr->var_name;
 			defn << boost::format("\twpb_choose_%1%->clicked().connect(this, &%2%_ui::HandleChoose%1%);\n")
@@ -688,12 +692,11 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 		} else {
-			decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
+			decl <<  boost::format("\tWt::Ext::LineEdit * we_le_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table_%3%->elementAt(%1%, 1));\n")
+			defn << boost::format("\twe_le_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			defn << boost::format("\twta_%1%->setRows(1);\n")
-					% v_ptr->var_name;
+			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
 		}
 	}
 
