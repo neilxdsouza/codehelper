@@ -742,6 +742,58 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 						load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
 							aTableInfo->tableName_ % counter++;
 						load_table_view_str << "\t\ttemp1.str(\"\");\n";
+						load_table_view_str << "\t\tif ( (i+1)%10 == 0 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_0\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 1 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_1\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 2 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_2\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 3 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_3\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 4 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_4\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 5 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_5\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 6 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_6\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 7 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_7\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 8 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_8\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+						load_table_view_str << "\t\tif ( (i+1)%10 == 9 ) {\n";
+						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_9\");\n") %
+							aTableInfo->tableName_ ;
+						load_table_view_str << "\t\t}\n";
+						
+
+
 					}
 				}
 			}
