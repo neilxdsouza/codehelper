@@ -27,6 +27,7 @@ void CppCodeGenerator::GenerateCode(FILE * fptr)
 	uiGenerator_->GenerateCode();
 	GenerateBLL();
 
+	GenerateMessages();
 
 
 	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
@@ -370,7 +371,21 @@ void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 
 void CppCodeGenerator::FinalCleanUp()
 {
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	uiGenerator_->FinalCleanUp();
+
+	string messages_fname (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ string("messages")
+				+ string(".xml"))); 
+	std::ofstream messages(messages_fname.c_str(), ios_base::out|ios_base::ate|ios_base::app);
+	if(!messages){
+		string err_msg="unable to open " + messages_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		exit(1);
+	}
+	messages << "</messages>\n";
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
 }
 
 
@@ -823,4 +838,36 @@ void CppCodeGenerator::RunPreCodeGenerationChecks()
 		}
 		v_ptr = v_ptr->prev;
 	}
+}
+
+void CppCodeGenerator::GenerateMessages()
+{
+
+	string messages_fname (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ string("messages")
+				+ string(".xml"))); 
+	std::ofstream messages(messages_fname.c_str(), ios_base::out|ios_base::ate|ios_base::app);
+	if(!messages){
+		string err_msg="unable to open " + messages_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		exit(1);
+	}
+
+
+	messages << PrintMessages();
+
+}
+
+string CppCodeGenerator::PrintMessages()
+{
+	using boost::format;
+	stringstream messages;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		messages << format("\t\t<message id=\"%1%\">\n\t\t\t%2%\n\t\t</message>\n") %
+				v_ptr->var_name % v_ptr->var_name;
+		v_ptr= v_ptr->prev;
+	}
+	return messages.str();
 }

@@ -15,6 +15,7 @@
 
 #include "WtUIGeneratorFactory.h"
 #include "WtUIGenerator.h"
+#include "error.h"
 
 
 #include "TableCollectionSingleton.hpp"
@@ -71,7 +72,8 @@ int main(int argc, char* argv[], char* envp[])
 	//input_file_name = argv[1];
 	//rhs_name_space_name=argv[2];
 	
-	std::string output_code_directory_prefix = "output/CppCodeGenerator/";
+	//std::string output_code_directory_prefix = "output/CppCodeGenerator/";
+	using global_variables::output_code_directory_prefix;
 	//PostgreSQLCodeGenerator psqlCodeGenerator;
 	PostgreSQLCodeGeneratorFactory psqlFactory; 
 	WtUIGeneratorFactory wtFactory;
@@ -125,6 +127,10 @@ void print_code(FILE * & edit_out)
 	printf("ENTER print_code\n");
 	tree_root->RunPreCodeGenerationChecks();
 	tree_root->GenerateCode(edit_out);
+	// Later Im going to be punished for this - I know my sins
+	struct table_decl_stmt * tbl_ptr = dynamic_cast<table_decl_stmt*> (tree_root);
+	if (tbl_ptr)
+		tbl_ptr->codeGenerator_->FinalCleanUp();
 	GraphType g(global_variables::nGraphNodes);
 	ConstructGraph(g, tree_root);
 	TestGraph(g);
@@ -162,6 +168,21 @@ void Init()
 		}
 	}
 	//vector <string> dict;
+	//
+
+	string messages_fname ( global_variables::output_code_directory_prefix
+				+ string("/")
+				+ string("messages")
+				+ string(".xml")); 
+	std::ofstream messages(messages_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!messages){
+		string err_msg="unable to open " + messages_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		exit(1);
+	}
+
+	messages << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\" ?>\n"
+		<< "\t<messages>\n";
 }
 
 namespace global_options {
@@ -197,6 +218,7 @@ void ParseProgramOptions(int argc, char * argv[])
 	if (vm.count("help")) {
 		cout << "Usage " << argv[0] << " [options]\n";
 		cout << desc;
+		exit(0);
 	}
 
 	//if(argc!=3) {
@@ -215,6 +237,5 @@ void ParseProgramOptions(int argc, char * argv[])
 		return ;
 	}
 
-	//exit(0);
 	
 }

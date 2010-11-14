@@ -6,6 +6,7 @@
 namespace global_variables {
 	extern int nGraphNodes;
 	extern std::vector<int> topologicalOrder;
+	extern std::string output_code_directory_prefix ;
 	
 }
 

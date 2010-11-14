@@ -4,6 +4,8 @@
 #include "std_using.h"
 #include "utils.h"
 #include "global_options.h"
+#include "error.h"
+
 using global_options::project_namespace;
 
 using namespace std;
@@ -742,6 +744,9 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			}
 		}
 		load_table_view_str << "\t}\n";
+		load_table_view_str << format("\ttable_%1%_view->setHeaderCount(1);\n") %
+						aTableInfo->tableName_ ;
+					
 
 		defn << load_table_view_str.str();
 	}
@@ -790,6 +795,7 @@ using global_options::input_file_name;
 
 void WtUIGenerator::GenerateMakefile()
 {
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
@@ -807,6 +813,7 @@ void WtUIGenerator::GenerateMakefile()
 	makefile_fname << outputDirPrefix_ << "/Makefile." << input_file_name ;
 	std::ofstream makefile(makefile_fname.str().c_str(), ios_base::out|ios_base::trunc);
 	makefile << makefile_str.str();
+	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
 }
 
 

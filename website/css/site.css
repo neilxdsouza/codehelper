@@ -1,0 +1,56 @@
+p.landing_para 
+{
+/*border: 1px solid black; */
+}
+
+p {
+}
+
+*.landing_container
+{
+	/*background-color: rgb(239,206,255); */
+	/*background-color: rgb(240,240,255); */
+	background-color: rgb(255,162,0);
+	/* font-family: verdana, arial, sans-serif; */
+	color: rgb(255,40,92);
+}
+
+body
+{
+	font-family: verdana, arial, sans-serif;
+	color: rgb(92,40,92);
+}
+
+*.what_it_does 
+{
+	/* font-family: verdana, arial, sans-serif; */
+	/*color:rgb(255,121,3); */
+	background-color: rgb(245,245,255);
+}
+
+/*
+p.what_it_does 
+{
+	color: rgb(255,255,3);
+	background-color: rgb(240,240,255);
+}
+
+div.what_it_does 
+{
+}
+*/
+
+/*
+p.what_it_does 
+{
+	font-family: monospace, verdana, arial, sans-serif;
+	background-color: rgb(255,252,191);
+	color: rgb (255,121,3);
+}
+*/
+
+/*
+#land_para 
+{
+}
+*/

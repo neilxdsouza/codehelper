@@ -62,7 +62,7 @@ void table_decl_stmt::GenerateCode(FILE * & fptr)
 		codeGenerator_->GenerateCode(fptr);
 		if(prev) prev->GenerateCode(fptr);
 	}
-	codeGenerator_->uiGenerator_->FinalCleanUp();
+	//codeGenerator_->FinalCleanUp();
 }
 
 void table_decl_stmt::RunPreCodeGenerationChecks()
