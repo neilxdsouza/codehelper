@@ -957,6 +957,10 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 	func_defn << format("\ttemp <<  p_%1%;\n") % p_vptr->var_name;
 	func_defn << format("\twt_%1%_value->setText(Wt::WString::tr(temp.str()));\n") %
 		p_vptr->var_name;
+	//func_defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::enable);\n")
+	//	% p_vptr->var_name;
+	func_defn << boost::format("\twpb_choose_%1%->enable();\n")
+		% p_vptr->var_name;
 	
 	func_defn << "}\n";
 	return func_defn.str();
