@@ -69,8 +69,19 @@ h2 span {
 }
 
 table   { border-collapse:separate; border:none  ;
-	font-size: 10pt;
+	font-size: 11pt;
 }
 
 td   { text-align:left; padding:2px; border: none; }
 th   { text-align:left; padding:2px; border: none; font-size: 12pt }
+
+tr.alt_row_0 { background: rgb(253,210,210); }
+tr.alt_row_1 { background: rgb(242,210,253); }
+tr.alt_row_2 { background: rgb(204,204,255); }
+tr.alt_row_3 { background: rgb(249,222,176); ; }
+tr.alt_row_4 { background: rgb(234,247,143); }
+tr.alt_row_5 { background: rgb(209,253,255); }
+tr.alt_row_6 { background: rgb(204,255,204); }
+tr.alt_row_7 { background: rgb(204,204,153); }
+tr.alt_row_8 { background: rgb(171,153,242); }
+tr.alt_row_9 { background: rgb(255,223,117); }
