@@ -596,6 +596,8 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 		string s;
 		if (v_ptr->options.primary_key) {
 			s = v_ptr->var_name + string(" serial unique");
+		} else if(v_ptr->var_type == COMPOSITE_TYPE) {
+			// skip
 		} else {
 			s= v_ptr->print_sql_var_decl();
 			if (v_ptr->options.unique) {

@@ -152,6 +152,7 @@ struct var_list
 	std::string print_cpp_var_name();
 	std::string print_lower_var_name();
 	std::string print_improved_lower_var_name();
+	std::string print_improved_ui_var_name();
 
 	std::string print_sql_var_decl();
 	std::string print_sql_var_type();

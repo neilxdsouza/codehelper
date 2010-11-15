@@ -545,3 +545,8 @@ std::string TableInfoType::print_cpp_search_key_args()
 	}
 	return search_key_fields_str.str();
 }
+
+std::string var_list::print_improved_ui_var_name()
+{
+	
+}
