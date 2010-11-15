@@ -57,6 +57,7 @@ h2 span {
 .treenodelabel {
 	cursor:pointer;cursor:hand;
 	font-size: 10pt;
+	color: rgb(167,49,236);
 }
 
 .treenodelabel:hover {
