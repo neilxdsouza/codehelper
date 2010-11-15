@@ -697,7 +697,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 				// functional programming style - as mentioned in the LISP books
 				if (v_ptr->options.ui_view) {
 					if (v_ptr->options.ref_table_name == "") {
-						load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(\"%3%\"));\n") %
+						load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(Wt::WString::tr(\"%3%\")));\n") %
 							aTableInfo->tableName_ % counter++ % v_ptr->var_name;
 					}
 				}

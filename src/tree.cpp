@@ -546,7 +546,19 @@ std::string TableInfoType::print_cpp_search_key_args()
 	return search_key_fields_str.str();
 }
 
-std::string var_list::print_improved_ui_var_name()
+std::string var_list::print_improved_ui_display_var_name()
 {
-	
+	string orig_varname = var_name;
+	int pos = orig_varname.find("_Code");
+	string improved_name1 = orig_varname.substr(0, pos);
+	// int found = string::npos;
+	// while( (found = improved_name1.find_first_of("_"))!=string::npos) {
+	// 	improved_name1.replace(found, 1, string(" "));
+	// }
+	int found = improved_name1.find_first_of("_");
+	while (found != string::npos) {
+		improved_name1.replace(found, 1, string(" "));
+		found = improved_name1.find(string("_"), found);
+	}
+	return improved_name1;
 }
