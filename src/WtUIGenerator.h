@@ -45,6 +45,8 @@ public:
 	std::vector<std::string> vec_handler_decls;
 	std::vector<std::string> vec_handler_defns;
 	std::string print_cpp_search_key_args();
+
+	std::string PrintProcessInsert();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

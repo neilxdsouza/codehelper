@@ -317,15 +317,15 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 		string("Fix me : exit_nicely may not be required since the PGconn has a custom deleter which closes the connection\n"));
 	cpp_db_impl << "\t\texit_nicely(conn.get());\n";
 	cpp_db_impl << "\t} else {\n";
-	cpp_db_impl << "\t	int nTuples = PQntuples(res);\n";
-	cpp_db_impl << "\t	int nFields = PQnfields(res);\n";
-	cpp_db_impl << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
-	cpp_db_impl << "\t	for(int i=0; i<nFields; ++i){\n";
-	cpp_db_impl << "\t		char * fname=PQfname(res, i);\n";
-	cpp_db_impl << "\t		printf(\"fname: %s\\n\", fname);\n";
-	cpp_db_impl << "\t	}\n";
-	cpp_db_impl << "\t	char * value=PQgetvalue(res, 0, 0);\n";
-	cpp_db_impl << "\t	printf(\"value: %s\\n\", value);\n";
+	// cpp_db_impl << "\t	int nTuples = PQntuples(res);\n";
+	// cpp_db_impl << "\t	int nFields = PQnfields(res);\n";
+	// cpp_db_impl << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
+	// cpp_db_impl << "\t	for(int i=0; i<nFields; ++i){\n";
+	// cpp_db_impl << "\t		char * fname=PQfname(res, i);\n";
+	// cpp_db_impl << "\t		printf(\"fname: %s\\n\", fname);\n";
+	// cpp_db_impl << "\t	}\n";
+	// cpp_db_impl << "\t	char * value=PQgetvalue(res, 0, 0);\n";
+	// cpp_db_impl << "\t	printf(\"value: %s\\n\", value);\n";
 	cpp_db_impl << "\t}\n";
 	cpp_db_impl << "\n}\n";
 }
@@ -953,6 +953,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "\t\texit_nicely(conn.get());\n";
 	func_body << "\t} else {\n";
 	func_body << "\t	int nTuples = PQntuples(res);\n";
+	/*
 	func_body << "\t	int nFields = PQnfields(res);\n";
 	func_body << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
 	func_body << "\t	for(int i=0; i<nFields; ++i){\n";
@@ -961,6 +962,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "\t	}\n";
 	func_body << "\t	//char * value=PQgetvalue(res, 0, 0);\n";
 	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
+	*/
 
 	stringstream field_pos_stream;
 	print_cpp_select_field_positions(field_pos_stream);

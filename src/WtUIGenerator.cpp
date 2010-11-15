@@ -403,6 +403,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/WContainerWidget>\n";
 	ui_class_headers << "#include <Wt/WWidget>\n";
 	ui_class_headers << "#include <Wt/WDialog>\n";
+	ui_class_headers << "#include <Wt/WPanel>\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <Wt/Ext/Button>\n";
 	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
@@ -462,52 +463,10 @@ string WtUIGenerator::GenerateUIInsertForm()
 	vecTableInfo.push_back(tableInfo_);
 	GenerateUITab(ui_class_headers, ui_class_decl, ui_class_defn, false, vecTableInfo);
 	
-	/*
-	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-		if(v_ptr->var_type==COMPOSITE_TYPE)
-			continue;
-		ui_class_decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
-					% v_ptr->var_name;
-		form_code << boost::format("\tWt::WLabel * wt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-					"\t\t\ttable->elementAt(%1%, 0));\n")
-				% counter % v_ptr->var_name;
-		ui_class_defn << 
-			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-					"\t\t\ttable->elementAt(%1%, 0));\n")
-					% counter % v_ptr->var_name;
-		if (v_ptr->var_type==DATETIME_TYPE) {
-			form_code << boost::format("\tWt::Ext::DateField * edf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
-			ui_class_decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
-						% v_ptr->var_name;
-			ui_class_defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
-		} else {
-			form_code << boost::format("\tWt::WTextArea * wta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
-			form_code << boost::format("\twta_%1%->setRows(1);\n")
-					% v_ptr->var_name;
-			ui_class_decl <<  boost::format("\tWt::WTextArea * wta_%1%;\n")
-						% v_ptr->var_name;
-			ui_class_defn << boost::format("\twta_%2% = new Wt::WTextArea(\"\", table->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name;
-			ui_class_defn << boost::format("\twta_%1%->setRows(1);\n")
-					% v_ptr->var_name;
-		}
-	}
-	form_code << boost::format("\tWt::WPushButton * wpb_insert = new Wt::WPushButton(table->elementAt(%1%, 0));\n")
-			% counter;
-	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-	form_code << boost::format("\twpb_insert->clicked().connect(wpb_insert, &good1::ProcessInsert%1%);\n")
-					% tableInfo_->tableName_;
-	form_code << "\t*" << "/\n";
-	*/
 
 	ui_class_decl << boost::format("\tvoid ProcessInsert%1%();\n")
 					% tableInfo_->tableName_;
-	ui_class_defn << boost::format("void %1%_ui::ProcessInsert%1%()\n{\n")
-					% tableInfo_->tableName_;
-	ui_class_defn << "}\n";
+	ui_class_defn << PrintProcessInsert();
 	// I should use some form of assert to check 
 	// that vec_handler_decls.size == vec_handler_defns.size
 	for(int i=0; i<vec_handler_decls.size(); ++i) {
@@ -596,9 +555,26 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			% aTableInfo->tableName_;
 	decl << boost::format("\tWt::WTable *table_%1%;\n")
 			% aTableInfo->tableName_;
+	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
+			% aTableInfo->tableName_;
+	decl << format("\tWt::WText * wt_%1%_err_msg;\n")
+			% aTableInfo->tableName_;
 	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
 			% aTableInfo->tableName_;
 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+			% aTableInfo->tableName_;
+
+	defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
+			% aTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
+			% aTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
+			% aTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
+			% aTableInfo->tableName_;
+	defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
+			% aTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
 			% aTableInfo->tableName_;
 
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
@@ -652,7 +628,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			decl << format("\tWt::WTable *table_%1%_view;\n") %
 						v_ptr->options.ref_table_name;
 			defn << 
-				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
 						% counter % v_ptr->var_name % aTableInfo->tableName_;
 			defn << 
@@ -814,9 +790,9 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	}
 	if (called_recursively==false) {
 		decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-		defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString::tr(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
+		defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
 				% counter% aTableInfo->tableName_% aTableInfo->tableName_;
-		defn << "\twpb_insert->setText(Wt::WString::tr(\"Add\"));\n";
+		defn << "\twpb_insert->setText(Wt::WString(\"Add\"));\n";
 		defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
 		defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
 						% tableInfo_->tableName_;
@@ -1007,7 +983,7 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 	// should check for null here and exit
 	func_defn << "\tstd::stringstream temp;\n";
 	func_defn << format("\ttemp <<  p_%1%;\n") % p_vptr->var_name;
-	func_defn << format("\twt_%1%_value->setText(Wt::WString::tr(temp.str()));\n") %
+	func_defn << format("\twt_%1%_value->setText(Wt::WString(temp.str()));\n") %
 		p_vptr->var_name;
 	//func_defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::enable);\n")
 	//	% p_vptr->var_name;
@@ -1016,5 +992,24 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 	
 	func_defn << "}\n";
 	return func_defn.str();
+}
+
+std::string WtUIGenerator::PrintProcessInsert()
+{
+	std::stringstream process_insert_defn;
+	using boost::format;
+	process_insert_defn << format("void %1%_ui::ProcessInsert%1%()\n{\n")
+					% tableInfo_->tableName_;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
+			process_insert_defn << format("\tif (wt_%1%_value->text() == \"<not selected>\" ) {\n"
+				"\t\t /*wt_err_mesg_%2%->text() */\n"
+				"\t}\n") % v_ptr->var_name % tableInfo_->tableName_;
+		}
+		v_ptr = v_ptr->prev;
+	}
+	process_insert_defn << "}\n";
+	return process_insert_defn.str();
 }
 
