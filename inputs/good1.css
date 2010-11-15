@@ -68,17 +68,19 @@ h2 span {
 	color:blue;
 }
 
-table   { border-collapse:separate; border:none  ;
+table   { border-collapse:separate; 
+	border:none;
+	padding: 3px;
 	font-size: 11pt;
 }
 
 td   { text-align:left; padding:2px; border: none; }
-th   { text-align:left; padding:2px; border: none; font-size: 12pt }
+th   { text-align:center; padding:2px; border: none; font-size: 12pt; background: rgb(200,200,200); color: white; }
 
 tr.alt_row_0 { background: rgb(253,210,210); }
 tr.alt_row_1 { background: rgb(242,210,253); }
 tr.alt_row_2 { background: rgb(204,204,255); }
-tr.alt_row_3 { background: rgb(249,222,176); ; }
+tr.alt_row_3 { background: rgb(249,222,176); }
 tr.alt_row_4 { background: rgb(234,247,143); }
 tr.alt_row_5 { background: rgb(209,253,255); }
 tr.alt_row_6 { background: rgb(204,255,204); }
