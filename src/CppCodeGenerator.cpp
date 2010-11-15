@@ -176,7 +176,7 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 			} else if (v_ptr->options.many==true) {
 				h_header << boost::format("#include \"%1%_bll.h\" /*1*/\n") %
 						v_ptr->options.ref_table_name;
-				string orig_varname = v_ptr->var_name.c_str();
+				string orig_varname = v_ptr->var_name;
 				int pos = orig_varname.find("_Code");
 				string improved_name = orig_varname.substr(0, pos);
 				variables << var_type.str() 
@@ -866,7 +866,7 @@ string CppCodeGenerator::PrintMessages()
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
 		messages << format("\t\t<message id=\"%1%\">\n\t\t\t%2%\n\t\t</message>\n") %
-				v_ptr->var_name % v_ptr->var_name;
+				v_ptr->var_name % v_ptr->print_improved_ui_display_var_name();
 		v_ptr= v_ptr->prev;
 	}
 	return messages.str();
