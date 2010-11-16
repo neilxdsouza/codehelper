@@ -79,6 +79,28 @@ struct options_list_type
 	}
 };
 
+struct tab_level_options_list_type
+{
+	bool has_ui_group_name;
+	string ui_group_name;
+	void setUIGroupName(std::string p_ui_group_name)
+	{
+		ui_group_name = p_ui_group_name;
+		has_ui_group_name=false;
+	}
+
+	tab_level_options_list_type():
+		has_ui_group_name(false), ui_group_name("")
+	{ }
+
+
+	void reinit() 
+	{
+		ui_group_name="";
+		has_ui_group_name=false;
+	}
+};
+
 using namespace std;
 //void print_csharp_types(FILE * fptr, datatype dt);
 //void print_sp_types(FILE * fptr, datatype dt);

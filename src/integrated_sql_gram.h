@@ -70,9 +70,10 @@
      INVISIBLE = 286,
      UI_VIEW = 287,
      UI_SELECT = 288,
-     TABLE = 289,
-     NAME = 290,
-     INUMBER = 291
+     UI_GROUP = 289,
+     TABLE = 290,
+     NAME = 291,
+     INUMBER = 292
    };
 #endif
 
@@ -83,7 +84,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 40 "src/integrated_sql_gram.y"
+#line 41 "src/integrated_sql_gram.y"
 
 	double dval;
 	int ival ;
@@ -95,7 +96,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 99 "src/integrated_sql_gram.hpp"
+#line 100 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

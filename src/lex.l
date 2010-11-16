@@ -102,6 +102,10 @@ UI_VIEW {
 	return UI_VIEW;
 }
 
+UI_GROUP {
+	return UI_GROUP;
+}
+
 
 ")"	{
 	return ')';

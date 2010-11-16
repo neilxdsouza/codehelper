@@ -30,6 +30,7 @@
 	void yyerror(char * s);
 	extern void yyrestart ( FILE *input_file );
 	struct options_list_type options_list;
+	struct tab_level_options_list_type tab_options;
 	extern AbstractCodeGeneratorFactory * codeGeneratorFactory;
 	std::vector<var_list *> vec_var_list;
 
@@ -70,6 +71,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
 %token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT
+%token UI_GROUP
 
 %token TABLE
 %token ','
@@ -95,9 +97,9 @@ statement_list: statement {
 	}
 	;
 
-statement:	CREATE TABLE NAME '(' decl_comma_list ')' ';' {
+statement:	CREATE TABLE NAME tab_level_options '(' decl_comma_list ')' ';' {
 		char *name=strdup($3);
-		struct var_list* v_list=trav_chain($5);
+		struct var_list* v_list=trav_chain($6);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
 				vec_var_list);
 		vec_var_list.clear();
@@ -120,6 +122,20 @@ data_type:	INT32_T
 	|	IMAGE_T
 	|	COMPOSITE_T
 	;
+
+tab_level_options: 	/* empty */
+	| ':' non_empty_tab_level_options
+	;
+
+non_empty_tab_level_options: tab_option
+	|	non_empty_tab_level_options tab_option
+	;
+
+tab_option: UI_GROUP '(' NAME ')' {
+		tab_options.setUIGroupName($3);
+	}
+	;
+
 
 decl_comma_list: var_decl_with_or_wo_options {
 		 $$=$1;
