@@ -75,13 +75,21 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	/* North */\n";
 	uiScaffolding << "	Ext::Panel *north = new Ext::Panel();\n";
 	uiScaffolding << "	north->setBorder(false);\n";
-	uiScaffolding << "	WText *head = new WText(Wt::WString::tr(\"header\"));\n";
-	uiScaffolding << "	head->setStyleClass(\"north\");\n";
-	uiScaffolding << "	north->setLayout(new WFitLayout());\n";
-	uiScaffolding << "	north->layout()->addWidget(head);\n";
+	//uiScaffolding << "	WText *head = new WText(Wt::WString::tr(\"header\"));\n";
+	//uiScaffolding << "	head->setStyleClass(\"north\");\n";
+
+	uiScaffolding << "\tWt::WImage *logo_image = new Wt::WImage(\"images/logo.png\");\n";
+	uiScaffolding << "\tnorth->setLayout(new WFitLayout());\n";
+	uiScaffolding << "\tWContainerWidget * north_container = new WContainerWidget();\n";
+	uiScaffolding << "\tnorth->layout()->addWidget(north_container);\n";
+	uiScaffolding << "\tWGridLayout * north_panel_grid = new WGridLayout();\n";
+	uiScaffolding << "\tnorth_container->setLayout(north_panel_grid);\n";
+	uiScaffolding << "\tnorth_panel_grid->addWidget(logo_image, 0, 0);\n\n";
+
 	uiScaffolding << "	north->resize(WLength::Auto, 35);\n";
-	uiScaffolding << "	layout->addWidget(north, WBorderLayout::North);\n";
+	uiScaffolding << "	layout->addWidget(north_container, WBorderLayout::North);\n";
 	uiScaffolding << PrintUIMenu();
+	uiScaffolding << "\tnorth_panel_grid->addWidget(north, 0, 1);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* West */\n";
 	uiScaffolding << "	Ext::Panel *west = new Ext::Panel();\n";
@@ -275,6 +283,8 @@ string WtUIGenerator::PrintHeaders()
 	h_files << "#include <Wt/WTreeNode>\n";
 	h_files << "#include <Wt/WApplication>\n";
 	h_files << "#include <Wt/WPushButton>\n";
+	h_files << "#include <Wt/WImage>\n";
+	h_files << "#include <Wt/WGridLayout>\n";
 	h_files << "\n";
 	h_files << "#include <Wt/Ext/Button>\n";
 	h_files << "#include <Wt/Ext/Calendar>\n";

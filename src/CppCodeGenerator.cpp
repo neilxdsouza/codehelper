@@ -863,6 +863,11 @@ string CppCodeGenerator::PrintMessages()
 {
 	using boost::format;
 	stringstream messages;
+
+	if (tableInfo_->tab_options.has_ui_group_name) {
+		messages << format("\t\t<message id=\"%1%\">\n\t\t\t%1%\n\t\t</message>\n") %
+				tableInfo_->tab_options.ui_group_name;
+	}
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {
 		messages << format("\t\t<message id=\"%1%\">\n\t\t\t%2%\n\t\t</message>\n") %
