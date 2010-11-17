@@ -20,3 +20,5 @@ src/*.vim
 inputs/edit_out.c
 inputs/insert_clientgroup.sql
 ProgTechniqueStubs
+src/.cccc
+src/*.gch
