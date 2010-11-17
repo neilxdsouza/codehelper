@@ -106,6 +106,14 @@ UI_GROUP {
 	return UI_GROUP;
 }
 
+EMBEDDED {
+	return EMBEDDED;
+}
+
+SESSION {
+	return SESSION;
+}
+
 
 ")"	{
 	return ')';

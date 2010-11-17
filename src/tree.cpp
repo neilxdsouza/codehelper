@@ -17,7 +17,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		vector<var_list*> & p_vec_var_list, tab_level_options_list_type & p_tab_options)
 	: 
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
-	has_multi(0), has_search_key(0), nInvisible(0),
+	has_multi(0), has_search_key(0), nInvisible(0), nSessionParams(0),
 	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options)
 {
 	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
@@ -35,6 +35,9 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		if (v_ptr->options.visible==false) {
 			++nInvisible ;
+		}
+		if (v_ptr->options.session==true) {
+			++nSessionParams;
 		}
 		v_ptr=v_ptr->prev;
 	}

@@ -96,7 +96,11 @@ string PostgreSQLCodeGenerator::print_sp_param_decls(print_sp_params_mode mode)
 		if(v_ptr->var_type == COMPOSITE_TYPE) {
 			v_ptr=v_ptr->prev;
 			continue;
+		} /*else if (v_ptr->options.session) {
+			v_ptr=v_ptr->prev;
+			continue;
 		}
+		*/
 		sp_param_decls_str << boost::format("\tp_%1% %2%") % v_ptr->var_name
 			% print_sp_types(v_ptr->var_type) ;
 		if(v_ptr->var_type==NVARCHAR_TYPE||v_ptr->var_type==VARCHAR_TYPE
@@ -443,6 +447,12 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		sp_decl << ",\n";
 		sp_decl << print_sp_search_key_params();
 	}
+	if (tableInfo_->nSessionParams) {
+		if(tableInfo_->has_search_key) {
+			sp_decl << ",\n";
+		}
+		sp_decl << print_sp_session_params();
+	}
 	sp_decl << ")\n";
 	stringstream sp_body;
 	sp_body << "\nAS $$\nBEGIN\n"
@@ -515,8 +525,43 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
 				++count;
 				if (count<tableInfo_->has_search_key) {
 					search_key_params <<  ",\n";
-				} else 
-					search_key_params << "\n";
+				} else {
+					//search_key_params << "";
+					break;
+				}
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 search_key_params << "\n";
+	}
+	return search_key_params.str();
+}
+
+std::string PostgreSQLCodeGenerator::print_sp_session_params()
+{
+	stringstream search_key_params;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if (tableInfo_->has_search_key) {
+		int count=0;
+		while (v_ptr) {
+			if (v_ptr->options.session) {
+				search_key_params <<  boost::format("\tp_%1% %2%") 
+					% v_ptr->var_name.c_str()
+					% print_sp_types(v_ptr->var_type);
+				if (v_ptr->var_type==NVARCHAR_TYPE
+					|| v_ptr->var_type==VARCHAR_TYPE 
+					|| v_ptr->var_type==NCHAR_TYPE) {
+					search_key_params << boost::format( "(%d)\n")
+						% v_ptr->arr_len;
+				}
+				++count;
+				if (count<tableInfo_->nSessionParams) {
+					search_key_params <<  ",\n";
+				} else {
+					//search_key_params << "\n";
+					break;
+				}
 			}
 			v_ptr=v_ptr->prev;
 		}
@@ -646,7 +691,14 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 	int recursion_level = 0;
 	while(v_ptr){
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			if (v_ptr->options.session) {
+				// skip this field
+				//print_comma = false;
+				p_sp_select_fields << "\t\t\t/* skipping :" << v_ptr->var_name 
+					<< __LINE__ << ", " << __FILE__ << ", " << __PRETTY_FUNCTION__ 
+					<< " */" 
+					<< "\n";
+			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
 				p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
 					% tableInfo_->tableName_
@@ -691,7 +743,10 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 	bool print_comma = false;
 	while (v_ptr) {
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			if (v_ptr->options.session) {
+				// skip this field
+				print_comma = false;
+			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				//v_ptr = v_ptr->prev;
 				//continue;
 				p_sp_select_fields_with_type << "/* print_comma = false */ ";
@@ -711,6 +766,7 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 					//if (v_ptr->prev) {
 					//	p_sp_select_fields_with_type << "/*77*/ ,\n";
 					//}
+					print_comma = true;
 				} else {
 					cerr << format("referenced table: %1% not found in table list:  ... exiting")
 						% v_ptr->options.ref_table_name;
@@ -1596,7 +1652,8 @@ std::string PostgreSQLCodeGenerator::print_sp_select_inner_joins()
 	int recursion_level = 0;
 	while(v_ptr){
 		if(v_ptr->options.ref_table_name!="" && v_ptr->options.many==false){
-			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			if (v_ptr->options.session) {
+			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
 				string orig_varname = v_ptr->var_name;
 				int pos = orig_varname.find("_Code");

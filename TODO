@@ -1,16 +1,49 @@
+17-nov-2010
+Carry forward items from 16-nov-2010 (not entered here)
+	CF1. Modify grammar to allow embedded widget for date - like Calendar
+	CF2. Create TS UI using above 
+	CF3. Login Form
+	CF4. Simple validation checks on selected Items
+	CF5. CSS styling of Form Widgets
+	CF6. Modify grammar to allow to group fields in UI
+Carry forward items from 11-nov-2010.
+	CF1. Automatic search setup -> for all tables, single reference, depth level 1, pull all search fields into search dialog
+	CF2. Automatic Edit/Update
+	CF3. Choose from grid view load form (implementing of select single record by primary key)
+	CF4. Modify Dialog form selector to transfer text and value back to form
+		- currently it only transfers a value back to form
+	CF5. Automatic insert
+	CF6. Partially done - play with Layout of form - this depends on 16-nov-2010 CF6 -> grammar modification to group fields in UI
+	CF7. Table list view - any single referenced field marked as view , we should search referenced table for fields marked as view and expose
+	CF8. Figure out how to apply CSS to the Wt widgets
+	CF9. Figure out how to pass a c++ function as a parameter (Template metaprogramming?)
+	CF10. Create website
+		- landing page
+		- wiki user guide
+		- Features page
+		- Investor's page
+New Items 17-nov-2010
+	1. Loading of Details table by using Primary key from master (e.g. load Employee status using Employee_code from Employee form)
+	2. Implement search functionality on the front end
+	3. Implement menu functionality
+	4. Modify grammar to allow Random Data Generation (RDG) hints
+	5. Implement a new grammar which takes RDG hints as keywords along with associated files
+		to use as data sources along with length of the fields.
+	
+
 11-nov-2010
-1. Program options - take database, portnumber, password, username as parameters - use boost where possible - almost done today itself
-2. Toplogical sort of graph - so that we output the create table/ random data inputs in correct order  and drop functions also
-3. Automatic search  -> for all tables, single reference, depth level 1, pull all search fields into search dialog
-4. Automatic Edit/Update
-5. Choose view - should load form and activate edit buttons
-6. Form chooser should transfer back text and value (ideally text should be 2nd field in table - ie. after primary key)
-7. Automatic Insert
-8. Play with layout of form using HBoxLayout, VBoxLayout , BoxLayout
-9. Table list view - any single referenced field marked as view , we should search referenced table for fields marked as view and expose
-10. Figure out how to apply CSS to the Wt widgets
-11. Figure out how to pass a c++ function as a parameter (Template metaprogramming?)
-12. create website
+DONE 1. Program options - take database, portnumber, password, username as parameters - use boost where possible - almost done today itself
+DONE 2. Toplogical sort of graph - so that we output the create table/ random data inputs in correct order  and drop functions also 
+TODO 3. Automatic search  -> for all tables, single reference, depth level 1, pull all search fields into search dialog
+TODO 4. Automatic Edit/Update
+TODO 5. Choose view - should load form and activate edit buttons
+PARTIALLY DONE 6. Form chooser should transfer back text and value (ideally text should be 2nd field in table - ie. after primary key)
+TODO 7. Automatic Insert
+PARTIALLY EXPERIMENTED WITH GRID LAYOUT IN NORTH BORDER 8. Play with layout of form using HBoxLayout, VBoxLayout , BoxLayout
+TODO 9. Table list view - any single referenced field marked as view , we should search referenced table for fields marked as view and expose
+DONE FOR TABLE ROWS 10. Figure out how to apply CSS to the Wt widgets
+TODO 11. Figure out how to pass a c++ function as a parameter (Template metaprogramming?)
+TODO 12. create website
 	- landing page
 	- wiki user guide
 	- Features page

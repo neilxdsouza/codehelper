@@ -155,3 +155,11 @@ create Table Project_Status: UI_GROUP (Project_Admin) (
 	Project_Status_Code int: primary_key UI_VIEW UI_SELECT,
 	Project_Status_Description varchar(250): not null UI_VIEW UI_SELECT
 	);
+
+create Table Timesheet: UI_GROUP (Project_Admin) (
+	Timesheet_Code int: primary_key,
+	Employee_Code int: session references Employee(Employee_Code),
+	Project_Code int: references Project(Project_Code) embedded,
+	Entry_Date datetime: embedded SEARCH_KEY,
+	TimeSpent double: not null
+	);

@@ -70,10 +70,12 @@
      INVISIBLE = 286,
      UI_VIEW = 287,
      UI_SELECT = 288,
-     UI_GROUP = 289,
-     TABLE = 290,
-     NAME = 291,
-     INUMBER = 292
+     EMBEDDED = 289,
+     SESSION = 290,
+     UI_GROUP = 291,
+     TABLE = 292,
+     NAME = 293,
+     INUMBER = 294
    };
 #endif
 
@@ -96,7 +98,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 100 "src/integrated_sql_gram.hpp"
+#line 102 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
