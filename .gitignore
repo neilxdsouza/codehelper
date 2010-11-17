@@ -9,3 +9,14 @@ op
 inputs/output/*
 src/tags
 src/integrated_sql_gram.output
+Inputs
+post-to-hacker-news.txt
+stubs
+src/dic-0294.zip
+src/dic-0294.txt
+website/yui-2.8.1
+src/TAGS
+src/*.vim
+inputs/edit_out.c
+inputs/insert_clientgroup.sql
+ProgTechniqueStubs
