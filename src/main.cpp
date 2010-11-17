@@ -161,11 +161,11 @@ void Init()
 				back_inserter(dict));
 		cout << "dictionary contains: " << dict.size() << " words"
 			<< endl;
-		for (int i=0; i<50; ++i) {
-			int pos = dict[i].find("'");
-			string without_quote = dict[i].substr(0, pos);
-			cout << dict[i] << "|" << without_quote << endl;
-		}
+		//for (int i=0; i<50; ++i) {
+		//	int pos = dict[i].find("'");
+		//	string without_quote = dict[i].substr(0, pos);
+		//	cout << dict[i] << "|" << without_quote << endl;
+		//}
 	}
 	//vector <string> dict;
 	//

@@ -1,5 +1,5 @@
 
-CREATE TABLE Project (
+CREATE TABLE Project : UI_GROUP (Project_Admin) (
 	Project_Code int: primary_key UI_VIEW UI_SELECT,
 	Project_Number varchar(20): unique UI_VIEW UI_SELECT,
 	Project_Name varchar(250): unique UI_VIEW UI_SELECT,
@@ -139,7 +139,7 @@ create Table Exchange_Master: UI_GROUP (Exchange_Rates) (
 	Exchange_Master_Comments varchar(250): not null
 	);
 
-create table Exchange_Details: UI_GROUP (Exchange_Details) (
+create table Exchange_Details: UI_GROUP (Exchange_Rates) (
 	Exchange_Details_Code int: primary_key   UI_VIEW UI_SELECT,
 	Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
 	Exchange_Rate double: not null UI_VIEW UI_SELECT,

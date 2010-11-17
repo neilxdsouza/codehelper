@@ -4,6 +4,7 @@
 #include "std_using.h"
 #include "utils.h"
 #include "global_options.h"
+#include "global_variables.h"
 #include "error.h"
 
 using global_options::project_namespace;
@@ -80,6 +81,7 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	north->layout()->addWidget(head);\n";
 	uiScaffolding << "	north->resize(WLength::Auto, 35);\n";
 	uiScaffolding << "	layout->addWidget(north, WBorderLayout::North);\n";
+	uiScaffolding << PrintUIMenu();
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* West */\n";
 	uiScaffolding << "	Ext::Panel *west = new Ext::Panel();\n";
@@ -356,7 +358,8 @@ string WtUIGenerator::PrintNavigationDecl()
 	navigation_tree_func << "\n";
 	navigation_tree_func << "	createNavigationNode(\"Form widgets\", rootNode,\n";
 	navigation_tree_func << "			    &good1::formWidgetsExample);\n";
-	navigation_tree_func << navigation_nodes.str();
+	//navigation_tree_func << navigation_nodes.str();
+	navigation_tree_func << PrintUINavigation();
 	navigation_tree_func << "\n";
 	navigation_tree_func << "	rootNode->setMargin(5);\n";
 	navigation_tree_func << "\n";
@@ -374,6 +377,66 @@ void WtUIGenerator::AddNavigationNode(std::string  label, std::string  func_name
 	navigation_nodes << "\tcreateNavigationNode(\""
 	 		<< label << "\", rootNode,\n"
 	 		<< "\t\t\t&good1::" << func_name << ");\n";
+}
+
+std::string WtUIGenerator::PrintUINavigation()
+{
+	using boost::format;
+	stringstream nav_str;
+	vector<string> & v = global_variables::ui_navigation_order.uiGroups_;
+	multimap<string, TableInfoType*> & mm = global_variables::ui_navigation_order.uiGroupLinks_;
+	nav_str << " /* v.size(): " << v.size() << " */\n";
+	typedef multimap<string,TableInfoType*>::const_iterator I;
+	for (int i=0; i<v.size(); ++i){
+		nav_str << format("\tWTreeNode * tn_%1% = new WTreeNode(\"%1%\", mapIcon, rootNode);\n") %
+			v[i];
+		pair<I,I> nav_nodes = mm.equal_range(v[i]);
+		for(I iter= nav_nodes.first; iter!=nav_nodes.second; ++iter){
+			TableInfoType * const & ti_ptr = iter->second;
+			if (ti_ptr->nReferencedAsMulti==0) {
+				nav_str << "\t/* : " << iter->second->tableName_ << " */\n";
+				nav_str << format("\tcreateNavigationNode(\"%2%\", tn_%1%, &good1::formInsert%2%);\n" ) %
+						v[i] % ti_ptr->tableName_;
+			}
+		}
+	}
+	return nav_str.str();
+}
+
+
+std::string WtUIGenerator::PrintUIMenu()
+{
+	using boost::format;
+	stringstream menu_str;
+	vector<string> & v = global_variables::ui_navigation_order.uiGroups_;
+	multimap<string, TableInfoType*> & mm = global_variables::ui_navigation_order.uiGroupLinks_;
+	menu_str << "\t/* v.size(): " << v.size() << " */\n";
+	menu_str << "\tWt::Ext::ToolBar *toolBar = new Wt::Ext::ToolBar();\n";
+	menu_str << "\tWt::Ext::MenuItem *item = 0;\n";
+	menu_str << "\tWt::Ext::Button *b =0;\n";
+
+	typedef multimap<string,TableInfoType*>::const_iterator I;
+	for (int i=0; i<v.size(); ++i) {
+		//menu_str << format("\tWTreeNode * tn_%1% = new WTreeNode(\"%1%\", mapIcon, rootNode);\n") %
+		//	v[i];
+		menu_str << format("\tWt::Ext::Menu *menu_%1% = new Wt::Ext::Menu();\n") %
+				v[i];
+		pair<I,I> nav_nodes = mm.equal_range(v[i]);
+		for (I iter= nav_nodes.first; iter!=nav_nodes.second; ++iter) {
+			TableInfoType * const & ti_ptr = iter->second;
+			if (ti_ptr->nReferencedAsMulti == 0) {
+				// menu_str << "\t/* : " << iter->second->tableName_ << " */\n";
+				// menu_str << format("\tcreateNavigationNode(\"%2%\", tn_%1%, &good1::formInsert%2%);\n" ) %
+				// 		v[i] % ti_ptr->tableName_;
+				menu_str << format("\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"));\n") %
+					v[i] % ti_ptr->tableName_;
+			}
+		}
+		menu_str << format("\tb = toolBar->addButton(Wt::WString::tr(\"%1%\"), menu_%1%);\n") %
+				v[i];
+	}
+	menu_str << "\tnorth->setTopToolBar(toolBar);\n";
+	return menu_str.str();
 }
 
 string WtUIGenerator::GenerateUIInsertForm()
@@ -446,12 +509,12 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_decl << "\tWt::Ext::TabWidget *tw;\n";
 	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
 		% tableInfo_->tableName_ ;
-	ui_class_decl << "\tWt::WText *title;\n";
-	ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
-		<< tableInfo_->tableName_ << "\"), this);\n";
+	//ui_class_decl << "\tWt::WText *title;\n";
+	//ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
+	//	<< tableInfo_->tableName_ << "\"), this);\n";
+	//ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	ui_class_defn << "\ttw = new Wt::Ext::TabWidget(this);\n";
 	//ui_class_defn << "\tpanel->setLayout(new Wt::WFitLayout());\n";
-	ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	//ui_class_defn << "\tpanel->layout()->addWidget();\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if( v_ptr == 0){
@@ -476,12 +539,12 @@ string WtUIGenerator::GenerateUIInsertForm()
 		ui_class_defn << endl << vec_handler_defns[i] << endl;
 	}
 	
-	stringstream func_name;
-	func_name << boost::format("formInsert%1%")
-					% tableInfo_->tableName_;
-	if (tableInfo_->nReferencedAsMulti==0) {
-		AddNavigationNode(tableInfo_->tableName_, func_name.str());
-	}
+	//stringstream func_name;
+	//func_name << boost::format("formInsert%1%")
+	//				% tableInfo_->tableName_;
+	//if (tableInfo_->nReferencedAsMulti==0) {
+	//	AddNavigationNode(tableInfo_->tableName_, func_name.str());
+	//}
 	
 	form_code << "\tsetCentralWidget(canvas);\n";
 	form_code << boost::format("}\n");

@@ -47,6 +47,8 @@ public:
 	std::string print_cpp_search_key_args();
 
 	std::string PrintProcessInsert();
+	std::string PrintUINavigation();
+	std::string PrintUIMenu();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

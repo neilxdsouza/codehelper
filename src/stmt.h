@@ -70,10 +70,12 @@ struct table_decl_stmt: public stmt
 
 	table_decl_stmt( datatype dtype, int lline_number, char * & name,  struct var_list* & v_list,
 			 AbstractCodeGeneratorFactory * p_codeGeneratorFactory,
-			 vector<var_list*>& vec_var_list);
+			 vector<var_list*>& vec_var_list,
+			 struct tab_level_options_list_type & p_tab_options);
 
 	void GenerateCode(FILE * & fptr);
 	virtual void RunPreCodeGenerationChecks();
+	struct tab_level_options_list_type tab_options;
 
 	private:
 	table_decl_stmt& operator=(const table_decl_stmt&);	

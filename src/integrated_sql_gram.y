@@ -55,6 +55,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %type <v_list>  decl_comma_list
 %type <dt> data_type
 
+
 %token <dt> BIT_T
 %token <dt> BIGINT_T
 %token <dt> INT32_T
@@ -101,7 +102,7 @@ statement:	CREATE TABLE NAME tab_level_options '(' decl_comma_list ')' ';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($6);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
-				vec_var_list);
+				vec_var_list, tab_options);
 		vec_var_list.clear();
 		global_variables::nGraphNodes++;
 	 }
@@ -151,11 +152,11 @@ decl_comma_list: var_decl_with_or_wo_options {
 
 var_decl_with_or_wo_options: var_decl ':' options_list {
 	$$ = $1;
-	$1->options = options_list;
+	//$1->options = options_list;
 	$$->options = options_list;
 
-	cout << "var_name: " << $1->var_name << "options: unique = " 
-		<< $1->options.unique << endl;
+	//cout << "var_name: " << $1->var_name << "options: unique = " 
+	//	<< $1->options.unique << endl;
 	options_list.reinit();
 	}
 	;
@@ -176,7 +177,7 @@ options: REFERENCES NAME '(' NAME ')' {
 	}
 	|	DBNULL {
 		options_list.null = true;
-		cout << "parsing option DBNULL" ;
+		//cout << "parsing option DBNULL" ;
 	}
 	|	NOT DBNULL {
 		/*

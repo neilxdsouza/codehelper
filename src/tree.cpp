@@ -14,13 +14,13 @@ extern std::vector<std::string> dict;
 
 
 TableInfoType::TableInfoType(string name, struct var_list*  elist,
-		vector<var_list*> & p_vec_var_list)
+		vector<var_list*> & p_vec_var_list, tab_level_options_list_type & p_tab_options)
 	: 
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 	has_multi(0), has_search_key(0), nInvisible(0),
-	vec_var_list(p_vec_var_list), nReferencedAsMulti(0)
+	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options)
 {
-	printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
+	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
 	struct var_list* v_ptr = param_list;
 	while(v_ptr){
@@ -38,7 +38,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		v_ptr=v_ptr->prev;
 	}
-	printf("EXIT %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
+	//printf("EXIT %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 }
 
 std::string var_list:: print_cpp_var_type()
@@ -305,24 +305,24 @@ std::string var_list::print_random_value(int counter, int p_nRecords)
 		case DATETIME_TYPE:{
 			//var_type_str << "boost::gregorian::date";
 			int year = 2000 + (rand() % 10);
-			int month = (rand() %12) + 1;
+			int month = (rand() % 12) + 1;
 			int day;
 			if(month == 2 ) {
-				if (year %100 ==0) {
-					if (year%400==0)
-						day = rand() % 29;
+				if (year % 100 == 0) {
+					if (year % 400 == 0)
+						day = (rand() % 29) + 1;
 					else 
-						day = rand() %28;
-				} else if (year % 4==0) { 
-					day = rand() %29;
+						day = (rand() % 28) + 1;
+				} else if (year % 4 == 0) { 
+					day = (rand() % 29) + 1;
 				} else {
-					day = rand() %28;
+					day = (rand() % 28) + 1;
 				}
 			}  else if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8
 					|| month == 10 || month == 12) {
-				day = rand() %31;
+				day = (rand() % 31) + 1;
 			} else {
-				day = rand() %30;
+				day = (rand() % 30) + 1;
 			}
 			stringstream month_str;
 			switch(month){

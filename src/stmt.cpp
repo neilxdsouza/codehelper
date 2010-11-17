@@ -5,6 +5,8 @@
 //#include "CSharpAspNetCodeGenerator.h"
 #include "AbstractCodeGenerator.h"
 #include "AbstractCodeGeneratorFactory.h"
+#include "global_variables.h"
+#include "error.h"
 
 using std::string;
 vector <TableInfoType *> vec_table_info;
@@ -24,14 +26,29 @@ TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name
 		,  struct var_list* & v_list, AbstractCodeGeneratorFactory * p_codeGeneratorFactory
-		,  vector<var_list*>& vec_var_list )
-	: stmt(dtype, lline_number), codeGenerator_(0)
+		,  vector<var_list*>& vec_var_list, struct tab_level_options_list_type & p_tab_options)
+	: stmt(dtype, lline_number), codeGenerator_(0), tab_options(p_tab_options)
 {
 	cout << __PRETTY_FUNCTION__ << "," << __FILE__ << "," << __LINE__ << endl;
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
-		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list );
+		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list, tab_options );
 		codeGenerator_ = p_codeGeneratorFactory->CreateCodeGenerator(ti);
 		TableCollectionSingleton::Instance().Tables.push_back(codeGenerator_);
+		log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " reached here ");	
+		if (ti->tab_options.has_ui_group_name) {
+			log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " reached here ");	
+			multimap<string, TableInfoType*> & m = global_variables::ui_navigation_order.uiGroupLinks_;
+			vector<string> & v = global_variables::ui_navigation_order.uiGroups_;
+			if (m.find(ti->tab_options.ui_group_name) == m.end()) {
+				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " reached here ");	
+				v.push_back(ti->tab_options.ui_group_name);
+				//m[ti->tab_options.ui_group_name] = ti;
+				m.insert(make_pair(ti->tab_options.ui_group_name, ti));
+			} else {
+				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " reached here ");	
+				m.insert(make_pair(ti->tab_options.ui_group_name, ti));
+			}
+		}
 		type=TABLE_TYPE;
 		struct symtab_ent* se=new struct symtab_ent;
 		if(! se) {

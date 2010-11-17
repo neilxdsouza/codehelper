@@ -86,7 +86,7 @@ struct tab_level_options_list_type
 	void setUIGroupName(std::string p_ui_group_name)
 	{
 		ui_group_name = p_ui_group_name;
-		has_ui_group_name=false;
+		has_ui_group_name=true;
 	}
 
 	tab_level_options_list_type():
@@ -217,8 +217,11 @@ struct TableInfoType
 	int nReferencedAsMulti;
 	vector<var_list*> vec_var_list;
 	void print_lower_fname(FILE * fptr);
+
+	struct tab_level_options_list_type tab_options;
 	TableInfoType(string name, struct var_list*  elist
-			, vector<var_list*> & p_vec_var_list); 
+			, vector<var_list*> & p_vec_var_list
+			, tab_level_options_list_type & p_tab_options); 
 
 	// main functions which print out an entire class
 	//void print_detail(FILE * fptr);
