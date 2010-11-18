@@ -228,9 +228,10 @@ struct TableInfoType
 			, vector<var_list*> & p_vec_var_list
 			, tab_level_options_list_type & p_tab_options); 
 
-	// main functions which print out an entire class
-	//void print_detail(FILE * fptr);
+	// I need to move this function to CppCodeGenerator
 	std::string print_cpp_search_key_args();
+	// I need to move this function to CppCodeGenerator
+	std::string print_cpp_session_key_args();
 
 
 	private:

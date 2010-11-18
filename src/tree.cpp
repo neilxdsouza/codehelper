@@ -530,7 +530,7 @@ std::string TableInfoType::print_cpp_search_key_args()
 				case NVARCHAR_TYPE:
 				case NCHAR_TYPE:
 				case NTEXT_TYPE:
-					search_key_fields_str << "std::string (\"%\")";
+					search_key_fields_str << "\t\tstd::string (\"%\")";
 				break;
 				// this has to be changed to create 2 params - 1 for start date and 1 for end date
 				// for now i am working on a different code path - session variables - so will
@@ -538,7 +538,7 @@ std::string TableInfoType::print_cpp_search_key_args()
 				case DATETIME_TYPE:
 					fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "search date should be 2 params: start and end");
 					search_key_fields_str 
-							<< "boost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+							<< "\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
 				break;
 				default:
 					search_key_fields_str << boost::format(" unhandled file: %1% line: %2% func: %3%")
@@ -547,8 +547,10 @@ std::string TableInfoType::print_cpp_search_key_args()
 				++count;
 				if(count<has_search_key){
 					search_key_fields_str <<  ",\n";
-				} else 
-					search_key_fields_str << "\n";
+				} else {
+					//search_key_fields_str << "\n";
+					break;
+				}
 			}
 			v_ptr=v_ptr->prev;
 		}
@@ -557,6 +559,55 @@ std::string TableInfoType::print_cpp_search_key_args()
 	}
 	return search_key_fields_str.str();
 }
+
+std::string TableInfoType::print_cpp_session_key_args()
+{
+	stringstream session_fields_str;
+	struct var_list* v_ptr=param_list;
+	if(nSessionParams){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.session){
+				//session_fields_str <<  boost::format("\t\t");
+				//session_fields_str << print_cpp_types(v_ptr->var_type);
+				switch (v_ptr->var_type) {
+				case INT32_TYPE:
+					session_fields_str << "\t\t1";
+					break;
+				case TEXT_TYPE:
+				case VARCHAR_TYPE:
+				case NVARCHAR_TYPE:
+				case NCHAR_TYPE:
+				case NTEXT_TYPE:
+					session_fields_str << "\t\tstd::string (\"%\")";
+				break;
+				// this has to be changed to create 2 params - 1 for start date and 1 for end date
+				// for now i am working on a different code path - session variables - so will
+				// come back for this later
+				case DATETIME_TYPE:
+					fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
+					session_fields_str 
+							<< "\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+				break;
+				default:
+					session_fields_str << boost::format(" unhandled file: %1% line: %2% func: %3%")
+						% __FILE__ % __LINE__ % __PRETTY_FUNCTION__;
+				}
+				++count;
+				if(count<nSessionParams){
+					session_fields_str <<  ",\n";
+				} else 
+					//session_fields_str << "\n";
+					break;
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 session_fields_str << "";
+	}
+	return session_fields_str.str();
+}
+
 
 std::string var_list::print_improved_ui_display_var_name()
 {

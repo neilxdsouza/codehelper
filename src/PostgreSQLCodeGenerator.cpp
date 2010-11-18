@@ -410,10 +410,20 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 	stringstream get_func_params;
 	get_func_params << "(";
 	get_func_params << "int p_PageIndex, int p_PageSize";
-	string search_key_params = print_cpp_search_key_params();
-	if (search_key_params != "" ) {
+	//string search_key_params = print_cpp_search_key_params();
+	//if (search_key_params != "" ) {
+	//	get_func_params << ",\n";
+	//	get_func_params << search_key_params;
+	//}
+	if (tableInfo_->has_search_key) {
 		get_func_params << ",\n";
-		get_func_params << search_key_params;
+		get_func_params << print_cpp_search_key_params();
+	}
+	if (tableInfo_->nSessionParams) {
+		if(tableInfo_->has_search_key) {
+			get_func_params << ",\n";
+		}
+		get_func_params << print_cpp_session_params();
 	}
 	get_func_params << "\t\t);\n";
 	get_func_signature << get_func_params.str();
@@ -945,10 +955,10 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "{\n";
 	func_body << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
 	func_body << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
-		% (tableInfo_->has_search_key + 2) /* int PageSize int PageIndex */ ;
+		% (tableInfo_->has_search_key + tableInfo_->nSessionParams + 2) /* int PageSize int PageIndex */ ;
 	func_body << boost::format("\tconst char * paramValues[%1%];\n"
 			"\tstd::stringstream ss_param_values[%1%];\n") 
-		% (tableInfo_->has_search_key + 2) /* int PageSize int PageIndex */ ;
+		% (tableInfo_->has_search_key + tableInfo_->nSessionParams + 2) /* int PageSize int PageIndex */ ;
 	int nActualParams = 0;
 	func_body << format("\tss_param_values[%1%] << p_PageIndex;\n")
 		% nActualParams;
@@ -964,21 +974,25 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
 	func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
 				% nActualParams++;
-	int count;
-	struct var_list* v_ptr=tableInfo_->param_list;
-	while (v_ptr) {
-		if (v_ptr->options.search_key) {
-			func_body << boost::format("\tss_param_values[%1%] << p_%2%;\n")
-				% nActualParams % v_ptr->var_name;
-			func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
-				% nActualParams;
-			func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
-			func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
-						% nActualParams++;
-			++count;
-		}
-		v_ptr=v_ptr->prev;
-	}
+	//int count;
+	//struct var_list* v_ptr=tableInfo_->param_list;
+	//while (v_ptr) {
+	//	if (v_ptr->options.search_key) {
+	//		func_body << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+	//			% nActualParams % v_ptr->var_name;
+	//		func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+	//			% nActualParams;
+	//		func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+	//		func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+	//					% nActualParams++;
+	//		++count;
+	//	}
+	//	v_ptr=v_ptr->prev;
+	//}
+	if (tableInfo_->has_search_key)
+		func_body << print_cpp_sp_invoc_search_keys(nActualParams);
+	if (tableInfo_->nSessionParams)
+		func_body << print_cpp_sp_invoc_session_keys(nActualParams);
 
 	func_body << format("\tstd::vector<boost::shared_ptr<Biz%1%> > vec_rval;\n") %
 		tableInfo_->tableName_;
@@ -990,6 +1004,19 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		func_body << "\t\t\t\",";
 		while (v_ptr1) {
 			if (v_ptr1->options.search_key) {
+				func_body << boost::format("$%1%::%2%")
+					% ++count1 % print_sp_types(v_ptr1->var_type);
+				if (count1 < nActualParams ){
+					func_body << ", ";
+				} else {
+					break;
+				}
+			}
+			v_ptr1=v_ptr1->prev;
+		}
+		v_ptr1=tableInfo_->param_list;
+		while (v_ptr1) {
+			if (v_ptr1->options.session) {
 				func_body << boost::format("$%1%::%2%")
 					% ++count1 % print_sp_types(v_ptr1->var_type);
 				if (count1 < nActualParams ){
@@ -1048,7 +1075,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	// This has to be fixed by using a shared pointer with 
 	// a custom deleter - this works for now as the live server 
 	// is leaking memory like a sieve
-	func_body << "\tPQclear(res);\n";
+	func_body << "\t\tPQclear(res);\n";
 	func_body << "\t}\n";
 	func_body << "\treturn vec_rval;\n";
 	func_body << "}\n";
@@ -1763,3 +1790,43 @@ void PostgreSQLCodeGenerator::print_sp_select_inner_joins2(stringstream & p_inne
 		//} 
 	}
 }
+
+std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys(int & nActualParams)
+{
+	struct var_list* v_ptr=tableInfo_->param_list;
+	stringstream search_key_param_setup_str;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			search_key_param_setup_str << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+				% nActualParams % v_ptr->var_name;
+			search_key_param_setup_str << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+				% nActualParams;
+			search_key_param_setup_str << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+			search_key_param_setup_str << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+						% nActualParams++;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	return search_key_param_setup_str.str();
+}
+
+
+std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_session_keys(int & nActualParams)
+{
+	struct var_list* v_ptr=tableInfo_->param_list;
+	stringstream session_key_param_setup_str;
+	while (v_ptr) {
+		if (v_ptr->options.session) {
+			session_key_param_setup_str << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+				% nActualParams % v_ptr->var_name;
+			session_key_param_setup_str << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+				% nActualParams;
+			session_key_param_setup_str << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+			session_key_param_setup_str << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+						% nActualParams++;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	return session_key_param_setup_str.str();
+}
+

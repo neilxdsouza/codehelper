@@ -753,10 +753,17 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % aTableInfo->tableName_;
 
-		string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
-		if (search_key_args_str != "") {
+		//string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
+		//if (search_key_args_str != "") {
+		if (tableInfo_->has_search_key >0) {
 			defn << ",\n";
-			defn << search_key_args_str;
+			defn << tableInfo_->print_cpp_search_key_args();
+		}
+		if (tableInfo_->nSessionParams>0) {
+			if (tableInfo_->has_search_key >0) {
+				defn << ",\n";
+			}
+			defn << tableInfo_->print_cpp_session_key_args();
 		}
 		defn << ");\n";
 
