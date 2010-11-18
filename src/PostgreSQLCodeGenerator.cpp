@@ -1022,10 +1022,10 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
 	*/
 
-	stringstream field_pos_stream;
-	print_cpp_select_field_positions(field_pos_stream);
-	field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
-	func_body << field_pos_stream.str();
+	// stringstream field_pos_stream;
+	// print_cpp_select_field_positions(field_pos_stream);
+	// field_pos_stream << "\t\tint32_t r_rownumber_fnum = PQfnumber(res, \"r_rownumber\");\n";
+	// func_body << field_pos_stream.str();
 
 	func_body << "\t\tfor (int i=0; i<nTuples; ++i) {\n";
 	//stringstream convert_fields_str;
@@ -1088,7 +1088,16 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while(v_ptr){
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			if (v_ptr->options.session) {
+				p_sp_select_fields_with_type 
+					<< "\t\t"
+					<< v_ptr->print_cpp_var_type() 
+					//<< "int32_t"
+					<< " " << v_ptr->print_sql_var_name_for_select_return_table("") << "_fnum = " 
+					<< "PQfnumber(res, \""
+					<<  v_ptr->print_sql_var_name_for_select_return_table("") 
+					<< "\");\n";
+			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				p_sp_select_fields_with_type 
 					<< "\t\t"
 					//<< v_ptr->print_cpp_var_type() 
@@ -1127,7 +1136,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 				// 	<< "PQfnumber(res, \""
 				// 	<< v_ptr->print_sql_var_name_for_select_return_table(v_ptr->options.ref_table_name)  
 				// 	<< "\");\n";
-				}
+			}
 		} else {
 			//p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 
@@ -1139,11 +1148,6 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 				<< "PQfnumber(res, \""
 				<<  v_ptr->print_sql_var_name_for_select_return_table("") 
 				<< "\");\n";
-			if (v_ptr->prev) {
-				p_sp_select_fields_with_type << "";
-			} else {
-				p_sp_select_fields_with_type << "";
-			}
 		}
 		v_ptr=v_ptr->prev;
 	}
@@ -1383,7 +1387,8 @@ std::string PostgreSQLCodeGenerator::PrintGetSingleRecord()
 		// This is for the Object within this current object 
 		while (v_ptr) {
 			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-				if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				if (v_ptr->options.session) {
+				} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				} else {
 					string orig_varname (v_ptr->var_name);
 					int pos = orig_varname.find("_Code");
@@ -1499,7 +1504,16 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 	while (v_ptr) {
 		if (v_ptr->options.many==false) {
 			if (v_ptr->options.ref_table_name!="") {
-				if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				if (v_ptr->options.session) {
+					if(rename_vars){
+						string orig_varname = inner_join_tabname;
+						int pos = orig_varname.find("_Code");
+						string improved_name = orig_varname.substr(0, pos);
+						s << "\t\t/*111*/ " << v_ptr->print_psql_to_cpp_conversion(improved_name);
+					}else {
+						s << "\t\t/*222*/ " << v_ptr->print_psql_to_cpp_conversion(string(""));
+					}
+				} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 					s << "\t\t/*2*/ " << v_ptr->print_psql_to_cpp_conversion(string(""));
 				} else {
 					struct CppCodeGenerator* t_ptr = (dynamic_cast<CppCodeGenerator*>
@@ -1534,22 +1548,11 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 				}
 			} else {
 				if(rename_vars){
-					//fprintf(edit_out, "renaming var: rename_vars: %d inner_join_tabname: %s\n", 
-					//		rename_vars, inner_join_tabname.c_str());
 					string orig_varname = inner_join_tabname;
 					int pos = orig_varname.find("_Code");
 					string improved_name = orig_varname.substr(0, pos);
-					//s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-					//	<< "PQgetvalue(res, row, "
-					//	<< v_ptr->print_sql_var_name_for_select_return_table(improved_name)  << "_fnum "
-					//	<< ") )";
 					s << "\t\t/*1*/ " << v_ptr->print_psql_to_cpp_conversion(improved_name);
 				}else {
-					//s	<< "\t\tboost::lexical_cast< " << v_ptr->print_cpp_var_type() << " > ("
-					//	<< "PQgetvalue(res, row, "
-					//	<< v_ptr->print_sql_var_name_for_select_return_table(string(""))  << "_fnum "
-					//	<< ") )";
-
 					s << "\t\t/*2*/ " << v_ptr->print_psql_to_cpp_conversion(string(""));
 				}
 			}

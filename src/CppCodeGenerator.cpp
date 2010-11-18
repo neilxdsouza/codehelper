@@ -121,8 +121,8 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 
 	bool emitted_vector_header = false;
 	bool emitted_string_header = false;
-	while(v_ptr){
-		if (v_ptr->options.ref_table_name!="") {
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name != "") {
 			if (v_ptr->options.many==false) {
 				var_type << boost::format("boost::shared_ptr<Biz%1%>") % v_ptr->options.ref_table_name;
 			} else {
@@ -499,7 +499,8 @@ void CppCodeGenerator::print_bll_Constructor_defn(std::ofstream & bll_cpp)
 		int count=0;
 		while (v_ptr) {
 			if (v_ptr->options.ref_table_name != "" && v_ptr->options.many==false) {
-				if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
+				if (v_ptr->options.session) {
+				} else if (ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
 				} else {
 					++count;
 				}
@@ -706,30 +707,36 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_h()
 	bll_bizobj_constructor_h << format("\tBiz%1%(")
 			% tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
-	while(v_ptr){
+	while (v_ptr) {
 		bll_bizobj_constructor_h << "\n\t\t";
-		if(v_ptr->options.ref_table_name==""){
+		if (v_ptr->options.ref_table_name == "") {
 			bll_bizobj_constructor_h << print_cpp_types(v_ptr->var_type);
 			bll_bizobj_constructor_h 
 				//<< format(" l_%1%") % v_ptr->var_name;
 				<< " "
 				<< v_ptr->print_cpp_var_param_name();
 		} else {
-			string orig_varname = v_ptr->var_name;
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos);
-			if(v_ptr->options.many){
-				bll_bizobj_constructor_h << 
-					format ("std::vector<boost::shared_ptr<Biz%1%> > %2%") 
-						% v_ptr->options.ref_table_name
-						//% improved_name;
-						% v_ptr->print_cpp_var_param_name();
+			if (v_ptr->options.session==true) {
+				bll_bizobj_constructor_h << print_cpp_types(v_ptr->var_type);
+				bll_bizobj_constructor_h << format(" p_%1%")
+					% v_ptr->var_name;
 			} else {
-				bll_bizobj_constructor_h 
-					<< format ("boost::shared_ptr<Biz%1%> %2%")
-						% v_ptr->options.ref_table_name
-						//% improved_name;
-						% v_ptr->print_cpp_var_param_name();
+				string orig_varname = v_ptr->var_name;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				if (v_ptr->options.many) {
+					bll_bizobj_constructor_h << 
+						format ("std::vector<boost::shared_ptr<Biz%1%> > %2%") 
+							% v_ptr->options.ref_table_name
+							//% improved_name;
+							% v_ptr->print_cpp_var_param_name();
+				} else {
+					bll_bizobj_constructor_h 
+						<< format ("boost::shared_ptr<Biz%1%> %2%")
+							% v_ptr->options.ref_table_name
+							//% improved_name;
+							% v_ptr->print_cpp_var_param_name();
+				}
 			}
 		}
 		v_ptr=v_ptr->prev;
@@ -772,19 +779,25 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 			bizobj_constructor_body << format(" p_%1%")
 				% v_ptr->var_name;
 		} else {
-			string orig_varname = v_ptr->var_name;
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos);
-			if(v_ptr->options.many){
-				bizobj_constructor_body << 
-					format ("std::vector<boost::shared_ptr<Biz%1%> > p_biz_vec_%2%") 
-						% v_ptr->options.ref_table_name
-						% improved_name;
+			if (v_ptr->options.session==true) {
+				bizobj_constructor_body << print_cpp_types(v_ptr->var_type);
+				bizobj_constructor_body << format(" p_%1%")
+					% v_ptr->var_name;
 			} else {
-				bizobj_constructor_body 
-					<< format ("boost::shared_ptr<Biz%1%> p_biz_%2%")
-						% v_ptr->options.ref_table_name
-						% improved_name;
+				string orig_varname = v_ptr->var_name;
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				if(v_ptr->options.many){
+					bizobj_constructor_body << 
+						format ("std::vector<boost::shared_ptr<Biz%1%> > p_biz_vec_%2%") 
+							% v_ptr->options.ref_table_name
+							% improved_name;
+				} else {
+					bizobj_constructor_body 
+						<< format ("boost::shared_ptr<Biz%1%> p_biz_%2%")
+							% v_ptr->options.ref_table_name
+							% improved_name;
+				}
 			}
 		}
 		v_ptr=v_ptr->prev;
@@ -796,18 +809,22 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 
 	v_ptr=tableInfo_->param_list;
 	while(v_ptr){
-		if(v_ptr->options.ref_table_name!=""){
-			string orig_varname = v_ptr->var_name.c_str();
-			int pos = orig_varname.find("_Code");
-			string improved_name = orig_varname.substr(0, pos);
-			if (v_ptr->options.many) {
-				bizobj_constructor_body << format ("\t\t%2% ( p_biz_vec_%1%)") 
-					% improved_name
-					% v_ptr->print_cpp_var_name();
+		if (v_ptr->options.ref_table_name!="") {
+			if (v_ptr->options.session==true) {
+				bizobj_constructor_body << format("\t\t%1%_(p_%1%)") % v_ptr->var_name;
 			} else {
-				bizobj_constructor_body << format ("\t\t%1% ( p_biz_%2%)") 
-					% v_ptr->print_cpp_var_name()
-					% improved_name;
+				string orig_varname = v_ptr->var_name.c_str();
+				int pos = orig_varname.find("_Code");
+				string improved_name = orig_varname.substr(0, pos);
+				if (v_ptr->options.many) {
+					bizobj_constructor_body << format ("\t\t%2% ( p_biz_vec_%1%)") 
+						% improved_name
+						% v_ptr->print_cpp_var_name();
+				} else {
+					bizobj_constructor_body << format ("\t\t%1% ( p_biz_%2%)") 
+						% v_ptr->print_cpp_var_name()
+						% improved_name;
+				}
 			}
 		} else {
 			bizobj_constructor_body << format("\t\t%1%_(p_%1%)") % v_ptr->var_name;
