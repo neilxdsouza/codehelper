@@ -4,12 +4,13 @@
  *  Released under GNU GPL Version 2
  */
 
-#include "tree.h"
-#include "utils.h"
 #include <cstdlib>
 #include <vector>
 #include <string>
 #include <time.h>
+#include "tree.h"
+#include "utils.h"
+#include "error.h"
 extern std::vector<std::string> dict;
 
 
@@ -530,6 +531,14 @@ std::string TableInfoType::print_cpp_search_key_args()
 				case NCHAR_TYPE:
 				case NTEXT_TYPE:
 					search_key_fields_str << "std::string (\"%\")";
+				break;
+				// this has to be changed to create 2 params - 1 for start date and 1 for end date
+				// for now i am working on a different code path - session variables - so will
+				// come back for this later
+				case DATETIME_TYPE:
+					fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "search date should be 2 params: start and end");
+					search_key_fields_str 
+							<< "boost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
 				break;
 				default:
 					search_key_fields_str << boost::format(" unhandled file: %1% line: %2% func: %3%")

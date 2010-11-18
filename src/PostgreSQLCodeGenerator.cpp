@@ -927,10 +927,17 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	stringstream func_params;
 	func_params << "(";
 	func_params << "int p_PageIndex, int p_PageSize";
-	string search_key_params = print_cpp_search_key_params();
-	if (search_key_params != "" ) {
+	//string search_key_params = print_cpp_search_key_params();
+	if (tableInfo_->has_search_key) {
 		func_params << ",\n";
-		func_params << search_key_params;
+		func_params << print_cpp_search_key_params();
+	}
+
+	if (tableInfo_->nSessionParams) {
+		if(tableInfo_->has_search_key) {
+			func_params << ",\n";
+		}
+		func_params << print_cpp_session_params();
 	}
 	func_params << "\t\t)\n";
 	func_signature << func_params.str();
@@ -1067,8 +1074,10 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 				++count;
 				if(count<tableInfo_->has_search_key){
 					search_key_fields_str <<  ",\n";
-				} else 
-					search_key_fields_str << "\n";
+				} else {
+					//search_key_fields_str << "\n";
+					break;
+				}
 			}
 			v_ptr=v_ptr->prev;
 		}
@@ -1076,6 +1085,34 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 		 search_key_fields_str << "";
 	}
 	return search_key_fields_str.str();
+}
+
+std::string PostgreSQLCodeGenerator::print_cpp_session_params()
+{
+	stringstream session_key_fields_str;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	if(tableInfo_->nSessionParams){
+		int count=0;
+		while(v_ptr){
+			if(v_ptr->options.session){
+				session_key_fields_str <<  boost::format("\t\t");
+				session_key_fields_str << print_cpp_types(v_ptr->var_type);
+				session_key_fields_str <<  boost::format(" p_%1%") 
+					% v_ptr->var_name;
+				++count;
+				if(count<tableInfo_->nSessionParams){
+					session_key_fields_str <<  ",\n";
+				} else {
+					//session_key_fields_str << "\n";
+					break;
+				}
+			}
+			v_ptr=v_ptr->prev;
+		}
+	} else {
+		 session_key_fields_str << "";
+	}
+	return session_key_fields_str.str();
 }
 
 

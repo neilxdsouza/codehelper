@@ -74,6 +74,7 @@ public:
 		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level);
 
 	std::string print_sp_session_params();
+	std::string print_cpp_session_params();
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

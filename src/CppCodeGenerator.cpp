@@ -123,7 +123,9 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 	bool emitted_string_header = false;
 	while (v_ptr) {
 		if (v_ptr->options.ref_table_name != "") {
-			if (v_ptr->options.many==false) {
+			if (v_ptr->options.session==true) {
+				var_type << print_cpp_types(v_ptr->var_type);
+			} else if (v_ptr->options.many==false) {
 				var_type << boost::format("boost::shared_ptr<Biz%1%>") % v_ptr->options.ref_table_name;
 			} else {
 				var_type << boost::format("std::vector<boost::shared_ptr<Biz%1%> >") 
@@ -154,7 +156,15 @@ void CppCodeGenerator::print_bll_params(std::ofstream & bll_h)
 		}
 
 		if (v_ptr->options.ref_table_name!="") {
-			if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			if (v_ptr->options.session==true) {
+				variables << var_type.str() << boost::format(" %1%_;\n") % v_ptr->var_name;
+				functions << "\t";
+				functions << boost::format("%2% Get_%1%() { return %1%_;}\n") 
+					% v_ptr->var_name % var_type.str();
+				functions << "\t";
+				functions << boost::format("void Set_%1%(%2%  value) { %1%_= value;}\n") 
+					% v_ptr->var_name % var_type.str();
+			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				//variables << "/* --from here : " << __FILE__ << ", " << __LINE__ 
 				//	<< ", " << __PRETTY_FUNCTION__ << "*/ "
 				//	<< endl;
@@ -616,11 +626,13 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 		if ( v_ptr->options.ref_table_name != "" && v_ptr->options.many == false
 			&&	
 			(!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) )) {
-			cpp_body << boost::format("\t%1%->%2%_ = %3%;\n") 
-				% v_ptr->print_cpp_var_name()
-				% v_ptr->var_name 
-				% v_ptr->print_cpp_var_param_name()
-				;
+			if (v_ptr->options.session == false) {
+				cpp_body << boost::format("\t%1%->%2%_ = %3%;\n") 
+					% v_ptr->print_cpp_var_name()
+					% v_ptr->var_name 
+					% v_ptr->print_cpp_var_param_name()
+					;
+			}
 		}
 		v_ptr=v_ptr->prev;		
 	}
