@@ -92,16 +92,16 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "\tnorth_panel_grid->addWidget(north, 0, 1);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* West */\n";
-	uiScaffolding << "	Ext::Panel *west = new Ext::Panel();\n";
-	uiScaffolding << "	west->layout()->addWidget(createNavigationTree());\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	west->setTitle(\"Widgets\");\n";
-	uiScaffolding << "	west->resize(200, WLength::Auto);\n";
-	uiScaffolding << "	west->setResizable(true);\n";
-	uiScaffolding << "	west->setCollapsible(true);\n";
-	uiScaffolding << "	west->setAnimate(true);\n";
-	uiScaffolding << "	west->setAutoScrollBars(true);\n";
-	uiScaffolding << "	layout->addWidget(west, WBorderLayout::West);\n";
+	uiScaffolding << "	// Ext::Panel *west = new Ext::Panel();\n";
+	uiScaffolding << "	// west->layout()->addWidget(createNavigationTree());\n";
+	uiScaffolding << "	// \n";
+	uiScaffolding << "	// west->setTitle(\"Widgets\");\n";
+	uiScaffolding << "	// west->resize(200, WLength::Auto);\n";
+	uiScaffolding << "	// west->setResizable(true);\n";
+	uiScaffolding << "	// west->setCollapsible(true);\n";
+	uiScaffolding << "	// west->setAnimate(true);\n";
+	uiScaffolding << "	// west->setAutoScrollBars(true);\n";
+	uiScaffolding << "	// layout->addWidget(west, WBorderLayout::West);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* Center */\n";
 	uiScaffolding << "	Ext::Panel *center = new Ext::Panel();\n";
@@ -438,7 +438,7 @@ std::string WtUIGenerator::PrintUIMenu()
 				// menu_str << "\t/* : " << iter->second->tableName_ << " */\n";
 				// menu_str << format("\tcreateNavigationNode(\"%2%\", tn_%1%, &good1::formInsert%2%);\n" ) %
 				// 		v[i] % ti_ptr->tableName_;
-				menu_str << format("\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"));\n") %
+				menu_str << format("\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"),\n\t\t\t this, &good1::formInsert%2%);\n") %
 					v[i] % ti_ptr->tableName_;
 			}
 		}
