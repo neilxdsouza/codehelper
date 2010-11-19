@@ -477,6 +477,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/WWidget>\n";
 	ui_class_headers << "#include <Wt/WDialog>\n";
 	ui_class_headers << "#include <Wt/WPanel>\n";
+	ui_class_headers << "#include \"TimesheetCalendar.h\"\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <Wt/Ext/Button>\n";
 	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
@@ -735,10 +736,15 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			xfer_func_defn << print_XferFunction(v_ptr, headers  /* required for header files of composite objects */);
 			vec_handler_defns.push_back(xfer_func_defn.str());
 			
-		} else if (v_ptr->var_type==DATETIME_TYPE) {
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
 			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% aTableInfo->tableName_;
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == true) {
+			decl <<  boost::format("\tTimesheetCalendar * ts_cal_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\tts_cal_%2% = new TimesheetCalendar(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 		} else {
 			decl <<  boost::format("\tWt::Ext::LineEdit * we_le_%1%;\n")
@@ -908,6 +914,7 @@ void WtUIGenerator::GenerateMakefile()
 {
 	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
+	makefile_objs << " TimesheetCalendar.o CalendarCell.o ";
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
 		<< makefile_objs.str() << endl;
