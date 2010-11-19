@@ -34,14 +34,14 @@ WtUIGenerator::WtUIGenerator(TableInfoType * p_tabInfo,
 
 void WtUIGenerator::GenerateCode()
 {
-	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+	//cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
+	//	% __PRETTY_FUNCTION__;
 	//ui << GenerateUIScaffolding();
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
 	
-	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+	// cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
+	// 	% __PRETTY_FUNCTION__;
 }
 
 void WtUIGenerator::GenerateForms()
@@ -654,17 +654,18 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-		if (v_ptr->options.ref_table_name!="") {
-			cout << " called_recursively: " << called_recursively
-				<< endl;
-			cout << " my table name: " << aTableInfo->tableName_
-				<< endl;
-			cout << " ref_table_name: " << v_ptr->options.ref_table_name
-				<< endl;
-			cout << "ReferencedTableContainsUs: " 
-				<< ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name)
-				<< endl;
-		}
+
+		// if (v_ptr->options.ref_table_name!="") {
+		// 	cout << " called_recursively: " << called_recursively
+		// 		<< endl;
+		// 	cout << " my table name: " << aTableInfo->tableName_
+		// 		<< endl;
+		// 	cout << " ref_table_name: " << v_ptr->options.ref_table_name
+		// 		<< endl;
+		// 	cout << "ReferencedTableContainsUs: " 
+		// 		<< ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name)
+		// 		<< endl;
+		// }
 		//! called_recursively == true means this form is being generated in the context of 
 		//! the original table that contains this one as a composite object
 		//! for such tables the foreign key is being supplied by the master table
@@ -912,7 +913,7 @@ using global_options::input_file_name;
 
 void WtUIGenerator::GenerateMakefile()
 {
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
+	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
 	makefile_objs << " TimesheetCalendar.o CalendarCell.o ";
 	makefile_str << "CXX := $(CXX) -g " << endl;
@@ -931,7 +932,7 @@ void WtUIGenerator::GenerateMakefile()
 	makefile_fname << outputDirPrefix_ << "/Makefile." << input_file_name ;
 	std::ofstream makefile(makefile_fname.str().c_str(), ios_base::out|ios_base::trunc);
 	makefile << makefile_str.str();
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
+	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
 }
 
 

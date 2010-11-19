@@ -16,8 +16,8 @@ using global_options::project_namespace;
 void CppCodeGenerator::GenerateCode(FILE * fptr)
 {
 	//cout << "CppCodeGenerator::GenerateCode()" << endl;
-	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+	//cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
+	//	% __PRETTY_FUNCTION__;
 
 	//std::string output_code_directory_prefix = "output/CppCodeGenerator/";
 
@@ -30,14 +30,14 @@ void CppCodeGenerator::GenerateCode(FILE * fptr)
 	GenerateMessages();
 
 
-	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+	//cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
+	//	% __PRETTY_FUNCTION__;
 }
 
 void CppCodeGenerator::GenerateBLL()
 {
 	//{
-		cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
+		//cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
 		string bll_h_fname (string(outputDirPrefix_.c_str()
 					+ string("/")
 					+ tableInfo_->tableName_
@@ -381,7 +381,7 @@ void CppCodeGenerator::print_bll_api_test_stubs(std::ofstream & bll_cpp)
 
 void CppCodeGenerator::FinalCleanUp()
 {
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
+	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	uiGenerator_->FinalCleanUp();
 
 	string messages_fname (string(outputDirPrefix_.c_str()
@@ -395,7 +395,7 @@ void CppCodeGenerator::FinalCleanUp()
 		exit(1);
 	}
 	messages << "</messages>\n";
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
+	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " EXIT ");	
 }
 
 
@@ -852,8 +852,8 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 
 void CppCodeGenerator::RunPreCodeGenerationChecks()
 {
-	cout << boost::format("/* file: %1%, line: %2%: func: %3%*/\n") %
-		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
+	// cout << boost::format("/* file: %1%, line: %2%: func: %3%*/\n") %
+	// 	__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
 
 	struct var_list* v_ptr=tableInfo_->param_list;
 	while (v_ptr) {

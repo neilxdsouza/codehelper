@@ -92,9 +92,13 @@ int main(int argc, char* argv[], char* envp[])
 	if(yyparse()){
 		cout << "Errors in parsing: " << no_errors << endl;
 		exit(1);
-	} else
-		cout << "yyparse finished : now going to print tree: no_errors: "
-			<< " should be 0 or we have a bug in the compiler"<< endl;
+	} else {
+		if (no_errors!=0) {
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__,
+				   "internal error in integrated_sql_gram.y in implementation, contact MAINTAINER\n");
+			exit(1);
+		}
+	}
 	if(!no_errors){
 		FILE * edit_out= fopen("edit_out.c", "wb");
 		if(edit_out==NULL){
@@ -105,7 +109,7 @@ int main(int argc, char* argv[], char* envp[])
 		print_code(edit_out);
 		fclose(edit_out);
 	} else {
-		cerr << "Errors in Parse:  Total errors: " << no_errors << endl;
+		cerr << "Errors , Total : " << no_errors << endl;
 	}
 	return no_errors;
 }
@@ -124,7 +128,6 @@ int lookup_func(string table_name_index)
 
 void print_code(FILE * & edit_out)
 {
-	printf("ENTER print_code\n");
 	tree_root->RunPreCodeGenerationChecks();
 	tree_root->GenerateCode(edit_out);
 	// Later Im going to be punished for this - I know my sins
@@ -135,15 +138,15 @@ void print_code(FILE * & edit_out)
 	ConstructGraph(g, tree_root);
 	TestGraph(g);
 	TopologicalSort(g);
-	for(int i=0; i<global_variables::topologicalOrder.size(); ++i) {
-		cout << global_variables::topologicalOrder[i] << endl;
-	}
+	// for(int i=0; i<global_variables::topologicalOrder.size(); ++i) {
+	// 	cout << global_variables::topologicalOrder[i] << endl;
+	// }
 	PrintSqlScriptInTopologicalOrder(g, global_variables::topologicalOrder);
 }
 
 void Init()
 {
-	cout << __PRETTY_FUNCTION__ << ", FILE: " << __FILE__ << ", LINE: " << __LINE__ << endl;
+	// cout << __PRETTY_FUNCTION__ << ", FILE: " << __FILE__ << ", LINE: " << __LINE__ << endl;
 	//CreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	//ptrCreateTableStatementArray = TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
 	//TableCollectionSingleton<CSharpAspNetCodeGenerator>::Instance();
@@ -159,7 +162,9 @@ void Init()
 		typedef istream_iterator<string> string_input;
 		copy(string_input(dict_file), string_input(),
 				back_inserter(dict));
-		cout << "dictionary contains: " << dict.size() << " words"
+		cout << "using dictionary file: " 
+			<< dict_name
+			<< " contains " << dict.size() << " words"
 			<< endl;
 		//for (int i=0; i<50; ++i) {
 		//	int pos = dict[i].find("'");
@@ -225,11 +230,15 @@ void ParseProgramOptions(int argc, char * argv[])
 	//	cout << "Usage: " << argv[0] << "  <inp-file> <namespace_name>" << endl;
 	//	exit(0);
 	//}
-	cout << "top-level-namespace-name: " << project_namespace << endl;
-	cout << "database_port:" << database_port << endl;
-	cout << "database_password:" << database_password << endl;
-	cout << "database_name:" << database_name << endl;
-	cout << "input_file:" << input_file_name << endl;
+	cout << "Generated code will be written to dir: " << global_variables::output_code_directory_prefix
+		<< endl
+		<< "This variable itself is set in global_variables.cpp" << endl;
+	cout << "Current option values are: " << endl;
+	cout << "\ttop-level-namespace-name: " << project_namespace << endl;
+	cout << "\tdatabase_port:" << database_port << endl;
+	cout << "\tdatabase_password:" << database_password << endl;
+	cout << "\tdatabase_name:" << database_name << endl;
+	cout << "\tinput_file:" << input_file_name << endl;
 	}
 
 	catch (std::exception & e) {

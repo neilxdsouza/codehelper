@@ -1,21 +1,29 @@
 
 CREATE TABLE Project : UI_GROUP (Project_Admin) (
-	Project_Code int: primary_key UI_VIEW UI_SELECT,
-	Project_Number varchar(20): unique UI_VIEW UI_SELECT,
-	Project_Name varchar(250): unique UI_VIEW UI_SELECT,
-	Project_Short_Description varchar(2000): not null,
-	Project_Entry_Date datetime: not null,
-	Project_Start_Date datetime: null,
-	Project_End_Date datetime: null,
-	Project_Commission_Date datetime: not null UI_VIEW UI_SELECT,
-	Project_Lost_Date datetime: not null,
-	Project_Description varchar(5000): null,
-	Revenue_Start_Date datetime: not null,
-	Project_Status_Code int: references Project_Status(Project_Status_Code),
-	Employee_Code int: references Employee(Employee_Code),
-	ClientContactPerson_Code int: references ClientContactPerson(ClientContactPerson_Code),
-	Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
-	Project_Type_Code int: references Project_Type(Project_Type_Code)
+	Project_Admin -> 
+		Project_Code int: primary_key UI_VIEW UI_SELECT,
+		Project_Number varchar(20): unique UI_VIEW UI_SELECT,
+		Project_Name varchar(250): unique UI_VIEW UI_SELECT
+	Project_Description ->
+		Project_Short_Description varchar(2000): not null
+	Project_Dates ->
+		Project_Entry_Date datetime: not null,
+		Project_Start_Date datetime: null,
+		Project_End_Date datetime: null,
+		Project_Commission_Date datetime: not null UI_VIEW UI_SELECT,
+		Project_Lost_Date datetime: not null
+	Project_Description ->
+		Project_Description varchar(5000): null
+	Project_Dates ->
+		Revenue_Start_Date datetime: not null
+	Project_Admin ->
+		Project_Status_Code int: references Project_Status(Project_Status_Code)
+	Project_People ->
+		Employee_Code int: references Employee(Employee_Code),
+		ClientContactPerson_Code int: references ClientContactPerson(ClientContactPerson_Code)
+	Project_Admin ->
+		Exchange_Master_Code int: references Exchange_Master(Exchange_Master_Code),
+		Project_Type_Code int: references Project_Type(Project_Type_Code)
 	);
 
 CREATE TABLE ClientContactPerson: UI_GROUP (Client) (

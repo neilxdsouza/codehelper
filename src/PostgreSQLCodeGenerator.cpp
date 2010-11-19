@@ -26,13 +26,13 @@ PostgreSQLCodeGenerator::PostgreSQLCodeGenerator(TableInfoType * p_tabInfo,
 
 void PostgreSQLCodeGenerator::GenerateCode()
 {
-	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+//	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
+//		% __PRETTY_FUNCTION__;
 	GenerateStoredProcedures();
 	GenerateDB_h();
 	GenerateCppFuncs();
-	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
-		% __PRETTY_FUNCTION__;
+//	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
+//		% __PRETTY_FUNCTION__;
 }
 
 
@@ -53,7 +53,7 @@ void PostgreSQLCodeGenerator::SetOutputDirectory(output_code_directory_prefix)
 
 void PostgreSQLCodeGenerator::GenerateInsertSP()
 {
-	cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
+	// cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
 	string sp_insert_fname (string(outputDirPrefix_.c_str()
 					+ string("/sp_")
 					+ tableInfo_->tableName_ 
@@ -643,7 +643,7 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 {
 	using boost::format;
 	stringstream create_sql_str;
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "ENTER");
+	//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "ENTER");
 	create_sql_str << format("CREATE TABLE %1% (\n")
 			%  tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -656,9 +656,9 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 		} else {
 			s= v_ptr->print_sql_var_decl();
 			if (v_ptr->options.unique) {
-				cout << "var_name: " << v_ptr->var_name 
-					<< " has unique set"
-					<< endl;
+				// cout << "var_name: " << v_ptr->var_name 
+				// 	<< " has unique set"
+				// 	<< endl;
 				s += string(" unique");
 			}
 			if (v_ptr->options.ref_table_name != "") {
@@ -688,7 +688,7 @@ void PostgreSQLCodeGenerator::GenerateCreateSQL()
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
 	create_sp << create_sql_str.str();
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "EXIT");
+	//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "EXIT");
 }
 
 
@@ -728,7 +728,7 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 						% v_ptr->options.ref_table_name;
 					exit(1);
 				}
-				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+				//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 			}
 		} else if (v_ptr->var_type == COMPOSITE_TYPE) {
 		} else {
@@ -1192,7 +1192,7 @@ void PostgreSQLCodeGenerator::print_cpp_select_field_positions(
 						% v_ptr->options.ref_table_name;
 					exit(1);
 				}
-				log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
+				//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 				// p_sp_select_fields_with_type 
 				// 	<< "\t\t"
 				// 	<< "int32_t"
@@ -1551,11 +1551,11 @@ void PostgreSQLCodeGenerator::print_reader(bool with_pkey, bool rename_vars, std
 	if(!with_pkey){
 		v_ptr=v_ptr->prev;
 	}
-	cout << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
-		<< " recursion_level: " << recursion_level 
-		<< " tableName_: " << tableInfo_->tableName_
-		<< "*/\n"
-		<< endl;
+	// cout << "/*: file: "  << __FILE__  << ", line: " << __LINE__ << ", func: " << __PRETTY_FUNCTION__ 
+	// 	<< " recursion_level: " << recursion_level 
+	// 	<< " tableName_: " << tableInfo_->tableName_
+	// 	<< "*/\n"
+	// 	<< endl;
 	if (recursion_level > 10 ) {
 		cerr << " recursion_level too high - probably a runaway ... exiting: FILE: " 
 			<< __FILE__

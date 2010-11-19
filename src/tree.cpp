@@ -221,7 +221,7 @@ std::string var_list::print_random_value(int counter, int p_nRecords)
 	static bool set_seed=true;
 	if (set_seed) {
 		srand(time(0));
-		cout << "setting the random number seed";
+		//cout << "setting the random number seed";
 		set_seed=false;
 	}
 	stringstream random_value_str;

@@ -34,7 +34,10 @@
 	extern AbstractCodeGeneratorFactory * codeGeneratorFactory;
 	std::vector<var_list *> vec_var_list;
 
-struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v_list);
+	struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v_list);
+
+	multimap<string, vector<var_list*> > mm_field_groups;
+	vector<var_list*> current_field_group;
 
 %}
 
@@ -108,6 +111,21 @@ statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 				vec_var_list, tab_options);
 		vec_var_list.clear();
 		global_variables::nGraphNodes++;
+		typedef multimap<string, vector<var_list*> >::const_iterator mm_it_type;
+		// cout << "Field Groups for : " << name << "are " << endl;
+		//mm_it_type it = mm_field_groups.begin();
+		//cout << (*it).first << endl;
+		//for (mm_it_type mm_iter=mm_field_groups.begin(); 
+		//		mm_iter!=mm_field_groups.end(); ++mm_iter) {
+		//	//cout << mm_iter->first << ": ";
+		//	cout << (*mm_iter).first << ": ";
+		//	const vector <var_list*> & vv = (*mm_iter).second;
+		//	for (int i=0; i<vv.size(); ++i) {
+		//		cout << vv[i]->var_name << ", ";
+		//	}
+		//	cout << endl;
+		//}
+		mm_field_groups.clear();
 	 }
 	 ;
 
@@ -150,7 +168,7 @@ opt_ui_field_groups: decl_comma_list {
 
 
 ui_field_groups: ui_field_group {
-			 $$ = $1;
+		$$ = $1;
 	}
 	|	ui_field_groups ui_field_group {
 		$$=link_chain($1,$2);
@@ -160,6 +178,17 @@ ui_field_groups: ui_field_group {
 
 ui_field_group:	NAME ARROW decl_comma_list {
 		$$ = $3;
+		struct var_list * vv_ptr = $3;
+		
+		while (vv_ptr) {
+			current_field_group.push_back(vv_ptr);
+			vv_ptr = vv_ptr->next;
+		}
+		string field_group_name($1);
+		//if (mm_field_groups.find(field_group_name) == mm_field_groups.end()) {
+			mm_field_groups.insert(make_pair(field_group_name, current_field_group));
+		//}
+		current_field_group.clear();
 	}
 	;
 
