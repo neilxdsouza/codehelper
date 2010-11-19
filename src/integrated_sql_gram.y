@@ -108,7 +108,7 @@ statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($6);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
-				vec_var_list, tab_options);
+				vec_var_list, tab_options, mm_field_groups);
 		vec_var_list.clear();
 		global_variables::nGraphNodes++;
 		typedef multimap<string, vector<var_list*> >::const_iterator mm_it_type;

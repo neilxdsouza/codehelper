@@ -226,12 +226,15 @@ struct TableInfoType
 	struct tab_level_options_list_type tab_options;
 	TableInfoType(string name, struct var_list*  elist
 			, vector<var_list*> & p_vec_var_list
-			, tab_level_options_list_type & p_tab_options); 
+			, tab_level_options_list_type & p_tab_options
+			, std::multimap<std::string, std::vector<var_list*> > & p_field_groups
+			); 
 
 	// I need to move this function to CppCodeGenerator
 	std::string print_cpp_search_key_args();
 	// I need to move this function to CppCodeGenerator
 	std::string print_cpp_session_key_args();
+	std::multimap<std::string, std::vector<var_list*> > & field_groups;
 
 
 	private:

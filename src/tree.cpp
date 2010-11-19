@@ -15,11 +15,14 @@ extern std::vector<std::string> dict;
 
 
 TableInfoType::TableInfoType(string name, struct var_list*  elist,
-		vector<var_list*> & p_vec_var_list, tab_level_options_list_type & p_tab_options)
+		vector<var_list*> & p_vec_var_list, tab_level_options_list_type & p_tab_options,
+		std::multimap<std::string, std::vector<var_list*> > & p_field_groups
+		)
 	: 
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 	has_multi(0), has_search_key(0), nInvisible(0), nSessionParams(0),
-	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options)
+	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options),
+	field_groups(p_field_groups)
 {
 	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
