@@ -53,6 +53,9 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %type <v_list>  var_decl_with_or_wo_options
 %type <v_list>  var_decl
 %type <v_list>  decl_comma_list
+%type <v_list>  ui_field_groups
+%type <v_list>  ui_field_group
+%type <v_list>  opt_ui_field_groups
 %type <dt> data_type
 
 
@@ -71,7 +74,7 @@ struct stmt * load_table_into_symbol_table( char * & name,  struct var_list* & v
 %token <dt> NCHAR_T
 %token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
-%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION
+%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION ARROW
 %token UI_GROUP
 
 %token TABLE
@@ -98,7 +101,7 @@ statement_list: statement {
 	}
 	;
 
-statement:	CREATE TABLE NAME tab_level_options '(' decl_comma_list ')' ';' {
+statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($6);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
@@ -134,6 +137,29 @@ non_empty_tab_level_options: tab_option
 
 tab_option: UI_GROUP '(' NAME ')' {
 		tab_options.setUIGroupName($3);
+	}
+	;
+
+opt_ui_field_groups: decl_comma_list {
+		$$ = $1;
+	} 
+	| ui_field_groups {
+		$$ = $1;
+	}
+	;
+
+
+ui_field_groups: ui_field_group {
+			 $$ = $1;
+	}
+	|	ui_field_groups ui_field_group {
+		$$=link_chain($1,$2);
+		//vec_var_list.push_back($3);
+	}
+	;
+
+ui_field_group:	NAME ARROW decl_comma_list {
+		$$ = $3;
 	}
 	;
 

@@ -134,6 +134,10 @@ SESSION {
 	return ':';
 }
 
+"->"	{
+	return ARROW;
+}
+
 
 '.' 	{
 	return yytext[0];
