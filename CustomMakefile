@@ -61,6 +61,7 @@ $(BUILD_DIR)/csassist.exe:	$(OBJECTS) Makefile  $(CPP_SOURCES) $(LEX_OUTPUTS) $(
 	echo $(CPP_SOURCES)
 	$(LINK) -o $@ $(OBJECTS) $(LINK_LIBS)
 	cp $@ bin
+	echo "copy or soft link inputs/CalendarCell.C inputs/CalendarCell.h inputs/TimesheetCalendar.C inputs/TimesheetCalendar.h to output folder or you will get compilation errors"
 
 
 # NxD: I have commented out this rule as you may not have bison/flex installed
