@@ -26,7 +26,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 {
 	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
-	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, tableName_ );	
+	//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, tableName_ );	
 
 	//cout << "Fields are : " ;
 	struct var_list* v_ptr = param_list;

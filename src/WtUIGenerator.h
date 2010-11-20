@@ -49,6 +49,12 @@ public:
 	std::string PrintProcessInsert();
 	std::string PrintUINavigation();
 	std::string PrintUIMenu();
+
+	void PrintListViewHeaders(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
+			, int max_recursion_level, int recursion_level, int & nColumns);
+
+	void PrintListViewData(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
+			, int max_recursion_level, int recursion_level, int & nColumns);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

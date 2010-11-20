@@ -1,5 +1,7 @@
 #include "std_headers.h"
 #include "WtUIGenerator.h"
+#include "CppCodeGenerator.h"
+#include "TableCollectionSingleton.hpp"
 
 #include "std_using.h"
 #include "utils.h"
@@ -788,6 +790,17 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 							aTableInfo->tableName_ % counter++ % v_ptr->var_name;
 					}
 				}
+				if (v_ptr->options.ref_table_name != "" 
+						&& v_ptr->options.many == false) {
+					struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+								(TableCollectionSingleton::Instance()
+									.my_find_table(v_ptr->options.ref_table_name)));
+					vector<TableInfoType *> vec_list_view_stack;
+					vec_list_view_stack.push_back(tbl_ptr->tableInfo_);
+					int max_recursion_level=2;
+					int recursion_level = 1;
+					PrintListViewHeaders(load_table_view_str, vec_list_view_stack, max_recursion_level, recursion_level, counter);
+				}
 			}
 		}
 
@@ -805,61 +818,74 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 						load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
 							aTableInfo->tableName_ % counter++;
 						load_table_view_str << "\t\ttemp1.str(\"\");\n";
-						load_table_view_str << "\t\tif ( (i+1)%10 == 0 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_0\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 1 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_1\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 2 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_2\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 3 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_3\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 4 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_4\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 5 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_5\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 6 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_6\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 7 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_7\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 8 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_8\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-						load_table_view_str << "\t\tif ( (i+1)%10 == 9 ) {\n";
-						load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_9\");\n") %
-							aTableInfo->tableName_ ;
-						load_table_view_str << "\t\t}\n";
-						
-
 
 					}
 				}
+				if (v_ptr->options.ref_table_name != "" 
+						&& v_ptr->options.many == false
+						&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+						&& (!v_ptr->options.session)
+						) {
+					struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+								(TableCollectionSingleton::Instance()
+									.my_find_table(v_ptr->options.ref_table_name)));
+					vector<TableInfoType *> vec_list_view_stack;
+					vec_list_view_stack.push_back(tbl_ptr->tableInfo_);
+					int max_recursion_level=2;
+					int recursion_level = 1;
+					PrintListViewData(load_table_view_str, vec_list_view_stack, max_recursion_level, recursion_level, counter);
+				}
 			}
+
+			load_table_view_str << "\t\tif ( (i+1)%10 == 0 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_0\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 1 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_1\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 2 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_2\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 3 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_3\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 4 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_4\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 5 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_5\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 6 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_6\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 7 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_7\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 8 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_8\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
+			
+			load_table_view_str << "\t\tif ( (i+1)%10 == 9 ) {\n";
+			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_9\");\n") %
+				aTableInfo->tableName_ ;
+			load_table_view_str << "\t\t}\n";
 		}
 		load_table_view_str << "\t}\n";
 		load_table_view_str << format("\ttable_%1%_view->setHeaderCount(1);\n") %
@@ -1099,5 +1125,41 @@ std::string WtUIGenerator::PrintProcessInsert()
 	}
 	process_insert_defn << "}\n";
 	return process_insert_defn.str();
+}
+
+void WtUIGenerator::PrintListViewHeaders(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
+		, int max_recursion_level, int recursion_level, int & nColumns)
+{
+	TableInfoType * aTableInfo = p_vec_list_view_stack.back();
+	struct var_list* v_ptr=aTableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ui_view && (!v_ptr->options.primary_key) ) {
+			if (v_ptr->options.ref_table_name == "") {
+				p_load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(Wt::WString::tr(\"%3%\")));\n") %
+					tableInfo_ /* this is not a mistake */ ->tableName_ % nColumns++ % v_ptr->var_name;
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
+}
+
+
+void WtUIGenerator::PrintListViewData(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
+		, int max_recursion_level, int recursion_level, int & nColumns)
+{
+	TableInfoType * aTableInfo = p_vec_list_view_stack.back();
+	struct var_list* v_ptr=aTableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ui_view && (!v_ptr->options.primary_key) ) {
+			if (v_ptr->options.ref_table_name == "") {
+				p_load_table_view_str << boost::format("\t\ttemp1 << page1[i]->biz_%1%_->%2%_;\n") %
+					aTableInfo->tableName_ % v_ptr->var_name;
+				p_load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
+					tableInfo_->tableName_ % nColumns++;
+				p_load_table_view_str << "\t\ttemp1.str(\"\");\n";
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
 }
 
