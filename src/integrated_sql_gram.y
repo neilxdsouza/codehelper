@@ -173,51 +173,11 @@ ui_field_groups: ui_field_group {
 		$$ = $1;
 	}
 	|	ui_field_groups ui_field_group {
-
-		cout << __FILE__ << ", " << __LINE__ << " grammer rule: chaining ui_field_groups ui_field_group " << endl;
-		cout << "chain $1: " << endl;
-		struct var_list * temp = $1;
-		while (temp) {
-			cout << temp->var_name << " ";
-			temp = temp->next;
-		}
-		cout << endl;
-		cout << "chain $2: " << endl;
-		temp = $2;
-		while (temp) {
-			cout << temp->var_name << " ";
-			temp = temp->next;
-		}
-		cout << endl;
-
-		// struct var_list * temp1 = trav_chain($2);
-		// $$ = link_chain($1, temp1);
 		$$ = link_chain($1, $2);
-		//vec_var_list.push_back($3);
-		cout << "after chaining $$: " << endl;
-		temp = $$;
-		while (temp) {
-			cout << temp->var_name << " ";
-			temp = temp->next;
-		}
-		cout << endl << endl;
-
 	}
 	;
 
 ui_field_group:	NAME ARROW decl_comma_list {
-		/*
-		{
-			struct var_list * temp = $3;
-			cout << "BEFORE: " << __FILE__ << ", " << __LINE__ << " grammer rule: ui_field_group " << endl;
-			while (temp) {
-				cout << temp->var_name << " ";
-				temp = temp->next;
-			}
-			cout << endl;
-		}
-		*/
-		//struct var_list * vv_ptr = $3;
 		struct var_list * head= trav_chain($3);
 		struct var_list * vv_ptr = head;
 		
@@ -232,17 +192,6 @@ ui_field_group:	NAME ARROW decl_comma_list {
 		current_field_group.clear();
 		//$$ = head;
 		$$ = $3;
-		/*
-		{
-			struct var_list * temp = $3;
-			cout << "AFTER: " << __FILE__ << ", " << __LINE__ << " grammer rule: ui_field_group " << endl;
-			while (temp) {
-				cout << temp->var_name << " ";
-				temp = temp->next;
-			}
-			cout << endl;
-		}
-		*/
 	}
 	;
 
