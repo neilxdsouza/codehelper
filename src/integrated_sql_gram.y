@@ -15,6 +15,7 @@
 #include "tree.h"
 #include "stmt.h"
 #include "global_variables.h"
+#include "error.h"
 //#include "stmt.h"
 
 	extern int line_no;
@@ -23,7 +24,8 @@
 	extern stmt * tree_root;
 	extern vector <scope*> active_scope_list;
 	template<class T> T* link_chain(T* & elem1, T* & elem2);
-	template<class T> T* trav_chain(T* & elem1);
+	// template<typename T> T* trav_chain(T* & elem1)
+	template<class T> T* trav_chain(T* elem1);
 	int lookup_func(string func_name_index);
 	vector <TableInfoType*> table_info_table;
 	int yylex();
@@ -171,36 +173,104 @@ ui_field_groups: ui_field_group {
 		$$ = $1;
 	}
 	|	ui_field_groups ui_field_group {
-		$$=link_chain($1,$2);
+
+		cout << __FILE__ << ", " << __LINE__ << " grammer rule: chaining ui_field_groups ui_field_group " << endl;
+		cout << "chain $1: " << endl;
+		struct var_list * temp = $1;
+		while (temp) {
+			cout << temp->var_name << " ";
+			temp = temp->next;
+		}
+		cout << endl;
+		cout << "chain $2: " << endl;
+		temp = $2;
+		while (temp) {
+			cout << temp->var_name << " ";
+			temp = temp->next;
+		}
+		cout << endl;
+
+		// struct var_list * temp1 = trav_chain($2);
+		// $$ = link_chain($1, temp1);
+		$$ = link_chain($1, $2);
 		//vec_var_list.push_back($3);
+		cout << "after chaining $$: " << endl;
+		temp = $$;
+		while (temp) {
+			cout << temp->var_name << " ";
+			temp = temp->next;
+		}
+		cout << endl << endl;
+
 	}
 	;
 
 ui_field_group:	NAME ARROW decl_comma_list {
-		$$ = $3;
-		struct var_list * vv_ptr = $3;
+		/*
+		{
+			struct var_list * temp = $3;
+			cout << "BEFORE: " << __FILE__ << ", " << __LINE__ << " grammer rule: ui_field_group " << endl;
+			while (temp) {
+				cout << temp->var_name << " ";
+				temp = temp->next;
+			}
+			cout << endl;
+		}
+		*/
+		//struct var_list * vv_ptr = $3;
+		struct var_list * head= trav_chain($3);
+		struct var_list * vv_ptr = head;
 		
 		while (vv_ptr) {
 			current_field_group.push_back(vv_ptr);
-			vv_ptr = vv_ptr->next;
+			vv_ptr = vv_ptr->prev;
 		}
 		string field_group_name($1);
 		//if (mm_field_groups.find(field_group_name) == mm_field_groups.end()) {
 			mm_field_groups.insert(make_pair(field_group_name, current_field_group));
 		//}
 		current_field_group.clear();
+		//$$ = head;
+		$$ = $3;
+		/*
+		{
+			struct var_list * temp = $3;
+			cout << "AFTER: " << __FILE__ << ", " << __LINE__ << " grammer rule: ui_field_group " << endl;
+			while (temp) {
+				cout << temp->var_name << " ";
+				temp = temp->next;
+			}
+			cout << endl;
+		}
+		*/
 	}
 	;
 
 
 decl_comma_list: var_decl_with_or_wo_options {
-		 $$=$1;
-		 vec_var_list.push_back($1);
-		 //cout << "got decl_comma_list : " << endl;
+		$$ = $1;
+		vec_var_list.push_back($1);
+		//cout << "got decl_comma_list : " << endl;
 	}
 	| decl_comma_list ',' var_decl_with_or_wo_options {
-		$$=link_chain($1,$3);
+		// cout << "decl_comma_list , var_decl_with_or_wo_options" << endl;
+		// cout << "chain $1: " << endl;
+		// struct var_list * temp = $1;
+		// while (temp) {
+		// 	cout << temp->var_name << " ";
+		// 	temp = temp->next;
+		// }
+		// cout << endl;
+		// cout << "chain $3: " << endl;
+		// temp = $3;
+		// while (temp) {
+		// 	cout << temp->var_name << " ";
+		// 	temp = temp->next;
+		// }
+		// cout << endl;
+		$$ = link_chain($1, $3);
 		vec_var_list.push_back($3);
+
 		//cout << "chaining var_decl : " << endl;
 	}
 	;
@@ -305,12 +375,20 @@ var_decl: 	NAME data_type{
 
 template<typename T> T* link_chain(T* &elem1, T* &elem2)
 {
+	T * tail = elem2;
+	//if (elem2->next)
+	//	log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "  ENTER ");	
+	while (elem2->next) {
+		//cout << ".";
+		elem2 = elem2->next;
+	}
 	elem2->next=elem1;
 	elem1->prev=elem2;
-	return elem2;
+	return tail;
 }
 
-template<typename T> T* trav_chain(T* & elem1)
+//template<typename T> T* trav_chain(T* & elem1)
+template<typename T> T* trav_chain(T* elem1)
 {
 	while (elem1->next) elem1=elem1->next;
 	return elem1;
