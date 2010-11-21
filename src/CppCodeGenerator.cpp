@@ -527,6 +527,7 @@ void CppCodeGenerator::print_bll_Constructor_defn(std::ofstream & bll_cpp)
 void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 {
 	cpp_body << "\n";
+	using boost::format;
 	cpp_body << boost::format("Biz%1%::Biz%1%(\n")
 			% tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -542,7 +543,11 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 	v_ptr=tableInfo_->param_list;
 	bool print_comma=false;
 	while (v_ptr) {
-		if ( (v_ptr->var_type == COMPOSITE_TYPE &&
+		if (v_ptr->options.session) {
+			cpp_body << "\t/*55*/ ";
+			cpp_body << format("%1%_(p_%1%)") % v_ptr->var_name;
+			print_comma = true;
+		} else if ( (v_ptr->var_type == COMPOSITE_TYPE &&
 			ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
 			||
 			v_ptr->options.ref_table_name == "" 
@@ -551,16 +556,16 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 				<< "("
 				<< v_ptr->print_cpp_var_param_name()
 				<< ")"; 
+			print_comma = true;
 		} else if (v_ptr->options.ref_table_name!=""  /*&& v_ptr->options.many==false */
-				&&
-			v_ptr->var_type == COMPOSITE_TYPE 
-				&&
-			ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) == false 
+				&& v_ptr->var_type == COMPOSITE_TYPE 
+				&& ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) == false 
 				) {
 			cpp_body <<  "\t/*2*/" << v_ptr->print_cpp_var_name() 
 				<< "("
 				<< v_ptr->print_cpp_var_param_name()
 				<< ")"; 
+			print_comma = true;
 			/*
 			if (v_ptr && v_ptr->prev) {
 				struct var_list * temp = v_ptr->prev;
@@ -581,6 +586,7 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 				<< "("
 				<< v_ptr->print_cpp_var_param_name()
 				<< ")"; 
+			print_comma = true;
 			/*
 			if (v_ptr && v_ptr->prev) {
 				struct var_list * temp = v_ptr->prev;
@@ -595,15 +601,19 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 			}
 			*/
 		} else {
-			print_comma = false;
+			if (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)) {
+				cpp_body << format("\t/*44*/ biz_%1%_(new Biz%1%())") %
+					v_ptr->options.ref_table_name;
+				print_comma = true;
+			}
 		}
+		/*
 		if (v_ptr && v_ptr->prev) {
 			struct var_list * temp = v_ptr->prev;
 			if (temp->options.ref_table_name == "" ||
 				( temp->options.many == true && temp->var_type == COMPOSITE_TYPE
 				//ReferencedTableContainsUs(tableInfo_, temp->options.ref_table_name) == false 
 				) ) {
-				cpp_body << " /* print_comma = true; */ ";
 				print_comma = true;
 			} else if (ReferencedTableContainsUs(tableInfo_, temp->options.ref_table_name) == true ) {
 				print_comma = false;
@@ -613,6 +623,7 @@ void CppCodeGenerator::print_bll_Constructor_with_all_fields()
 		} else {
 			print_comma = true;
 		}
+		*/
 		v_ptr=v_ptr->prev;
 		if(v_ptr && print_comma){
 			cpp_body << ",\n";
@@ -784,17 +795,20 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 	bizobj_constructor_body << format("Biz%1%::Biz%1%(")
 			% tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	bool print_comma = false;
 	while(v_ptr){
 		bizobj_constructor_body << "\n\t\t";
 		if(v_ptr->options.ref_table_name==""){
 			bizobj_constructor_body << print_cpp_types(v_ptr->var_type);
 			bizobj_constructor_body << format(" p_%1%")
 				% v_ptr->var_name;
+			print_comma = true;
 		} else {
 			if (v_ptr->options.session==true) {
 				bizobj_constructor_body << print_cpp_types(v_ptr->var_type);
 				bizobj_constructor_body << format(" p_%1%")
 					% v_ptr->var_name;
+				print_comma = true;
 			} else {
 				string orig_varname = v_ptr->var_name;
 				int pos = orig_varname.find("_Code");
@@ -804,17 +818,20 @@ std::string CppCodeGenerator::print_bll_bizobj_constructor_cpp()
 						format ("std::vector<boost::shared_ptr<Biz%1%> > p_biz_vec_%2%") 
 							% v_ptr->options.ref_table_name
 							% improved_name;
+					print_comma = true;
 				} else {
 					bizobj_constructor_body 
 						<< format ("boost::shared_ptr<Biz%1%> p_biz_%2%")
 							% v_ptr->options.ref_table_name
 							% improved_name;
+					print_comma = true;
 				}
 			}
 		}
 		v_ptr=v_ptr->prev;
-		if(v_ptr){
+		if(v_ptr && print_comma){
 			bizobj_constructor_body <<  ", ";
+			print_comma = false;
 		}
 	}
 	bizobj_constructor_body << ")\n\t:\n";

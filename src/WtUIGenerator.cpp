@@ -1193,8 +1193,12 @@ std::string WtUIGenerator::PrintProcessInsert()
 				&& v_ptr->options.embedded == false
 				) {
 			//process_insert_defn << " /* reached here embedded == false*/ ";
-			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(we_%2%->text())")
-				% v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			// process_insert_defn << format("\t\tboost::lexical_cast<%1%>(we_%2%->text())")
+			// 	% v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			//process_insert_defn << "\t\t{\n\t\t\tstring s( (we_%2%->toString(\"yyyy-M-d\")).toUTF8());\n";
+			process_insert_defn << format("\t\tboost::gregorian::from_simple_string( ( (we_%1%->date()).toString(\"yyyy-M-d\")).toUTF8() )")
+			 	% v_ptr->var_name;
+			//process_insert_defn << "\t\t}\n";
 			print_comma = true;
 		} else if (v_ptr->var_type == DATETIME_TYPE 
 				&& v_ptr->options.embedded == true
@@ -1222,6 +1226,8 @@ std::string WtUIGenerator::PrintProcessInsert()
 		}
 	}
 	process_insert_defn << format("\t\t) );\n");
+	process_insert_defn << format("\tptr_%1%->Insert();\n")
+			% tableInfo_->tableName_;
 		
 	process_insert_defn << "}\n\n";
 
