@@ -212,6 +212,7 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
 	cpp_db_impl << PrintCppSelectFunc();
+	cpp_db_impl << PrintCppSelectSingleFunc();
 	cpp_db_impl << PrintGetSingleRecord();
 	cpp_db_impl << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
@@ -387,22 +388,22 @@ void PostgreSQLCodeGenerator::print_exit_nicely(ofstream & cpp_db_impl)
 
 void PostgreSQLCodeGenerator::GenerateDB_h()
 {
+	using boost::format;
 	string db_h_fname(string(outputDirPrefix_.c_str()
 					+ tableInfo_->tableName_ 
 					+ string("_db_postgres.h"))); 
 	std::ofstream db_h(db_h_fname.c_str(), ios_base::out|ios_base::trunc);
 	db_h << "#include <postgresql/libpq-fe.h>\n";
 	db_h << "#include <boost/shared_ptr.hpp>\n";
-	db_h << boost::format("#include \"%1%_bll.h\"\n")
+	db_h << format("#include \"%1%_bll.h\"\n")
 			% tableInfo_->tableName_;
-	db_h << boost::format("namespace %1% { namespace db { namespace %2% {\n")
+	db_h << format("namespace %1% { namespace db { namespace %2% {\n")
 			% project_namespace % tableInfo_->tableName_;
-	db_h << boost::format("int Insert%1%(Biz%1% & ") % tableInfo_->tableName_;
+	db_h << format("int Insert%1%(Biz%1% & ") % tableInfo_->tableName_;
 	print_lower_fname(db_h);
 	db_h << ");\n";
 	/* Print Get Function signature using a different style */
 	stringstream get_func_signature;
-	using boost::format;
 	get_func_signature << format("std::vector<boost::shared_ptr<Biz%1%> > Get%1%") %
 		tableInfo_->tableName_;
 	stringstream get_func_params;
@@ -426,6 +427,8 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 	get_func_params << "\t\t);\n";
 	get_func_signature << get_func_params.str();
 	db_h << get_func_signature.str();
+	db_h << format("boost::shared_ptr<Biz%1%> GetSingle%1%(int p_pkey);\n")
+			% tableInfo_->tableName_;
 
 	db_h << PrintGetSingleRecord_h();
 	db_h << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
@@ -996,6 +999,9 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		tableInfo_->tableName_;
 	func_body << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_select_%1%($1::int, $2::int\"\n") %
 		tableInfo_->tableName_;
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__,
+	   "Move session variables printing outside has_search_key if condition");
+
 	if (tableInfo_->has_search_key) {
 		int count1=2;
 		struct var_list* v_ptr1=tableInfo_->param_list;
@@ -1873,4 +1879,88 @@ void PostgreSQLCodeGenerator::GenerateSelectSingleRecordSP()
 		<< sp_body.str()
 		<< endl
 		<< endl;
+}
+
+
+string PostgreSQLCodeGenerator::PrintCppSelectSingleFunc()
+{
+	stringstream func_signature;
+	using boost::format;
+	func_signature << format("\n\nboost::shared_ptr<Biz%1%> GetSingle%1%") %
+		tableInfo_->tableName_;
+	stringstream func_params;
+	func_params << "(";
+	func_params << "int p_pkey)\n";
+	func_signature << func_params.str();
+	stringstream func_body;
+	func_body << "{\n";
+	func_body << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
+	func_body << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
+		% (1) /* int PageSize int PageIndex */ ;
+	func_body << boost::format("\tconst char * paramValues[%1%];\n"
+			"\tstd::stringstream ss_param_values[%1%];\n") 
+		% (1) /* int PageSize int PageIndex */ ;
+	int nActualParams = 0;
+	func_body << format("\tss_param_values[%1%] << p_pkey;\n")
+		% nActualParams;
+
+	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+		% nActualParams;
+	func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+	func_body << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+				% nActualParams++;
+
+	func_body << format("\t boost::shared_ptr<Biz%1%>  rval;\n") %
+		tableInfo_->tableName_;
+	func_body << boost::format("\tPGresult *res=PQexecParams(conn.get(), \n\t\t\"select * from sp_%1%_select_single_%1%($1::int\"") %
+		tableInfo_->tableName_;
+
+	func_body << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+			nActualParams;
+
+	func_body << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
+	func_body << "\t\tint res_status = PQresultStatus(res);\n";
+	func_body << "\t\tprintf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\\n\",\n"
+				 << "\t\t\tres_status, PGRES_COMMAND_OK, PGRES_TUPLES_OK);\n";
+	func_body << format("\t\tfprintf(stderr, \"select single %1% failed: %%s\", PQerrorMessage(conn.get()));\n") 
+			% tableInfo_->tableName_;
+	func_body << "\t\tPQclear(res);\n";
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
+		string("Fix me : exit_nicely may not be required since the PGconn has a custom deleter which closes the connection\n"));
+	func_body << "\t\texit_nicely(conn.get());\n";
+	func_body << "\t} else {\n";
+	func_body << "\t	int nTuples = PQntuples(res);\n";
+	// Need to do an assert here
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, 
+		string("Fix me : assert here that we have only one record retured from the database\n"));
+
+	/*
+	func_body << "\t	int nFields = PQnfields(res);\n";
+	func_body << "\t	printf( \"nTuples: %d, nFields=%d\\n\", nTuples, nFields);\n";
+	func_body << "\t	for(int i=0; i<nFields; ++i){\n";
+	func_body << "\t		char * fname=PQfname(res, i);\n";
+	func_body << "\t		printf(\"fname: %s\\n\", fname);\n";
+	func_body << "\t	}\n";
+	func_body << "\t	//char * value=PQgetvalue(res, 0, 0);\n";
+	func_body << "\t	//printf(\"value: %s\\n\", value);\n";
+	*/
+
+	func_body << format("\t\tusing %1%::db::%2%::Get%2%FromReader;\n")
+			% project_namespace
+			% tableInfo_->tableName_;
+	func_body << format("\t\tboost::shared_ptr<Biz%1%> rval ( Get%1%FromReader(res,1) );\n")
+			% tableInfo_->tableName_;
+	// This has to be fixed by using a shared pointer with 
+	// a custom deleter - this works for now as the live server 
+	// is leaking memory like a sieve
+	func_body << "\t\treturn rval;\n";
+	func_body << "\t\tPQclear(res);\n";
+	func_body << "\t}\n";
+	func_body << format("\treturn boost::shared_ptr<Biz%1%>();\n") % tableInfo_->tableName_;
+	func_body << "}\n";
+	stringstream the_func;
+	the_func << func_signature.str() 
+		<< func_body.str()
+		<< "\n";
+	return the_func.str();
 }

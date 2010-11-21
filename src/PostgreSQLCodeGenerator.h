@@ -34,6 +34,7 @@ public:
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
 	string PrintCppSelectFunc();
+	string PrintCppSelectSingleFunc();
 	void PrintGetConn(ofstream & cpp_db_impl);
 	void PrintConnCloser(ofstream & cpp_db_impl);
 	void PrintMallocDeleter(ofstream & cpp_db_impl);
