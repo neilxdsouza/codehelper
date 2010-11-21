@@ -138,7 +138,6 @@ string PostgreSQLCodeGenerator::print_sp_params( print_sp_params_mode mode)
 		v_ptr=v_ptr->prev;
 	}
 	while(v_ptr){
-		//fprintf(fptr, "\t@%s ", v_ptr->var_name.c_str());
 		if(v_ptr->var_type == COMPOSITE_TYPE) {
 			v_ptr=v_ptr->prev;
 			continue;
@@ -146,10 +145,8 @@ string PostgreSQLCodeGenerator::print_sp_params( print_sp_params_mode mode)
 		sp_params << tab_indent << boost::format("p_%1%") % v_ptr->var_name;
 		v_ptr=v_ptr->prev;
 		if(v_ptr){
-			//fprintf(fptr, ",\n");
 			sp_params << ",\n";
 		} else {
-			//fprintf(fptr, "\n");
 			sp_params << "\n";
 		}
 	}
