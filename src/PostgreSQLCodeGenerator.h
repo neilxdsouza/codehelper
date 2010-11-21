@@ -30,6 +30,7 @@ public:
 	virtual void GenerateInsertSP();
 	virtual void GenerateSelectSP();
 	virtual void GenerateCreateSQL();
+	virtual void GenerateSelectSingleRecordSP();
 	void GenerateCppFuncs();
 	void PrintCppInsertFunc(ofstream & ofile);
 	string PrintCppSelectFunc();

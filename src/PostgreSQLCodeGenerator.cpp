@@ -40,6 +40,7 @@ void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 {
 	GenerateInsertSP();
 	GenerateSelectSP();
+	GenerateSelectSingleRecordSP();
 	GenerateCreateSQL();
 	GenerateRandomData();
 }
@@ -1827,3 +1828,49 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_session_keys(int & nActu
 	return session_key_param_setup_str.str();
 }
 
+
+void PostgreSQLCodeGenerator::GenerateSelectSingleRecordSP()
+{
+	// search key params
+	stringstream sp_decl;
+	sp_decl << boost::format("create or replace function sp_%1%_select_single_%1%(\n")
+		% tableInfo_->tableName_;
+	sp_decl << "\tp_pkey  int\n";
+
+	sp_decl << ")\n";
+	stringstream sp_body;
+	sp_body << "\nAS $$\nBEGIN\n"
+		<< "\tRETURN QUERY SELECT * FROM(\n"
+		<< "\tSELECT \n";
+	struct var_list* v_ptr=tableInfo_->param_list;
+	stringstream sp_select_fields, sp_select_fields_with_type;
+	print_sp_return_table_fields(sp_select_fields_with_type);
+	print_sp_select_fields(sp_select_fields);
+	sp_body << sp_select_fields.str();
+	sp_body << boost::format("\t\tFROM %1%\n")
+			% tableInfo_->tableName_;
+	sp_body << print_sp_select_inner_joins();
+	// print out search keys
+	sp_body << boost::format( "\tWHERE  %1%.%1%_Code = p_pkey\n")
+		% tableInfo_->tableName_;
+	sp_body << boost::format ( "\t) sp_select_%s;\n") 
+		% tableInfo_->tableName_;
+	sp_body << "END\n$$ LANGUAGE plpgsql;\n";
+	/* output the sp to a file */
+	string sp_select_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_select_single_postgres.sql"))); 
+	std::ofstream select_sp(sp_select_fname.c_str(), ios_base::out|ios_base::trunc);
+	if (!select_sp) {
+		string err_msg="unable to open " + sp_select_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	select_sp << sp_decl.str() 
+		<< "\nRETURNS TABLE (\n"
+		<< sp_select_fields_with_type.str() 
+		<< "\n)"
+		<< sp_body.str()
+		<< endl
+		<< endl;
+}
