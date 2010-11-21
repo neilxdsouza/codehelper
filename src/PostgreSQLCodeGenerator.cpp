@@ -1948,7 +1948,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectSingleFunc()
 	func_body << format("\t\tusing %1%::db::%2%::Get%2%FromReader;\n")
 			% project_namespace
 			% tableInfo_->tableName_;
-	func_body << format("\t\tboost::shared_ptr<Biz%1%> rval ( Get%1%FromReader(res,1) );\n")
+	func_body << format("\t\tboost::shared_ptr<Biz%1%> rval ( Get%1%FromReader(res, 0) );\n")
 			% tableInfo_->tableName_;
 	// This has to be fixed by using a shared pointer with 
 	// a custom deleter - this works for now as the live server 

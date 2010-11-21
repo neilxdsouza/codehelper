@@ -56,6 +56,7 @@ public:
 	void PrintListViewData(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
 			, int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
+	std::string PrintLoadForm();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

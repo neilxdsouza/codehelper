@@ -559,8 +559,10 @@ string WtUIGenerator::GenerateUIInsertForm()
 					% tableInfo_->tableName_;
 	ui_class_decl << boost::format("\tint ValidateForInsert%1%();\n")
 					% tableInfo_->tableName_;
+	ui_class_decl << "\tvoid LoadForm(int32_t pkey);\n";
 	ui_class_defn << PrintProcessInsert();
 	ui_class_defn << PrintValidateForInsert();
+	ui_class_defn << PrintLoadForm();
 	// I should use some form of assert to check 
 	// that vec_handler_decls.size == vec_handler_defns.size
 	for(int i=0; i<vec_handler_decls.size(); ++i) {
@@ -868,7 +870,12 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		{
 			int counter =0; // start at row 2 - titles in row 1
 			for (; v_ptr; v_ptr=v_ptr->prev) {
-				if (v_ptr->options.ui_view) {
+				if (v_ptr->options.primary_key) {
+					load_table_view_str << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
+						aTableInfo->tableName_ % counter++;
+					load_table_view_str << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::LoadForm, this, page1[i]->%2%_));\n") %
+						tableInfo_->tableName_ % v_ptr->var_name;
+				} else if (v_ptr->options.ui_view) {
 					if (v_ptr->options.ref_table_name == "") {
 						load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
 							v_ptr->var_name;
@@ -1077,7 +1084,7 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 		int counter =0; // start at row 2 - titles in row 1
 		for (; v_ptr; v_ptr=v_ptr->prev) {
 			if (v_ptr->options.ui_select) {
-				if (v_ptr == aTableInfo->param_list) {
+				if (v_ptr->options.primary_key /* v_ptr == aTableInfo->param_list*/) {
 					func_defn << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
 						p_vptr->options.ref_table_name % counter++;
 					func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_));\n") %
@@ -1317,4 +1324,64 @@ std::string WtUIGenerator::PrintValidateForInsert()
 	validate_for_insert_defn << "\treturn nErrors;\n";
 	validate_for_insert_defn << "}\n\n";
 	return validate_for_insert_defn.str();
+}
+
+std::string WtUIGenerator::PrintLoadForm()
+{
+	stringstream load_form_func;
+	load_form_func << format("void %1%_ui::LoadForm(int32_t pkey)\n{\n")
+		% tableInfo_->tableName_;
+	load_form_func << format("\tboost::shared_ptr<Biz%2%> l_biz_%2%( %1%::db::%2%::GetSingle%2% (pkey));\n")
+		% project_namespace % tableInfo_->tableName_;
+	int counter=0;
+	struct var_list* v_ptr = tableInfo_->param_list;
+	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+		if (v_ptr->options.ref_table_name!=""
+				&& ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+			continue;
+		} 
+			
+		if (v_ptr->options.primary_key) {
+			// need to save this later into some variable in ui
+			continue;
+		}
+		if (v_ptr->var_type==COMPOSITE_TYPE) {
+			/*
+			TableInfoType * ti_ptr = find_TableInfo(v_ptr->var_name);
+			p_vecTableInfo.push_back(ti_ptr);
+			*/
+			continue;
+		}
+		if (v_ptr->options.ref_table_name!="" 
+				&& v_ptr->var_type != COMPOSITE_TYPE
+				 ) {
+			if (! v_ptr->options.session ) {
+				load_form_func << 
+					boost::format("\twt_%1%_value->setText(boost::lexical_cast<std::string>(l_biz_%2%->biz_%3%_->%1%_));\n")
+							% v_ptr->var_name % tableInfo_->tableName_ % v_ptr->options.ref_table_name;
+			}
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
+			load_form_func << boost::format("\t/*we_%1%->setDate(l_biz_%2%->%1%_);*/\n")
+					% v_ptr->var_name % tableInfo_->tableName_;
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == true) {
+			load_form_func << boost::format("\t/*\n ts_cal_%1% ->setDate(l_biz_%2%->%1%_);\n\t*/\n")
+					% v_ptr->var_name% tableInfo_->tableName_;
+		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
+			load_form_func << boost::format("\twe_%1%->setText(boost::lexical_cast<std::string>(l_biz_%2%->%1%_));\n")
+					% v_ptr->var_name % tableInfo_->tableName_;
+		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
+			load_form_func << boost::format("\twe_%1%->setText(boost::lexical_cast<std::string>(l_biz_%2%->%1%_));\n")
+					% v_ptr->var_name % tableInfo_->tableName_;
+
+		} else if(v_ptr->var_type==BIT_TYPE ) {
+			load_form_func << boost::format("\twe_%1%->setText( (l_biz_%2%->%1%_ == true ? \"1\" : \"0\") );\n")
+					% v_ptr->var_name % tableInfo_->tableName_;
+		} else {
+			load_form_func << boost::format("\twe_%1%->setText(l_biz_%2%->%1%_);\n")
+					% v_ptr->var_name % tableInfo_->tableName_;
+		}
+	}
+
+	load_form_func << "}\n\n";
+	return load_form_func.str();
 }
