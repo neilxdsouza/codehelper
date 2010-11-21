@@ -304,6 +304,10 @@ string WtUIGenerator::PrintHeaders()
 	h_files << "#include <Wt/Ext/TableView>\n";
 	h_files << "#include <Wt/Ext/TextEdit>\n";
 	h_files << "#include <Wt/Ext/ToolBar>\n";
+	h_files << "#include <boost/lexical_cast.hpp>\n";
+	h_files << "#include <boost/shared_ptr.hpp>\n";
+	h_files << "#include <boost/scoped_ptr.hpp>\n";
+	h_files << "#include <boost/date_time/gregorian/gregorian.hpp>\n";
 	h_files << "\n";
 	h_files << "#include <iostream>\n";
 	h_files << "\n";
@@ -553,7 +557,10 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 	ui_class_decl << boost::format("\tvoid ProcessInsert%1%();\n")
 					% tableInfo_->tableName_;
+	ui_class_decl << boost::format("\tint ValidateForInsert%1%();\n")
+					% tableInfo_->tableName_;
 	ui_class_defn << PrintProcessInsert();
+	ui_class_defn << PrintValidateForInsert();
 	// I should use some form of assert to check 
 	// that vec_handler_decls.size == vec_handler_defns.size
 	for(int i=0; i<vec_handler_decls.size(); ++i) {
@@ -751,17 +758,17 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			vec_handler_defns.push_back(xfer_func_defn.str());
 			
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
-			decl <<  boost::format("\tWt::Ext::DateField * edf_%1%;\n")
+			decl <<  boost::format("\tWt::Ext::DateField * we_%1%;\n")
 						% v_ptr->var_name;
 			decl << format("\tWt::WDateValidator * wdv_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\tedf_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
+			defn << boost::format("\twe_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 			defn << format("\twdv_%1% = new Wt::WDateValidator();\n")
 						% v_ptr->var_name;
-			defn << format("\tedf_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
 			defn << format("\twdv_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
-			defn << format("\tedf_%1%->setValidator(wdv_%1%);\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wdv_%1%);\n") % v_ptr->var_name;
 			if (v_ptr->options.null == false) {
 				defn << format("\twdv_%1%->setMandatory(true);\n") % v_ptr->var_name;
 			}
@@ -771,38 +778,38 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			defn << boost::format("\tts_cal_%2% = new TimesheetCalendar(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
-			decl <<  boost::format("\tWt::Ext::NumberField * enf_%1%;\n")
+			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
 
 			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\tenf_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
+			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 			defn << format("\twv_%1% = new Wt::WDoubleValidator();\n")
 						% v_ptr->var_name;
-			defn << format("\tenf_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
 			if (v_ptr->options.null == false) {
 				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
 			}
 		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
-			decl <<  boost::format("\tWt::Ext::NumberField * enf_%1%;\n")
+			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
 
-			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
+			decl << format("\tWt::WIntValidator * wv_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\tenf_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
+			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			defn << format("\twv_%1% = new Wt::WDoubleValidator();\n")
+			defn << format("\twv_%1% = new Wt::WIntValidator();\n")
 						% v_ptr->var_name;
-			defn << format("\tenf_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
-			defn << format("\tenf_%1%->setDecimalPrecision(0);\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setDecimalPrecision(0);\n") % v_ptr->var_name;
 			if (v_ptr->options.null == false) {
 				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
 			}
 		} else {
-			decl <<  boost::format("\tWt::Ext::LineEdit * we_le_%1%;\n")
+			decl <<  boost::format("\tWt::Ext::LineEdit * we_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\twe_le_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
+			defn << boost::format("\twe_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% aTableInfo->tableName_;
 			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
 		}
@@ -1160,46 +1167,68 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 
 std::string WtUIGenerator::PrintProcessInsert()
 {
-	std::stringstream process_insert_defn;
+	std::stringstream process_insert_defn, dummy_defns, header;
+	
 	using boost::format;
-	process_insert_defn << format("void %1%_ui::ProcessInsert%1%()\n{\n")
+	header << format("void %1%_ui::ProcessInsert%1%()\n{\n")
 					% tableInfo_->tableName_;
-	process_insert_defn << "\tstd::stringstream ss_err_msgs;\n";
-	process_insert_defn << "\tint nErrors = 0;\n";
-	process_insert_defn << format("\tWt::WValidator::State validation_status;\n");
+	process_insert_defn << format("\tif (ValidateForInsert%1%()!=0) {\n"
+		 "\t\treturn;\n"
+		 "\t}\n") % tableInfo_->tableName_;
 	struct var_list* v_ptr=tableInfo_->param_list;
+	process_insert_defn << format("\tboost::shared_ptr<Biz%1%> ptr_%1% (new Biz%1%(\n")
+			% tableInfo_->tableName_;
+	bool print_comma = false;
 	while (v_ptr) {
-		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
-			process_insert_defn << format("\tif (wt_%1%_value->text() == \"<not selected>\" ) {\n"
-				"\t\tss_err_msgs << \"Please select a value for %1%\";\n"
-				"\t\t++nErrors;\n"
-				"\t}\n") % v_ptr->var_name ;
-		} else if (v_ptr->var_type == DATETIME_TYPE && v_ptr->options.embedded == false) {
-			process_insert_defn << format("\tvalidation_status = edf_%1%->validate();\n")
-				% v_ptr->var_name;
-			process_insert_defn << format("\tif(validation_status != Wt::WValidator::Valid) {\n"
-					"\t\tss_err_msgs << \"Please choose a valid date for %1%\\n\";\n"
-					"\t\t++nErrors;\n"
-					"\t}\n") % v_ptr->var_name;
-		} else if (v_ptr->var_type == FLOAT_TYPE || v_ptr->var_type == DOUBLE_TYPE) {
-			process_insert_defn << format("\tvalidation_status = enf_%1%->validate();\n")
-				% v_ptr->var_name;
-			process_insert_defn << format("\tif(validation_status != Wt::WValidator::Valid) {\n"
-					"\t\tss_err_msgs << \"Please enter a valid number for %1%\\n\";\n"
-					"\t\t++nErrors;\n"
-					"\t}\n") % v_ptr->var_name;
+		if (v_ptr->options.primary_key) {
+			process_insert_defn << "\t\t-1";
+			print_comma = true;
+		} else if (v_ptr->var_type == COMPOSITE_TYPE) {
+			dummy_defns << format("\tstd::vector<boost::shared_ptr<Biz%1%> > l_dummy_%1%;\n") %
+					v_ptr->options.ref_table_name;
+			process_insert_defn << format("\t\tl_dummy_%1%") %
+					v_ptr->options.ref_table_name;
+			print_comma = true;
+		} else if (v_ptr->var_type == DATETIME_TYPE 
+				&& v_ptr->options.embedded == false
+				) {
+			//process_insert_defn << " /* reached here embedded == false*/ ";
+			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(we_%2%->text())")
+				% v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			print_comma = true;
+		} else if (v_ptr->var_type == DATETIME_TYPE 
+				&& v_ptr->options.embedded == true
+				) {
+			// process_insert_defn << " /* reached here embedded == true*/ ";
+			process_insert_defn << format("\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2010-11-21\"))");
+				// % v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			print_comma = true;
+		} else if (v_ptr->options.ref_table_name != ""
+				&& v_ptr->options.many == false) {
+			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(wt_%2%_value->text())")
+				 % v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			print_comma = true;
+		} else {
+			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(we_%2%->text())")
+				% v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			print_comma = true;
 		}
 		v_ptr = v_ptr->prev;
+		if(v_ptr && print_comma) {
+			process_insert_defn << ",\n";
+			print_comma = false;
+		} else {
+			process_insert_defn << "\n";
+		}
 	}
-	process_insert_defn << "\tif (nErrors>0) {\n";
-	process_insert_defn << format("\t\twt_%1%_err_msg->setText(ss_err_msgs.str());\n") %
-			tableInfo_->tableName_;
-	process_insert_defn << format("\t\tpanel_%1%_err_msg->expand();\n") %
-			tableInfo_->tableName_;
-	process_insert_defn << "\t}\n";
-	process_insert_defn << boost::format("\twpb_insert->setEnabled(true);\n");
+	process_insert_defn << format("\t\t) );\n");
+		
 	process_insert_defn << "}\n\n";
-	return process_insert_defn.str();
+
+	stringstream func;
+	func << header.str() << dummy_defns.str() << process_insert_defn.str();
+	//return process_insert_defn.str();
+	return func.str();
 }
 
 void WtUIGenerator::PrintListViewHeaders(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
@@ -1238,3 +1267,48 @@ void WtUIGenerator::PrintListViewData(stringstream  & p_load_table_view_str, vec
 	}
 }
 
+
+std::string WtUIGenerator::PrintValidateForInsert()
+{
+	std::stringstream validate_for_insert_defn;
+	using boost::format;
+	validate_for_insert_defn << format("int %1%_ui::ValidateForInsert%1%()\n{\n")
+					% tableInfo_->tableName_;
+	validate_for_insert_defn << "\tstd::stringstream ss_err_msgs;\n";
+	validate_for_insert_defn << "\tint nErrors = 0;\n";
+	validate_for_insert_defn << format("\tWt::WValidator::State validation_status;\n");
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
+			validate_for_insert_defn << format("\tif (wt_%1%_value->text() == \"<not selected>\" ) {\n"
+				"\t\tss_err_msgs << \"Please select a value for %1%\";\n"
+				"\t\t++nErrors;\n"
+				"\t}\n") % v_ptr->var_name ;
+		} else if (v_ptr->var_type == DATETIME_TYPE && v_ptr->options.embedded == false) {
+			validate_for_insert_defn << format("\tvalidation_status = we_%1%->validate();\n")
+				% v_ptr->var_name;
+			validate_for_insert_defn << format("\tif(validation_status != Wt::WValidator::Valid) {\n"
+					"\t\tss_err_msgs << \"Please choose a valid date for %1%\\n\";\n"
+					"\t\t++nErrors;\n"
+					"\t}\n") % v_ptr->var_name;
+		} else if (v_ptr->var_type == FLOAT_TYPE || v_ptr->var_type == DOUBLE_TYPE) {
+			validate_for_insert_defn << format("\tvalidation_status = we_%1%->validate();\n")
+				% v_ptr->var_name;
+			validate_for_insert_defn << format("\tif(validation_status != Wt::WValidator::Valid) {\n"
+					"\t\tss_err_msgs << \"Please enter a valid number for %1%\\n\";\n"
+					"\t\t++nErrors;\n"
+					"\t}\n") % v_ptr->var_name;
+		}
+		v_ptr = v_ptr->prev;
+	}
+	validate_for_insert_defn << "\tif (nErrors>0) {\n";
+	validate_for_insert_defn << format("\t\twt_%1%_err_msg->setText(ss_err_msgs.str());\n") %
+			tableInfo_->tableName_;
+	validate_for_insert_defn << format("\t\tpanel_%1%_err_msg->expand();\n") %
+			tableInfo_->tableName_;
+	validate_for_insert_defn << "\t}\n";
+	validate_for_insert_defn << boost::format("\twpb_insert->setEnabled(true);\n");
+	validate_for_insert_defn << "\treturn nErrors;\n";
+	validate_for_insert_defn << "}\n\n";
+	return validate_for_insert_defn.str();
+}
