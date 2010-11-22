@@ -40,7 +40,7 @@ CREATE TABLE ClientContactPerson: UI_GROUP (Client) (
 
 CREATE TABLE Client: UI_GROUP (Client) (
 	Client_Code int : PRIMARY_KEY UI_VIEW UI_SELECT,
-	Client_Name varchar(250):  UNIQUE SEARCH_KEY UI_VIEW UI_SELECT,
+	Client_Name varchar(250):  UNIQUE SEARCH_KEY UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER,
 	ClientGroup_Code int: REFERENCES ClientGroup(ClientGroup_Code),
 	Address1 varchar(500) :NULL,
 	Address2 varchar(500) :NULL,
@@ -112,8 +112,8 @@ CREATE TABLE Designation : UI_GROUP (Employee) (
 	);
 
 CREATE TABLE DesignationGroup : UI_GROUP (Employee) (
-	DesignationGroup_Code int : primary_key UI_VIEW UI_SELECT,
-	DesignationGroup_Title varchar(150): not null UI_VIEW UI_SELECT
+	DesignationGroup_Code int : primary_key UI_VIEW UI_SELECT ,
+	DesignationGroup_Title varchar(150): not null UI_VIEW UI_SELECT  UI_DIALOG_SELECT_XFER
 	);
 
 CREATE TABLE TimeCost : UI_GROUP (Timesheet_Admin) (
