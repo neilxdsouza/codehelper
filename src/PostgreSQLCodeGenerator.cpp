@@ -329,6 +329,12 @@ void PostgreSQLCodeGenerator::PrintCppInsertFunc(ofstream & cpp_db_impl)
 	// cpp_db_impl << "\t	}\n";
 	// cpp_db_impl << "\t	char * value=PQgetvalue(res, 0, 0);\n";
 	// cpp_db_impl << "\t	printf(\"value: %s\\n\", value);\n";
+	cpp_db_impl << "\t\tint32_t r_" << tableInfo_->param_list->var_name  << "_fnum = PQfnumber(res, \"p_" 
+			<< tableInfo_->param_list->var_name << "\");\n";
+	cpp_db_impl << "\t\t" << tableInfo_->param_list->print_cpp_var_type() << " pkey = boost::lexical_cast< "
+		<< tableInfo_->param_list->print_cpp_var_type() << " > (PQgetvalue (res, 0, r_" 
+		<< tableInfo_->param_list->var_name << "_fnum));\n\t\treturn pkey;\n";
+
 	cpp_db_impl << "\t}\n";
 	cpp_db_impl << "\n}\n";
 }

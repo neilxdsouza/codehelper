@@ -1343,7 +1343,7 @@ std::string WtUIGenerator::PrintProcessInsert()
 		}
 	}
 	process_insert_defn << format("\t\t) );\n");
-	process_insert_defn << format("\tptr_%1%->Insert();\n")
+	process_insert_defn << format("\tLoadForm(ptr_%1%->Insert());\n")
 			% tableInfo_->tableName_;
 		
 	process_insert_defn << "}\n\n";

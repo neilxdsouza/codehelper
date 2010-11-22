@@ -317,6 +317,7 @@ void CppCodeGenerator::print_bll_Insert_defn(std::ofstream & bll_cpp)
 	cpp_body << "{\n";
 	cpp_body << boost::format("\tint ret=%1%::db::%2%::Insert%2%(*this);\n")
 			% project_namespace % tableInfo_->tableName_;
+	cpp_body << "\treturn ret;\n";
 	cpp_body << "}\n";
 }
 
