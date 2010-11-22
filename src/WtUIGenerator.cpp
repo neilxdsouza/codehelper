@@ -645,33 +645,53 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
 	int counter=0;
-	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
-			% aTableInfo->tableName_;
-	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
-			% aTableInfo->tableName_;
-	decl << boost::format("\tWt::WTable *table_%1%;\n")
-			% aTableInfo->tableName_;
-	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
-			% aTableInfo->tableName_;
-	decl << format("\tWt::WText * wt_%1%_err_msg;\n")
-			% aTableInfo->tableName_;
-	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
-			% aTableInfo->tableName_;
-	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
-			% aTableInfo->tableName_;
 
-	defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
-			% aTableInfo->tableName_;
-	defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
-			% aTableInfo->tableName_;
-	defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
-			% aTableInfo->tableName_;
-	defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
-			% aTableInfo->tableName_;
-	defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
-			% aTableInfo->tableName_;
-	defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
-			% aTableInfo->tableName_;
+	//if (called_recursively == false) {
+		decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+				% aTableInfo->tableName_;
+		defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+				% aTableInfo->tableName_;
+		decl << boost::format("\tWt::WTable *table_%1%;\n")
+				% aTableInfo->tableName_;
+		decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
+				% aTableInfo->tableName_;
+
+		decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
+				% aTableInfo->tableName_;
+		decl << format("\tWt::WText * wt_%1%_err_msg;\n")
+				% aTableInfo->tableName_;
+		decl << boost::format("\tWt::WTable *table_%1%_view;\n")
+				% aTableInfo->tableName_;
+		decl << boost::format("\tWt::WTable *table_%1%_search;\n")
+				% aTableInfo->tableName_;
+		defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+				% aTableInfo->tableName_;
+
+		defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
+				% aTableInfo->tableName_;
+		defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
+				% aTableInfo->tableName_;
+		defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
+				% aTableInfo->tableName_;
+		defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
+				% aTableInfo->tableName_;
+		defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
+				% aTableInfo->tableName_;
+		defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
+				% aTableInfo->tableName_;
+
+		defn << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % aTableInfo->tableName_;
+		defn << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % aTableInfo->tableName_;
+		defn << format("	panel_%1%_search->setCollapsible(true);\n") % aTableInfo->tableName_;
+		defn << format("	panel_%1%_search->setCollapsed(false);\n") % aTableInfo->tableName_;
+		defn << format("	table_%1%_search = new Wt::WTable();\n") % aTableInfo->tableName_;
+		defn << format("	panel_%1%_search->setLayout(new Wt::WFitLayout());\n") % aTableInfo->tableName_;
+		defn << format("	Wt::WLabel * dummy_%1%_search_label1 = new Wt::WLabel(\"dummy label1\", table_%1%_search->elementAt(0,0));\n") % aTableInfo->tableName_;
+		defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox1 = new Wt::Ext::LineEdit(\"dummy text1\", table_%1%_search->elementAt(0,1));\n") % aTableInfo->tableName_;
+		defn << format("	Wt::WLabel * dummy_%1%_search_label2 = new Wt::WLabel(\"dummy label2\", table_%1%_search->elementAt(1,0));\n") % aTableInfo->tableName_;
+		defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox2 = new Wt::Ext::LineEdit(\"dummy text2\", table_%1%_search->elementAt(1,1));\n") % aTableInfo->tableName_;
+		defn << format("	panel_%1%_search->layout()->addWidget(table_%1%_search);\n") % aTableInfo->tableName_;
+	//}
 
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
