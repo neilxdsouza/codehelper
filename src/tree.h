@@ -46,6 +46,7 @@ struct options_list_type
 	bool ui_view;
 	bool embedded;
 	bool session;
+	bool ui_dialog_select_xfer;
 
 	options_list_type(string l_ref_table_name, string l_ref_field_name, 
 			  bool l_many, bool l_null, bool l_unique, bool l_search_key, 
@@ -61,7 +62,8 @@ struct options_list_type
 		: ref_table_name(), ref_field_name(),
 		  many(false), null(false), unique(false), search_key(false),
 		  validator(none), primary_key(false), visible(true),
-		  ui_select(false), ui_view(false), embedded(false), session(false)
+		  ui_select(false), ui_view(false), embedded(false), session(false),
+		  ui_dialog_select_xfer(false)
 	{ }
 			   
 	public:
@@ -80,6 +82,7 @@ struct options_list_type
 		ui_view = false;
 		embedded = false;
 		session = false;
+		ui_dialog_select_xfer = false;
 	}
 };
 
@@ -220,6 +223,7 @@ struct TableInfoType
 	int nInvisible;
 	int nSessionParams;
 	int nReferencedAsMulti;
+	int nUIDialogSelectXfer;
 	vector<var_list*> vec_var_list;
 	void print_lower_fname(FILE * fptr);
 

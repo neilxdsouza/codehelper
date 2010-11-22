@@ -34,7 +34,7 @@ public:
 	void GenerateForms();
 	void GenerateMakefile();
 	string print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl);
-	string print_XferFunction(struct var_list * p_vptr, std::stringstream & decl);
+	string print_XferFunction(struct var_list * p_vptr, std::stringstream & decl, std::stringstream & p_prototype);
 
 	static std::stringstream class_vars;
 	static std::stringstream class_functions_decl;

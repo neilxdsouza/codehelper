@@ -73,10 +73,11 @@
      EMBEDDED = 289,
      SESSION = 290,
      ARROW = 291,
-     UI_GROUP = 292,
-     TABLE = 293,
-     NAME = 294,
-     INUMBER = 295
+     UI_DIALOG_SELECT_XFER = 292,
+     UI_GROUP = 293,
+     TABLE = 294,
+     NAME = 295,
+     INUMBER = 296
    };
 #endif
 
@@ -99,7 +100,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 103 "src/integrated_sql_gram.hpp"
+#line 104 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

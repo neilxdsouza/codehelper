@@ -114,6 +114,10 @@ SESSION {
 	return SESSION;
 }
 
+UI_DIALOG_SELECT_XFER {
+	return UI_DIALOG_SELECT_XFER;
+}
+
 
 ")"	{
 	return ')';

@@ -22,7 +22,7 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 	has_multi(0), has_search_key(0), nInvisible(0), nSessionParams(0),
 	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options),
-	field_groups(p_field_groups)
+	field_groups(p_field_groups), nUIDialogSelectXfer(0)
 {
 	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
@@ -45,6 +45,9 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		if (v_ptr->options.session==true) {
 			++nSessionParams;
+		}
+		if (v_ptr->options.ui_dialog_select_xfer) {
+			++nUIDialogSelectXfer;
 		}
 		//cout << v_ptr->var_name << " ";
 		v_ptr=v_ptr->prev;

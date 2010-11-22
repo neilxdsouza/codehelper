@@ -751,12 +751,13 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			vec_handler_defns.push_back(handle_func_defn.str());
 
 			stringstream xfer_func_decl;
-			xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
-				v_ptr->var_name;
-			vec_handler_decls.push_back(xfer_func_decl.str());
+			// xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
+			// 	v_ptr->var_name;
+			// vec_handler_decls.push_back(xfer_func_decl.str());
 			
 			stringstream xfer_func_defn;
-			xfer_func_defn << print_XferFunction(v_ptr, headers  /* required for header files of composite objects */);
+			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  /* required for header files of composite objects */);
+			vec_handler_decls.push_back(xfer_func_decl.str());
 			vec_handler_defns.push_back(xfer_func_defn.str());
 			
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
@@ -1075,6 +1076,9 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 			}
 		}
 	}
+	struct CppCodeGenerator * ref_table_ptr = (dynamic_cast<CppCodeGenerator*>
+			(TableCollectionSingleton::Instance()
+				.my_find_table(p_vptr->options.ref_table_name)));
 
 	func_defn << format("\tfor (int i=0; i<page1_%1%.size(); ++i) {\n") %
 		p_vptr->options.ref_table_name;
@@ -1087,8 +1091,45 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 				if (v_ptr->options.primary_key /* v_ptr == aTableInfo->param_list*/) {
 					func_defn << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
 						p_vptr->options.ref_table_name % counter++;
-					func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_));\n") %
-						tableInfo_->tableName_ % p_vptr->options.ref_table_name % p_vptr->var_name   ;
+					func_defn << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%3%, this, page1_%2%[i]->%3%_")
+							%
+						tableInfo_->tableName_ % p_vptr->options.ref_table_name % p_vptr->var_name;
+					//func_defn << "\n\t\t\t/* reached here table name:" 
+					//	<< ref_table_ptr->tableInfo_->tableName_
+					//	<< " nUIDialogSelectXfer: " << ref_table_ptr->tableInfo_->nUIDialogSelectXfer
+					//	<<  " */\n\t\t\t";
+
+
+					struct var_list * v_ptr2 = ref_table_ptr->tableInfo_->param_list;
+					if (ref_table_ptr->tableInfo_->nUIDialogSelectXfer) {
+						func_defn << ",\n";
+						int count_sel_xfer = 0;
+						bool print_comma2 = false;
+						while (v_ptr2) {
+							if (v_ptr2->options.ui_dialog_select_xfer) {
+								func_defn << format("\t\t\tpage1_%2%[i]->%1%_") % v_ptr2->var_name
+									% p_vptr->options.ref_table_name 
+									;
+								print_comma2 = true;
+								++count_sel_xfer;
+							}
+							// func_defn << "/* looping count_sel_xfer:" << count_sel_xfer << " */";
+							v_ptr2 = v_ptr2->prev;
+							if (count_sel_xfer < ref_table_ptr->tableInfo_->nUIDialogSelectXfer) {
+								// func_defn << "\t\t\t/* count_sel_xfer < nUIDialogSelectXfer */\n";
+								if (print_comma2) {
+									func_defn << ", ";
+									print_comma2 = false;
+								}
+							} else {
+								//func_defn << "\t\t\t/* breaking out count_sel_xfer: " 
+								//	<< count_sel_xfer << " */\n";
+								break;
+							}
+						}
+					}
+
+					func_defn << "));\n";
 					func_defn << boost::format("\t\tb->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
 						% p_vptr->var_name;
 				} else if (v_ptr->options.ref_table_name == "") {
@@ -1149,12 +1190,81 @@ std::string WtUIGenerator::print_cpp_search_key_args()
 */
 
 
-string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringstream & decl)
+string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringstream & decl, std::stringstream & p_prototype)
 {
 	stringstream func_defn;
 	using boost::format;
-	func_defn << format("void %2%_ui::XferChoice%1%(int32_t p_%1% )\n{\n")
+	func_defn << format("void %2%_ui::XferChoice%1%(int32_t p_%1%")
 		% p_vptr->var_name % tableInfo_->tableName_;
+	p_prototype << format("\tvoid XferChoice%1%(int32_t p_%1%")
+		% p_vptr->var_name ;
+
+	struct CppCodeGenerator * ref_table_ptr = (dynamic_cast<CppCodeGenerator*>
+			(TableCollectionSingleton::Instance()
+				.my_find_table(p_vptr->options.ref_table_name)));
+	/*
+	struct var_list * v_ptr2 = ref_table_ptr->tableInfo_->param_list;
+	int count_sel_xfer = 0;
+	bool print_comma2 = false;
+	while (v_ptr2) {
+		if (v_ptr2->options.ui_dialog_select_xfer) {
+			func_defn << format("%1% %2%_") 
+				% v_ptr2->print_cpp_var_type()
+				% v_ptr2->var_name
+				;
+			print_comma2 = true;
+			++count_sel_xfer;
+		}
+		v_ptr2 = v_ptr2->prev;
+		if (count_sel_xfer < tableInfo_->nUIDialogSelectXfer && print_comma2) {
+			func_defn << ", ";
+			print_comma2 = false;
+		} else {
+			break;
+		}
+	}
+	*/
+
+
+	/* =================== */
+	struct var_list * v_ptr2 = ref_table_ptr->tableInfo_->param_list;
+	if (ref_table_ptr->tableInfo_->nUIDialogSelectXfer) {
+		func_defn << ",\n";
+		p_prototype << ",\n";
+		int count_sel_xfer = 0;
+		bool print_comma2 = false;
+		while (v_ptr2) {
+			if (v_ptr2->options.ui_dialog_select_xfer) {
+				func_defn << format("\t%1% %2%_") 
+					% v_ptr2->print_cpp_var_type()
+					% v_ptr2->var_name
+					;
+				p_prototype << format("\t\t%1% %2%_") 
+					% v_ptr2->print_cpp_var_type()
+					% v_ptr2->var_name
+					;
+				print_comma2 = true;
+				++count_sel_xfer;
+			}
+			// func_defn << "/* looping count_sel_xfer:" << count_sel_xfer << " */";
+			v_ptr2 = v_ptr2->prev;
+			if (count_sel_xfer < ref_table_ptr->tableInfo_->nUIDialogSelectXfer) {
+				// func_defn << "\t\t\t/* count_sel_xfer < nUIDialogSelectXfer */\n";
+				if (print_comma2) {
+					func_defn << ", ";
+					print_comma2 = false;
+				}
+			} else {
+				//func_defn << "\t\t\t/* breaking out count_sel_xfer: " 
+				//	<< count_sel_xfer << " */\n";
+				break;
+			}
+		}
+	}
+	/* =================== */
+
+	p_prototype << format(");\n");
+	func_defn << ")\n{\n";
 
 
 	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
