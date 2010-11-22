@@ -57,6 +57,7 @@ public:
 			, int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
+	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

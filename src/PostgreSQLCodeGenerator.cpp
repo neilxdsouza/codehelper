@@ -1103,14 +1103,15 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 	if(tableInfo_->has_search_key){
 		int count=0;
 		while(v_ptr){
-			if(v_ptr->options.search_key){
+			// other complicated cases to be handled later - this is just a top level scan
+			if (v_ptr->options.search_key && v_ptr->options.ref_table_name=="") {
 				search_key_fields_str <<  boost::format("\t\t");
 				search_key_fields_str << print_cpp_types(v_ptr->var_type);
 				search_key_fields_str <<  boost::format(" p_%1%") 
 					% v_ptr->var_name;
 				++count;
 				if(count<tableInfo_->has_search_key){
-					search_key_fields_str <<  ",\n";
+					search_key_fields_str <<  "/*11*/ ,\n";
 				} else {
 					//search_key_fields_str << "\n";
 					break;

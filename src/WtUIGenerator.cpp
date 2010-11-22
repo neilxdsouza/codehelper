@@ -656,6 +656,8 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
 				% aTableInfo->tableName_;
 
+		decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
+				% aTableInfo->tableName_;
 		decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
 				% aTableInfo->tableName_;
 		decl << format("\tWt::WText * wt_%1%_err_msg;\n")
@@ -680,17 +682,20 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
 				% aTableInfo->tableName_;
 
-		defn << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % aTableInfo->tableName_;
-		defn << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % aTableInfo->tableName_;
-		defn << format("	panel_%1%_search->setCollapsible(true);\n") % aTableInfo->tableName_;
-		defn << format("	panel_%1%_search->setCollapsed(false);\n") % aTableInfo->tableName_;
-		defn << format("	table_%1%_search = new Wt::WTable();\n") % aTableInfo->tableName_;
-		defn << format("	panel_%1%_search->setLayout(new Wt::WFitLayout());\n") % aTableInfo->tableName_;
-		defn << format("	Wt::WLabel * dummy_%1%_search_label1 = new Wt::WLabel(\"dummy label1\", table_%1%_search->elementAt(0,0));\n") % aTableInfo->tableName_;
-		defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox1 = new Wt::Ext::LineEdit(\"dummy text1\", table_%1%_search->elementAt(0,1));\n") % aTableInfo->tableName_;
-		defn << format("	Wt::WLabel * dummy_%1%_search_label2 = new Wt::WLabel(\"dummy label2\", table_%1%_search->elementAt(1,0));\n") % aTableInfo->tableName_;
-		defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox2 = new Wt::Ext::LineEdit(\"dummy text2\", table_%1%_search->elementAt(1,1));\n") % aTableInfo->tableName_;
-		defn << format("	panel_%1%_search->layout()->addWidget(table_%1%_search);\n") % aTableInfo->tableName_;
+		defn << PrintUISearchPanel(aTableInfo);
+
+		// defn << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % aTableInfo->tableName_;
+		// defn << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % aTableInfo->tableName_;
+		// defn << format("	panel_%1%_search->setCollapsible(true);\n") % aTableInfo->tableName_;
+		// defn << format("	panel_%1%_search->setCollapsed(false);\n") % aTableInfo->tableName_;
+		// defn << format("	table_%1%_search = new Wt::WTable();\n") % aTableInfo->tableName_;
+		// defn << format("	panel_%1%_search->setLayout(new Wt::WFitLayout());\n") % aTableInfo->tableName_;
+		// defn << format("	Wt::WLabel * dummy_%1%_search_label1 = new Wt::WLabel(\"dummy label1\", table_%1%_search->elementAt(0,0));\n") % aTableInfo->tableName_;
+		// defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox1 = new Wt::Ext::LineEdit(\"dummy text1\", table_%1%_search->elementAt(0,1));\n") % aTableInfo->tableName_;
+		// defn << format("	Wt::WLabel * dummy_%1%_search_label2 = new Wt::WLabel(\"dummy label2\", table_%1%_search->elementAt(1,0));\n") % aTableInfo->tableName_;
+		// defn << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox2 = new Wt::Ext::LineEdit(\"dummy text2\", table_%1%_search->elementAt(1,1));\n") % aTableInfo->tableName_;
+		// defn << format("	panel_%1%_search->layout()->addWidget(table_%1%_search);\n") % aTableInfo->tableName_;
+
 	//}
 
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
@@ -1514,4 +1519,41 @@ std::string WtUIGenerator::PrintLoadForm()
 
 	load_form_func << "}\n\n";
 	return load_form_func.str();
+}
+
+
+
+std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo)
+{
+	stringstream search_panel_str;
+	search_panel_str << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	panel_%1%_search->setCollapsible(true);\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	panel_%1%_search->setCollapsed(false);\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	wcw_%1%_search = new Wt::WContainerWidget();\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	table_%1%_search = new Wt::WTable(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	panel_%1%_search->setLayout(new Wt::WFitLayout());\n") % p_ptrTableInfo->tableName_;
+	struct var_list* v_ptr = p_ptrTableInfo->param_list;
+	int counter = 0;
+	int modulus_counter = 0;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			search_panel_str << format("	Wt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
+					counter % modulus_counter % v_ptr->var_name;
+			search_panel_str << format("	Wt::Ext::LineEdit * le_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
+					counter % (modulus_counter + 1) % v_ptr->var_name;
+			if (modulus_counter == 0) {
+				modulus_counter += 2;
+			} else /*if (modulus_counter == 2) */ {
+				modulus_counter = 0; counter++;
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
+	// search_panel_str << format("	Wt::WLabel * dummy_%1%_search_label1 = new Wt::WLabel(\"dummy label1\", table_%1%_search->elementAt(0,0));\n") % p_ptrTableInfo->tableName_;
+	// search_panel_str << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox1 = new Wt::Ext::LineEdit(\"dummy text1\", table_%1%_search->elementAt(0,1));\n") % p_ptrTableInfo->tableName_;
+	// search_panel_str << format("	Wt::WLabel * dummy_%1%_search_label2 = new Wt::WLabel(\"dummy label2\", table_%1%_search->elementAt(1,0));\n") % p_ptrTableInfo->tableName_;
+	// search_panel_str << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox2 = new Wt::Ext::LineEdit(\"dummy text2\", table_%1%_search->elementAt(1,1));\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
+	return search_panel_str.str();
 }
