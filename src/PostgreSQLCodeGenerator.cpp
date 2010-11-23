@@ -1679,8 +1679,8 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 		v_ptr = v_ptr->prev;
 		if (v_ptr && print_comma) {
 			s << ",\n";
+			print_comma = false;
 		} else {
-			s << "\n";
 		}
 	}
 	s << "\t) values (\n";
@@ -1700,8 +1700,8 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 			v_ptr = v_ptr->prev;
 			if (v_ptr && print_comma) {
 				random_data_varying << ",\n";
+				print_comma = false;
 			} else {
-				random_data_varying << "\n";
 			}
 		}
 		random_data_varying << ");\n";
