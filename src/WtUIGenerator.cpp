@@ -644,7 +644,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	TableInfoType * aTableInfo = p_vecTableInfo.back();
 	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
-	int counter=0;
 
 	//if (called_recursively == false) {
 		decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
@@ -696,11 +695,16 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		// defn << format("	panel_%1%_search->layout()->addWidget(table_%1%_search);\n") % aTableInfo->tableName_;
 
 	//}
+	
+	// defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+	// 		% aTableInfo->tableName_;
+	int counter=0;
+	PrintForm(aTableInfo, decl, defn, 
+			vec_handler_decls, vec_handler_defns, 
+			headers, called_recursively, p_vecTableInfo, counter);
 
-	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
-			% aTableInfo->tableName_;
+	/*
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-
 		// if (v_ptr->options.ref_table_name!="") {
 		// 	cout << " called_recursively: " << called_recursively
 		// 		<< endl;
@@ -738,7 +742,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
 					"\t\t\ttable_%3%->elementAt(%1%, 0));\n")
 					% counter % v_ptr->var_name % aTableInfo->tableName_;
-
 		if (v_ptr->options.ref_table_name!="" 
 				&& v_ptr->var_type != COMPOSITE_TYPE
 				 ) {
@@ -771,20 +774,17 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			vec_handler_decls.push_back(handle_func_decl.str());
 			
 			stringstream handle_func_defn;
-			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */);
+			handle_func_defn << print_ChoiceHandler(v_ptr, headers  );
 			vec_handler_defns.push_back(handle_func_defn.str());
-
 			stringstream xfer_func_decl;
 			// xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
 			// 	v_ptr->var_name;
 			// vec_handler_decls.push_back(xfer_func_decl.str());
 			
 			stringstream xfer_func_defn;
-			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  /* required for header files of composite objects */);
+			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  );
 			vec_handler_decls.push_back(xfer_func_decl.str());
 			vec_handler_defns.push_back(xfer_func_defn.str());
-
-			
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
 			decl <<  boost::format("\tWt::Ext::DateField * we_%1%;\n")
 						% v_ptr->var_name;
@@ -808,7 +808,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
 			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
-
 			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
@@ -822,7 +821,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
 			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
-
 			decl << format("\tWt::WIntValidator * wv_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
@@ -842,6 +840,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
 		}
 	}
+	*/
 
 	if (called_recursively==false) {
 		decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
@@ -1000,6 +999,8 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	if (p_vecTableInfo.size()>0) {
 		GenerateUITab(headers, decl, defn, true, p_vecTableInfo);
 	}
+	
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "I think the code below should go into the PrintForm - analyse this later ");
 	if (called_recursively==false) {
 		decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
 		defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
@@ -1549,9 +1550,9 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 		if (v_ptr->options.search_key) {
 			decl << format("\tWt::Ext::LineEdit * le_%1%_search;\n") % 
 					v_ptr->var_name;
-			search_panel_str << format("	Wt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
+			search_panel_str << format("\tWt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
 					counter % modulus_counter % v_ptr->var_name;
-			search_panel_str << format("	Wt::Ext::LineEdit * le_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
+			search_panel_str << format("\tle_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
 					counter % (modulus_counter + 1) % v_ptr->var_name;
 			if (modulus_counter == 0) {
 				modulus_counter += 2;
@@ -1592,6 +1593,11 @@ void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & def
 					v_ptr->var_name;
 			print_comma = true;
 			++count;
+		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
+			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
+			defn << "\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+			print_comma = true;
+			++count;
 		}
 		if (print_comma && (count < tableInfo_->has_search_key)) {
 			defn << ",\n";
@@ -1599,6 +1605,167 @@ void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & def
 		}
 		v_ptr = v_ptr->prev;
 	}
+	if (tableInfo_->nSessionParams>0) {
+		if (tableInfo_->has_search_key >0) {
+			defn << ",\n";
+		}
+		defn << tableInfo_->print_cpp_session_key_args();
+	}
 	defn << ");\n";
 	defn << "}\n\n";
+}
+
+
+// void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo, 
+// 			std::stringstream & decl, std::stringstream & defn,
+// 			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+// 			std::stringstream & headers
+// 			)
+
+void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers, bool & called_recursively,
+			vector<TableInfoType *> & p_vecTableInfo, int & counter
+			)
+{
+	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+			% p_ptrTableInfo->tableName_;
+	struct var_list* v_ptr=p_ptrTableInfo->param_list;
+	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
+		// if (v_ptr->options.ref_table_name!="") {
+		// 	cout << " called_recursively: " << called_recursively
+		// 		<< endl;
+		// 	cout << " my table name: " << p_ptrTableInfo->tableName_
+		// 		<< endl;
+		// 	cout << " ref_table_name: " << v_ptr->options.ref_table_name
+		// 		<< endl;
+		// 	cout << "ReferencedTableContainsUs: " 
+		// 		<< ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name)
+		// 		<< endl;
+		// }
+		//! called_recursively == true means this form is being generated in the context of 
+		//! the original table that contains this one as a composite object
+		//! for such tables the foreign key is being supplied by the master table
+		//! for example in the case of "employee, employeestatus" in which 
+		//! employeestatus is also contained in employee as separate composite object
+		//! when generating the employeestatus tab - we dont want to display the employee 
+		//! code again in employeestatus - it is already supplied in the employee tab
+		if (called_recursively && v_ptr->options.ref_table_name!=""
+				&& ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name) ) {
+			continue;
+		} 
+			
+		if (v_ptr->options.primary_key) {
+			continue;
+		}
+		if (v_ptr->var_type==COMPOSITE_TYPE) {
+			TableInfoType * ti_ptr = find_TableInfo(v_ptr->var_name);
+			p_vecTableInfo.push_back(ti_ptr);
+			continue;
+		}
+		decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
+					% v_ptr->var_name;
+		defn << 
+			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
+					"\t\t\ttable_%3%->elementAt(%1%, 0));\n")
+					% counter % v_ptr->var_name % p_ptrTableInfo->tableName_;
+		if (v_ptr->options.ref_table_name!="" 
+				&& v_ptr->var_type != COMPOSITE_TYPE
+				 ) {
+			decl <<  boost::format("\tWt::WLabel * wt_%1%_value;\n")
+						% v_ptr->var_name;
+			decl <<  boost::format("\tWt::WPushButton * wpb_choose_%1%;\n")
+						% v_ptr->var_name;
+			decl << format("\tWt::WTable *table_%1%_view;\n") %
+						v_ptr->options.ref_table_name;
+			defn << 
+				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
+						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
+						% counter % v_ptr->var_name % p_ptrTableInfo->tableName_;
+			defn << 
+				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString(\" ... \"),\n" 
+						"\t\t\ttable_%3%->elementAt(%1%, 2));\n")
+						% counter % v_ptr->var_name % p_ptrTableInfo->tableName_;
+			defn << 
+				boost::format("\twpb_choose_%2%->setToolTip( Wt::WString(\"Choose \") + Wt::WString::tr(\"%2%\"));\n" )
+						% counter % v_ptr->var_name;
+			defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::disable);\n")
+				% v_ptr->var_name;
+			defn << boost::format("\twpb_choose_%1%->clicked().connect(this, &%2%_ui::HandleChoose%1%);\n")
+							% v_ptr->var_name % tableInfo_->tableName_;
+			decl << boost::format("\tWt::Ext::Dialog * wd_choose_%1%;\n")
+						% v_ptr->var_name;
+			stringstream handle_func_decl;
+			handle_func_decl << boost::format("\tvoid HandleChoose%1%();\n")
+				% v_ptr->var_name;
+			vec_handler_decls.push_back(handle_func_decl.str());
+			
+			stringstream handle_func_defn;
+			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */);
+			vec_handler_defns.push_back(handle_func_defn.str());
+			stringstream xfer_func_decl;
+			// xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
+			// 	v_ptr->var_name;
+			// vec_handler_decls.push_back(xfer_func_decl.str());
+			
+			stringstream xfer_func_defn;
+			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  /* required for header files of composite objects */);
+			vec_handler_decls.push_back(xfer_func_decl.str());
+			vec_handler_defns.push_back(xfer_func_defn.str());
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
+			decl <<  boost::format("\tWt::Ext::DateField * we_%1%;\n")
+						% v_ptr->var_name;
+			decl << format("\tWt::WDateValidator * wdv_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\twe_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twdv_%1% = new Wt::WDateValidator();\n")
+						% v_ptr->var_name;
+			defn << format("\twe_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
+			defn << format("\twdv_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wdv_%1%);\n") % v_ptr->var_name;
+			if (v_ptr->options.null == false) {
+				defn << format("\twdv_%1%->setMandatory(true);\n") % v_ptr->var_name;
+			}
+		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == true) {
+			decl <<  boost::format("\tTimesheetCalendar * ts_cal_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\tts_cal_%2% = new TimesheetCalendar(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
+			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
+						% v_ptr->var_name;
+			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twv_%1% = new Wt::WDoubleValidator();\n")
+						% v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
+			if (v_ptr->options.null == false) {
+				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
+			}
+		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
+			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
+						% v_ptr->var_name;
+			decl << format("\tWt::WIntValidator * wv_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twv_%1% = new Wt::WIntValidator();\n")
+						% v_ptr->var_name;
+			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
+			defn << format("\twe_%1%->setDecimalPrecision(0);\n") % v_ptr->var_name;
+			if (v_ptr->options.null == false) {
+				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
+			}
+		} else {
+			decl <<  boost::format("\tWt::Ext::LineEdit * we_%1%;\n")
+						% v_ptr->var_name;
+			defn << boost::format("\twe_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
+					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
+		}
+	}
 }

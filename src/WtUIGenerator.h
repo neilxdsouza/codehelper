@@ -59,6 +59,17 @@ public:
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
 	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl );
+	void PrintForm(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers, bool & called_recursively, 
+			vector<TableInfoType *> & p_vecTableInfo, int & counter
+			);
+	void PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers
+			);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);
