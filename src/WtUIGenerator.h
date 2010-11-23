@@ -67,7 +67,7 @@ public:
 			);
 	void PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo, 
 			std::stringstream & decl, std::stringstream & defn,
-			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
 			std::stringstream & headers
 			);
 };
