@@ -49,6 +49,7 @@ public:
 	std::string PrintProcessInsert();
 	std::string PrintUINavigation();
 	std::string PrintUIMenu();
+	void print_SearchFunction(stringstream & decl, stringstream & defn);
 
 	void PrintListViewHeaders(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
 			, int max_recursion_level, int recursion_level, int & nColumns);
@@ -57,7 +58,7 @@ public:
 			, int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
-	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo);
+	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl );
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

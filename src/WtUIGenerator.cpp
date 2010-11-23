@@ -682,7 +682,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
 				% aTableInfo->tableName_;
 
-		defn << PrintUISearchPanel(aTableInfo);
 
 		// defn << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % aTableInfo->tableName_;
 		// defn << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % aTableInfo->tableName_;
@@ -784,6 +783,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  /* required for header files of composite objects */);
 			vec_handler_decls.push_back(xfer_func_decl.str());
 			vec_handler_defns.push_back(xfer_func_defn.str());
+
 			
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
 			decl <<  boost::format("\tWt::Ext::DateField * we_%1%;\n")
@@ -844,6 +844,15 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	}
 
 	if (called_recursively==false) {
+		decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
+			aTableInfo->tableName_ ;
+		defn << PrintUISearchPanel(aTableInfo, decl);
+
+		stringstream search_func_defn, search_func_decl;
+		print_SearchFunction(search_func_decl, search_func_defn);
+		vec_handler_decls.push_back(search_func_decl.str());
+		vec_handler_defns.push_back(search_func_defn.str());
+
 		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % aTableInfo->tableName_;
 
@@ -1523,7 +1532,7 @@ std::string WtUIGenerator::PrintLoadForm()
 
 
 
-std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo)
+std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl)
 {
 	stringstream search_panel_str;
 	search_panel_str << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % p_ptrTableInfo->tableName_;
@@ -1538,6 +1547,8 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo)
 	int modulus_counter = 0;
 	while (v_ptr) {
 		if (v_ptr->options.search_key) {
+			decl << format("\tWt::Ext::LineEdit * le_%1%_search;\n") % 
+					v_ptr->var_name;
 			search_panel_str << format("	Wt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
 					counter % modulus_counter % v_ptr->var_name;
 			search_panel_str << format("	Wt::Ext::LineEdit * le_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
@@ -1550,10 +1561,44 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo)
 		}
 		v_ptr = v_ptr->prev;
 	}
-	// search_panel_str << format("	Wt::WLabel * dummy_%1%_search_label1 = new Wt::WLabel(\"dummy label1\", table_%1%_search->elementAt(0,0));\n") % p_ptrTableInfo->tableName_;
-	// search_panel_str << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox1 = new Wt::Ext::LineEdit(\"dummy text1\", table_%1%_search->elementAt(0,1));\n") % p_ptrTableInfo->tableName_;
-	// search_panel_str << format("	Wt::WLabel * dummy_%1%_search_label2 = new Wt::WLabel(\"dummy label2\", table_%1%_search->elementAt(1,0));\n") % p_ptrTableInfo->tableName_;
-	// search_panel_str << format("	Wt::Ext::LineEdit * dummy_%1%_search_textbox2 = new Wt::Ext::LineEdit(\"dummy text2\", table_%1%_search->elementAt(1,1));\n") % p_ptrTableInfo->tableName_;
+	search_panel_str << format("	btn_%1%_search = new Wt::Ext::Button(\"Search\", table_%1%_search->elementAt(%2%, %3%));\n") % 
+		p_ptrTableInfo->tableName_ % (counter+1) % 0;
+
+	search_panel_str << format("	btn_%1%_search->clicked().connect(this, &%1%_ui::SearchAndLoadView);\n") % 
+		p_ptrTableInfo->tableName_ ;
 	search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
 	return search_panel_str.str();
+}
+
+
+void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & defn)
+{
+	decl << "\tvoid SearchAndLoadView();\n";
+	defn << format("void %1%_ui::SearchAndLoadView()\n{\n") %
+		tableInfo_->tableName_ ;
+	struct var_list * v_ptr = tableInfo_->param_list;
+	using boost::format;
+	defn << format("\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+		project_namespace % tableInfo_->tableName_;
+	int count=0;
+	if (tableInfo_->has_search_key > 0) {
+		defn << ",\n";
+	}
+	bool print_comma = false;
+	while (v_ptr) {
+		if (v_ptr->options.search_key &&
+				v_ptr->var_type == VARCHAR_TYPE) {
+			defn << format("\t\tle_%1%_search->text().toUTF8()") % 
+					v_ptr->var_name;
+			print_comma = true;
+			++count;
+		}
+		if (print_comma && (count < tableInfo_->has_search_key)) {
+			defn << ",\n";
+			print_comma = false;
+		}
+		v_ptr = v_ptr->prev;
+	}
+	defn << ");\n";
+	defn << "}\n\n";
 }
