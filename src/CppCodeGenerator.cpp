@@ -892,7 +892,7 @@ void CppCodeGenerator::GenerateMessages()
 
 	string messages_fname (string(outputDirPrefix_.c_str()
 				+ string("/")
-				+ string("messages")
+				+ string("good1")
 				+ string(".xml"))); 
 	std::ofstream messages(messages_fname.c_str(), ios_base::out|ios_base::ate|ios_base::app);
 	if(!messages){

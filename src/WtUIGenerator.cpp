@@ -879,6 +879,8 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			);
 		vec_handler_decls.push_back(load_func_decl.str());
 		vec_handler_defns.push_back(load_func_defn.str());
+		defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+				% aTableInfo->tableName_;
 		defn << "\tLoadSummaryTableView(page1);\n";
 
 		/*
@@ -1639,8 +1641,8 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 			vector<TableInfoType *> & p_vecTableInfo, int & counter
 			)
 {
-	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
-			% p_ptrTableInfo->tableName_;
+	// defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+	// 		% p_ptrTableInfo->tableName_;
 	struct var_list* v_ptr=p_ptrTableInfo->param_list;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		// if (v_ptr->options.ref_table_name!="") {
