@@ -39,6 +39,19 @@ void WtUIGenerator::GenerateCode()
 	//cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
 	//	% __PRETTY_FUNCTION__;
 	//ui << GenerateUIScaffolding();
+	static bool once=true;
+	if (once) {
+		stringstream login_func_decl, login_func_defn;
+		PrintSetupLogin(login_func_decl, login_func_defn);
+		AddFunctionDecl(login_func_decl.str());
+		AddFunctionDefn(login_func_defn.str());
+
+		stringstream setup_app_func_decl, setup_app_func_defn;
+		PrintSetupApplication(setup_app_func_decl, setup_app_func_defn);
+		AddFunctionDecl(setup_app_func_decl.str());
+		AddFunctionDefn(setup_app_func_defn.str());
+		once = false;
+	}
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
 	
@@ -66,156 +79,109 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "good1::good1(const WEnvironment & env)\n";
 	uiScaffolding << "	: WApplication(env)\n";
 	uiScaffolding << "{\n";
-	uiScaffolding << "	setTitle(\"Timesheet Application Program\");\n";
-	uiScaffolding << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	useStyleSheet(\"good1.css\");\n";
-	uiScaffolding << "	messageResourceBundle().use(appRoot() + \"good1\");\n";
-	uiScaffolding << "	//Ext::Container * viewPort = new Ext::Container(root());\n";
-	uiScaffolding << "\tviewPort = new WTable(root());\n";
-	uiScaffolding << "\t//WBorderLayout *layout = new WBorderLayout(viewPort);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	/* North */\n";
-	uiScaffolding << "	Ext::Panel *north = new Ext::Panel();\n";
-	uiScaffolding << "	north->setBorder(false);\n";
-	//uiScaffolding << "	WText *head = new WText(Wt::WString::tr(\"header\"));\n";
-	//uiScaffolding << "	head->setStyleClass(\"north\");\n";
 
-	uiScaffolding << "\tWt::WImage *logo_image = new Wt::WImage(\"images/logo.png\");\n";
-	uiScaffolding << "\tviewPort->elementAt(0,0)->addWidget(logo_image);\n";
-	uiScaffolding << "\t// north->setLayout(new WFitLayout());\n";
-	uiScaffolding << "\t// WContainerWidget * north_container = new WContainerWidget();\n";
-	uiScaffolding << "\t// north->layout()->addWidget(north_container);\n";
-	uiScaffolding << "\t// WGridLayout * north_panel_grid = new WGridLayout();\n";
-	uiScaffolding << "\t// north_container->setLayout(north_panel_grid);\n";
-	uiScaffolding << "\t// north_panel_grid->addWidget(logo_image, 0, 0);\n\n";
+	uiScaffolding << "\t//viewPort = new WTable(root());\n";
+	uiScaffolding << "\tviewPort = new WContainerWidget(root());\n";
+	uiScaffolding << "\tSetupLogin();\n";
+	uiScaffolding << "\tlogin_->loginSuccessful.connect(this, &good1::SetupApplication);\n";
 
-	uiScaffolding << "	north->resize(WLength::Auto, 35);\n";
-	uiScaffolding << PrintUIMenu();
-	uiScaffolding << "\t//north_panel_grid->addWidget(north, 0, 1);\n";
-	uiScaffolding << "\tviewPort->elementAt(0,1)->addWidget(north);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	/* West */\n";
-	uiScaffolding << "	// Ext::Panel *west = new Ext::Panel();\n";
-	uiScaffolding << "	// west->layout()->addWidget(createNavigationTree());\n";
-	uiScaffolding << "	// \n";
-	uiScaffolding << "	// west->setTitle(\"Widgets\");\n";
-	uiScaffolding << "	// west->resize(200, WLength::Auto);\n";
-	uiScaffolding << "	// west->setResizable(true);\n";
-	uiScaffolding << "	// west->setCollapsible(true);\n";
-	uiScaffolding << "	// west->setAnimate(true);\n";
-	uiScaffolding << "	// west->setAutoScrollBars(true);\n";
-	uiScaffolding << "	// layout->addWidget(west, WBorderLayout::West);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	/* Center */\n";
-	uiScaffolding << "	Ext::Panel *center = new Ext::Panel();\n";
-	uiScaffolding << "	center->setTitle(\"Demo widget\");\n";
-	uiScaffolding << "	center->layout()->addWidget(formContainer_ = new WContainerWidget());\n";
-	uiScaffolding << "	center->setAutoScrollBars(true);\n";
-	uiScaffolding << "	//layout->addWidget(center, WBorderLayout::Center);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	formContainer_->setPadding(5);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	WContainerWidget *container = new WContainerWidget(formContainer_);\n";
-	uiScaffolding << "	container->addWidget(new WText(Wt::WString::tr(\"about\")));\n";
-	uiScaffolding << "	currentForm_ = container;\n";
-	uiScaffolding << "\tviewPort->elementAt(1,1)->addWidget(center);\n";
-	uiScaffolding << "\n";
+
 	uiScaffolding << "}\n";
 	uiScaffolding << "\n";
 
 	uiScaffolding << PrintNavigationDecl();
 
-	uiScaffolding << "\n";
-	uiScaffolding << "void good1::formWidgetsExample()\n";
-	uiScaffolding << "{\n";
-	uiScaffolding << "	WContainerWidget *ex = new WContainerWidget();\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	WText *wt = new WText( Wt::WString::tr(\"ex-form-widgets\"), ex);\n";
-	uiScaffolding << "	wt->setMargin(5, Bottom);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	WTable *table = new WTable(ex);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// ComboBox\n";
-	uiScaffolding << "	cb = new Ext::ComboBox(table->elementAt(0, 0));\n";
-	uiScaffolding << "	cb->addItem(\"One\");\n";
-	uiScaffolding << "	cb->addItem(\"Two\");\n";
-	uiScaffolding << "	cb->addItem(\"Three\");\n";
-	uiScaffolding << "	cb->setFocus();\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	/*\n";
-	uiScaffolding << "	This is how you would keep the data on the server (for really big\n";
-	uiScaffolding << "	data models:\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	cb->setDataLocation(Ext::ServerSide);\n";
-	uiScaffolding << "	cb->setMinQueryLength(0);\n";
-	uiScaffolding << "	cb->setQueryDelay(0);\n";
-	uiScaffolding << "	cb->setPageSize(10);\n";
-	uiScaffolding << "	cb->setTextSize(20);\n";
-	uiScaffolding << "	*/\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// Button\n";
-	uiScaffolding << "	Ext::Button *button = new Ext::Button(\"Modify\", table->elementAt(0, 1));\n";
-	uiScaffolding << "	button->setMargin(5, Left);\n";
-	uiScaffolding << "	button->activated().connect(this, &good1::formModify);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// CheckBox\n";
-	uiScaffolding << "	Ext::CheckBox *cb1 = new Ext::CheckBox(\"Check 1\", table->elementAt(1, 0));\n";
-	uiScaffolding << "	Ext::CheckBox *cb2 = new Ext::CheckBox(\"Check 2\", table->elementAt(2, 0));\n";
-	uiScaffolding << "	cb2->setChecked();\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	/*\n";
-	uiScaffolding << "	-- test setHideWithOffsets() of Ext::ComboBox\n";
-	uiScaffolding << "	table->hide();\n";
-	uiScaffolding << "	WPushButton *b = new WPushButton(\"show\", ex);\n";
-	uiScaffolding << "	b->clicked().connect(table, &WWidget::show);\n";
-	uiScaffolding << "	*/\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// DateField\n";
-	uiScaffolding << "	WContainerWidget *w = new WContainerWidget(ex);\n";
-	uiScaffolding << "	w->setMargin(5, Top | Bottom);\n";
-	uiScaffolding << "	Ext::DateField *df = new Ext::DateField(w);\n";
-	uiScaffolding << "	df->setDate(WDate(2007, 9, 7));\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// Calendar\n";
-	uiScaffolding << "	Ext::Calendar *dp = new Ext::Calendar(false, ex);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// TextEdit\n";
-	uiScaffolding << "	html_ = new Ext::TextEdit(\"Hello there, <b>brothers and sisters</b>\", ex);\n";
-	uiScaffolding << "	html_->setMargin(5, Top | Bottom);\n";
-	uiScaffolding << "	html_->resize(600, 300);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// Horizontal Splitter\n";
-	uiScaffolding << "	Ext::Splitter *split = new Ext::Splitter(ex);\n";
-	uiScaffolding << "	split->resize(400, 100);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	split->addWidget(new WText(\"Left\"));\n";
-	uiScaffolding << "	split->children().back()->resize(150, WLength::Auto);\n";
-	uiScaffolding << "	split->children().back()->setMinimumSize(130, WLength::Auto);\n";
-	uiScaffolding << "	split->children().back()->setMaximumSize(170, WLength::Auto);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
-	uiScaffolding << "	split->children().back()->resize(100, WLength::Auto);\n";
-	uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	split->addWidget(new WText(\"Right\"));\n";
-	uiScaffolding << "	split->children().back()->resize(50, WLength::Auto);\n";
-	uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	// Vertical Splitter\n";
-	uiScaffolding << "	split = new Ext::Splitter(Vertical, ex);\n";
-	uiScaffolding << "	split->resize(100, 200);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	split->addWidget(new WText(\"Top\"));\n";
-	uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
-	uiScaffolding << "	split->children().back()->setMinimumSize(WLength::Auto, 50);\n";
-	uiScaffolding << "	split->children().back()->setMaximumSize(WLength::Auto, 196);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
-	uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
-	uiScaffolding << "\n";
-	uiScaffolding << "	setCentralWidget(ex);\n";
-	uiScaffolding << "}\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "void good1::formWidgetsExample()\n";
+	// uiScaffolding << "{\n";
+	// uiScaffolding << "	WContainerWidget *ex = new WContainerWidget();\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	WText *wt = new WText( Wt::WString::tr(\"ex-form-widgets\"), ex);\n";
+	// uiScaffolding << "	wt->setMargin(5, Bottom);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	WTable *table = new WTable(ex);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// ComboBox\n";
+	// uiScaffolding << "	cb = new Ext::ComboBox(table->elementAt(0, 0));\n";
+	// uiScaffolding << "	cb->addItem(\"One\");\n";
+	// uiScaffolding << "	cb->addItem(\"Two\");\n";
+	// uiScaffolding << "	cb->addItem(\"Three\");\n";
+	// uiScaffolding << "	cb->setFocus();\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	/*\n";
+	// uiScaffolding << "	This is how you would keep the data on the server (for really big\n";
+	// uiScaffolding << "	data models:\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	cb->setDataLocation(Ext::ServerSide);\n";
+	// uiScaffolding << "	cb->setMinQueryLength(0);\n";
+	// uiScaffolding << "	cb->setQueryDelay(0);\n";
+	// uiScaffolding << "	cb->setPageSize(10);\n";
+	// uiScaffolding << "	cb->setTextSize(20);\n";
+	// uiScaffolding << "	*/\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// Button\n";
+	// uiScaffolding << "	Ext::Button *button = new Ext::Button(\"Modify\", table->elementAt(0, 1));\n";
+	// uiScaffolding << "	button->setMargin(5, Left);\n";
+	// uiScaffolding << "	button->activated().connect(this, &good1::formModify);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// CheckBox\n";
+	// uiScaffolding << "	Ext::CheckBox *cb1 = new Ext::CheckBox(\"Check 1\", table->elementAt(1, 0));\n";
+	// uiScaffolding << "	Ext::CheckBox *cb2 = new Ext::CheckBox(\"Check 2\", table->elementAt(2, 0));\n";
+	// uiScaffolding << "	cb2->setChecked();\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	/*\n";
+	// uiScaffolding << "	-- test setHideWithOffsets() of Ext::ComboBox\n";
+	// uiScaffolding << "	table->hide();\n";
+	// uiScaffolding << "	WPushButton *b = new WPushButton(\"show\", ex);\n";
+	// uiScaffolding << "	b->clicked().connect(table, &WWidget::show);\n";
+	// uiScaffolding << "	*/\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// DateField\n";
+	// uiScaffolding << "	WContainerWidget *w = new WContainerWidget(ex);\n";
+	// uiScaffolding << "	w->setMargin(5, Top | Bottom);\n";
+	// uiScaffolding << "	Ext::DateField *df = new Ext::DateField(w);\n";
+	// uiScaffolding << "	df->setDate(WDate(2007, 9, 7));\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// Calendar\n";
+	// uiScaffolding << "	Ext::Calendar *dp = new Ext::Calendar(false, ex);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// TextEdit\n";
+	// uiScaffolding << "	html_ = new Ext::TextEdit(\"Hello there, <b>brothers and sisters</b>\", ex);\n";
+	// uiScaffolding << "	html_->setMargin(5, Top | Bottom);\n";
+	// uiScaffolding << "	html_->resize(600, 300);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// Horizontal Splitter\n";
+	// uiScaffolding << "	Ext::Splitter *split = new Ext::Splitter(ex);\n";
+	// uiScaffolding << "	split->resize(400, 100);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	split->addWidget(new WText(\"Left\"));\n";
+	// uiScaffolding << "	split->children().back()->resize(150, WLength::Auto);\n";
+	// uiScaffolding << "	split->children().back()->setMinimumSize(130, WLength::Auto);\n";
+	// uiScaffolding << "	split->children().back()->setMaximumSize(170, WLength::Auto);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
+	// uiScaffolding << "	split->children().back()->resize(100, WLength::Auto);\n";
+	// uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	split->addWidget(new WText(\"Right\"));\n";
+	// uiScaffolding << "	split->children().back()->resize(50, WLength::Auto);\n";
+	// uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	// Vertical Splitter\n";
+	// uiScaffolding << "	split = new Ext::Splitter(Vertical, ex);\n";
+	// uiScaffolding << "	split->resize(100, 200);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	split->addWidget(new WText(\"Top\"));\n";
+	// uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
+	// uiScaffolding << "	split->children().back()->setMinimumSize(WLength::Auto, 50);\n";
+	// uiScaffolding << "	split->children().back()->setMaximumSize(WLength::Auto, 196);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
+	// uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
+	// uiScaffolding << "\n";
+	// uiScaffolding << "	setCentralWidget(ex);\n";
+	// uiScaffolding << "}\n";
+	
 	uiScaffolding << "\n";
 	uiScaffolding << "WTreeNode *good1::createNavigationNode(const Wt::WString& label,\n";
 	uiScaffolding << "				    WTreeNode *parentNode,\n";
@@ -311,6 +277,7 @@ string WtUIGenerator::PrintHeaders()
 	h_files << "#include <boost/shared_ptr.hpp>\n";
 	h_files << "#include <boost/scoped_ptr.hpp>\n";
 	h_files << "#include <boost/date_time/gregorian/gregorian.hpp>\n";
+	h_files << "#include \"LoginWidget.h\"\n";
 	h_files << "\n";
 	h_files << "#include <iostream>\n";
 	h_files << "\n";
@@ -328,7 +295,7 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "	typedef void (good1::*ShowCentralWidget)();\n";
 	class_decl << "	void setCentralWidget(Wt::WWidget *theWidget);\n";
 	class_decl << "	WWidget * createNavigationTree();\n";
-	class_decl << "	void formWidgetsExample();\n";
+	class_decl << "	//void formWidgetsExample();\n";
 	class_decl << "	WTreeNode *createNavigationNode(const Wt::WString& label,\n";
 	class_decl << "					    WTreeNode *parentNode,\n";
 	class_decl << "					    ShowCentralWidget f);\n";
@@ -339,7 +306,9 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "	Wt::Ext::TextEdit *html_;\n";
 	class_decl << "	Wt::WWidget                       *currentForm_;\n";
 	class_decl << "Wt::WContainerWidget              *formContainer_;\n";
-	class_decl << "	Wt::WTable              *viewPort;\n";
+	class_decl << "	//Wt::WTable              *viewPort;\n";
+	class_decl << "	Wt::WContainerWidget              *viewPort;\n";
+	class_decl << "	LoginWidget             *login_;\n";
 
 	class_decl << class_vars.str();
 
@@ -377,8 +346,8 @@ string WtUIGenerator::PrintNavigationDecl()
 	navigation_tree_func << "	rootNode->expand();\n";
 	navigation_tree_func << "	rootNode->setLoadPolicy(WTreeNode::NextLevelLoading);\n";
 	navigation_tree_func << "\n";
-	navigation_tree_func << "	createNavigationNode(\"Form widgets\", rootNode,\n";
-	navigation_tree_func << "			    &good1::formWidgetsExample);\n";
+	navigation_tree_func << "	//createNavigationNode(\"Form widgets\", rootNode,\n";
+	navigation_tree_func << "	//		    &good1::formWidgetsExample);\n";
 	//navigation_tree_func << navigation_nodes.str();
 	navigation_tree_func << PrintUINavigation();
 	navigation_tree_func << "\n";
@@ -387,6 +356,87 @@ string WtUIGenerator::PrintNavigationDecl()
 	navigation_tree_func << "	return rootNode;\n";
 	navigation_tree_func << "}\n";
 	return navigation_tree_func.str();
+}
+
+void WtUIGenerator::PrintSetupLogin(stringstream & func_decl, stringstream & func_defn)
+{
+	func_decl << "void SetupLogin();\n";
+	func_defn << "\tvoid good1::SetupLogin()\n{\n";
+	func_defn << "	// WText * center_text = new WText(\"Timesheet Application\", viewPort->elementAt(0,0));\n";
+	func_defn << "	// viewPort->elementAt(0, 0)->setContentAlignment(AlignTop | AlignCenter);\n";
+	func_defn << "	// login_ = new LoginWidget();\n";
+	func_defn << "	// viewPort->elementAt(1, 0)->addWidget(login_);\n";
+	func_defn << "	login_ = new LoginWidget(viewPort);\n";
+
+	func_defn << "}\n\n";
+}
+
+void WtUIGenerator::PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn)
+{
+	func_decl << "\tvoid SetupApplication();\n";
+	func_defn << "\tvoid good1::SetupApplication()\n\{\n";
+
+	func_defn << "\tviewPort->clear();\n";
+	func_defn << "	setTitle(\"Timesheet Application Program\");\n";
+	func_defn << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
+	func_defn << "\n";
+	func_defn << "	useStyleSheet(\"good1.css\");\n";
+	func_defn << "	messageResourceBundle().use(appRoot() + \"good1\");\n";
+	func_defn << "	//Ext::Container * viewPort = new Ext::Container(root());\n";
+	func_defn << "\t//WBorderLayout *layout = new WBorderLayout(viewPort);\n";
+	func_defn << "\n";
+	func_defn << "	/* North */\n";
+	func_defn << "	Ext::Panel *north = new Ext::Panel();\n";
+	func_defn << "	north->setBorder(false);\n";
+	//func_defn << "	WText *head = new WText(Wt::WString::tr(\"header\"));\n";
+	//func_defn << "	head->setStyleClass(\"north\");\n";
+	func_defn << "\tWt::WImage *logo_image = new Wt::WImage(\"images/logo.png\");\n";
+	func_defn << "\tWContainerWidget * logo_container = new WContainerWidget();\n";
+
+	func_defn << "\tlogo_container->addWidget(logo_image);\n";
+	func_defn << "\tviewPort->addWidget(logo_container);\n";
+	func_defn << "\t//viewPort->elementAt(0,0)->addWidget(logo_image);\n";
+	func_defn << "\t// north->setLayout(new WFitLayout());\n";
+	func_defn << "\tWContainerWidget * north_container = new WContainerWidget();\n";
+	func_defn << "\t// north->layout()->addWidget(north_container);\n";
+	func_defn << "\t// WGridLayout * north_panel_grid = new WGridLayout();\n";
+	func_defn << "\t//north_container->setLayout(north_panel_grid);\n";
+	func_defn << "\t// north_panel_grid->addWidget(logo_image, 0, 0);\n\n";
+	func_defn << "	north->resize(WLength::Auto, 35);\n";
+	func_defn << PrintUIMenu();
+	func_defn << "\t//north_panel_grid->addWidget(north, 0, 1);\n";
+	func_defn << "\tnorth_container->addWidget(north);\n";
+	func_defn << "\tviewPort->addWidget(north_container);\n";
+	func_defn << "\t//viewPort->elementAt(0,1)->addWidget(north);\n";
+	func_defn << "\n";
+	func_defn << "	/* West */\n";
+	func_defn << "	// Ext::Panel *west = new Ext::Panel();\n";
+	func_defn << "	// west->layout()->addWidget(createNavigationTree());\n";
+	func_defn << "	// \n";
+	func_defn << "	// west->setTitle(\"Widgets\");\n";
+	func_defn << "	// west->resize(200, WLength::Auto);\n";
+	func_defn << "	// west->setResizable(true);\n";
+	func_defn << "	// west->setCollapsible(true);\n";
+	func_defn << "	// west->setAnimate(true);\n";
+	func_defn << "	// west->setAutoScrollBars(true);\n";
+	func_defn << "	// layout->addWidget(west, WBorderLayout::West);\n";
+	func_defn << "\n";
+	func_defn << "	/* Center */\n";
+	func_defn << "	Ext::Panel *center = new Ext::Panel();\n";
+	func_defn << "	center->setTitle(\"Demo widget\");\n";
+	func_defn << "	center->layout()->addWidget(formContainer_ = new WContainerWidget());\n";
+	func_defn << "	center->setAutoScrollBars(true);\n";
+	func_defn << "	//layout->addWidget(center, WBorderLayout::Center);\n";
+	func_defn << "\n";
+	func_defn << "	formContainer_->setPadding(5);\n";
+	func_defn << "\n";
+	func_defn << "	WContainerWidget *container = new WContainerWidget(formContainer_);\n";
+	func_defn << "	container->addWidget(new WText(Wt::WString::tr(\"about\")));\n";
+	func_defn << "	currentForm_ = container;\n";
+	func_defn << "\t//viewPort->elementAt(1,1)->addWidget(center);\n";
+	func_defn << "\tviewPort->addWidget(center);\n";
+	func_defn << "\n";
+	func_defn << "}\n\n";
 }
 
 void WtUIGenerator::AddNavigationNode(std::string  label, std::string  func_name)
@@ -488,6 +538,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_class_headers << "#include <Wt/WWidget>\n";
 	ui_class_headers << "#include <Wt/WDialog>\n";
 	ui_class_headers << "#include <Wt/WPanel>\n";
+	ui_class_headers << "#include <Wt/WLength>\n";
 
 
 	ui_class_headers << "#include <Wt/WDateValidator>\n";
@@ -548,6 +599,8 @@ string WtUIGenerator::GenerateUIInsertForm()
 	//	<< tableInfo_->tableName_ << "\"), this);\n";
 	//ui_class_defn << "\ttitle->setMargin(5, Wt::Bottom);\n";
 	ui_class_defn << "\ttw = new Wt::Ext::TabWidget(this);\n";
+	ui_class_defn << "\ttw->setMinimumSize(Wt::WLength(600, Wt::WLength::Pixel), Wt::WLength(400, Wt::WLength::Pixel));\n";
+	ui_class_defn << "\t//tw->resize(Wt::WLength(100, Wt::WLength::Percentage), Wt::WLength(100, Wt::WLength::Percentage));\n";
 	//ui_class_defn << "\tpanel->setLayout(new Wt::WFitLayout());\n";
 	//ui_class_defn << "\tpanel->layout()->addWidget();\n";
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -754,6 +807,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 
 	defn << boost::format("\ttw->addTab(wcw_%1%, \"%1%\");\n")
 				% aTableInfo->tableName_;
+	defn << "\ttw->resize(Wt::WLength::Auto, Wt::WLength(500, Wt::WLength::Pixel));\n";
 
 	if (p_vecTableInfo.size()>0) {
 		GenerateUITab(headers, decl, defn, true, p_vecTableInfo);
@@ -800,7 +854,7 @@ void WtUIGenerator::GenerateMakefile()
 {
 	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
-	makefile_objs << " TimesheetCalendar.o CalendarCell.o ";
+	makefile_objs << " TimesheetCalendar.o CalendarCell.o LoginWidget.o";
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
 		<< makefile_objs.str() << endl;
