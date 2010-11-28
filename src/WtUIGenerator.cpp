@@ -71,8 +71,9 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "\n";
 	uiScaffolding << "	useStyleSheet(\"good1.css\");\n";
 	uiScaffolding << "	messageResourceBundle().use(appRoot() + \"good1\");\n";
-	uiScaffolding << "	Ext::Container * viewPort = new Ext::Container(root());\n";
-	uiScaffolding << "	WBorderLayout *layout = new WBorderLayout(viewPort);\n";
+	uiScaffolding << "	//Ext::Container * viewPort = new Ext::Container(root());\n";
+	uiScaffolding << "\tviewPort = new WTable(root());\n";
+	uiScaffolding << "\t//WBorderLayout *layout = new WBorderLayout(viewPort);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* North */\n";
 	uiScaffolding << "	Ext::Panel *north = new Ext::Panel();\n";
@@ -81,17 +82,18 @@ string WtUIGenerator::GenerateUIScaffolding()
 	//uiScaffolding << "	head->setStyleClass(\"north\");\n";
 
 	uiScaffolding << "\tWt::WImage *logo_image = new Wt::WImage(\"images/logo.png\");\n";
-	uiScaffolding << "\tnorth->setLayout(new WFitLayout());\n";
-	uiScaffolding << "\tWContainerWidget * north_container = new WContainerWidget();\n";
-	uiScaffolding << "\tnorth->layout()->addWidget(north_container);\n";
-	uiScaffolding << "\tWGridLayout * north_panel_grid = new WGridLayout();\n";
-	uiScaffolding << "\tnorth_container->setLayout(north_panel_grid);\n";
-	uiScaffolding << "\tnorth_panel_grid->addWidget(logo_image, 0, 0);\n\n";
+	uiScaffolding << "\tviewPort->elementAt(0,0)->addWidget(logo_image);\n";
+	uiScaffolding << "\t// north->setLayout(new WFitLayout());\n";
+	uiScaffolding << "\t// WContainerWidget * north_container = new WContainerWidget();\n";
+	uiScaffolding << "\t// north->layout()->addWidget(north_container);\n";
+	uiScaffolding << "\t// WGridLayout * north_panel_grid = new WGridLayout();\n";
+	uiScaffolding << "\t// north_container->setLayout(north_panel_grid);\n";
+	uiScaffolding << "\t// north_panel_grid->addWidget(logo_image, 0, 0);\n\n";
 
 	uiScaffolding << "	north->resize(WLength::Auto, 35);\n";
-	uiScaffolding << "	layout->addWidget(north_container, WBorderLayout::North);\n";
 	uiScaffolding << PrintUIMenu();
-	uiScaffolding << "\tnorth_panel_grid->addWidget(north, 0, 1);\n";
+	uiScaffolding << "\t//north_panel_grid->addWidget(north, 0, 1);\n";
+	uiScaffolding << "\tviewPort->elementAt(0,1)->addWidget(north);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	/* West */\n";
 	uiScaffolding << "	// Ext::Panel *west = new Ext::Panel();\n";
@@ -110,13 +112,14 @@ string WtUIGenerator::GenerateUIScaffolding()
 	uiScaffolding << "	center->setTitle(\"Demo widget\");\n";
 	uiScaffolding << "	center->layout()->addWidget(formContainer_ = new WContainerWidget());\n";
 	uiScaffolding << "	center->setAutoScrollBars(true);\n";
-	uiScaffolding << "	layout->addWidget(center, WBorderLayout::Center);\n";
+	uiScaffolding << "	//layout->addWidget(center, WBorderLayout::Center);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	formContainer_->setPadding(5);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "	WContainerWidget *container = new WContainerWidget(formContainer_);\n";
 	uiScaffolding << "	container->addWidget(new WText(Wt::WString::tr(\"about\")));\n";
 	uiScaffolding << "	currentForm_ = container;\n";
+	uiScaffolding << "\tviewPort->elementAt(1,1)->addWidget(center);\n";
 	uiScaffolding << "\n";
 	uiScaffolding << "}\n";
 	uiScaffolding << "\n";
@@ -335,7 +338,8 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "	Wt::Ext::ComboBox *cb;\n";
 	class_decl << "	Wt::Ext::TextEdit *html_;\n";
 	class_decl << "	Wt::WWidget                       *currentForm_;\n";
-	class_decl << "	Wt::WContainerWidget              *formContainer_;\n";
+	class_decl << "Wt::WContainerWidget              *formContainer_;\n";
+	class_decl << "	Wt::WTable              *viewPort;\n";
 
 	class_decl << class_vars.str();
 
@@ -705,144 +709,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			vec_handler_decls, vec_handler_defns, 
 			headers, called_recursively, p_vecTableInfo, counter);
 
-	/*
-	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
-		// if (v_ptr->options.ref_table_name!="") {
-		// 	cout << " called_recursively: " << called_recursively
-		// 		<< endl;
-		// 	cout << " my table name: " << aTableInfo->tableName_
-		// 		<< endl;
-		// 	cout << " ref_table_name: " << v_ptr->options.ref_table_name
-		// 		<< endl;
-		// 	cout << "ReferencedTableContainsUs: " 
-		// 		<< ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name)
-		// 		<< endl;
-		// }
-		//! called_recursively == true means this form is being generated in the context of 
-		//! the original table that contains this one as a composite object
-		//! for such tables the foreign key is being supplied by the master table
-		//! for example in the case of "employee, employeestatus" in which 
-		//! employeestatus is also contained in employee as separate composite object
-		//! when generating the employeestatus tab - we dont want to display the employee 
-		//! code again in employeestatus - it is already supplied in the employee tab
-		if (called_recursively && v_ptr->options.ref_table_name!=""
-				&& ReferencedTableContainsUs(aTableInfo, v_ptr->options.ref_table_name) ) {
-			continue;
-		} 
-			
-		if (v_ptr->options.primary_key) {
-			continue;
-		}
-		if (v_ptr->var_type==COMPOSITE_TYPE) {
-			TableInfoType * ti_ptr = find_TableInfo(v_ptr->var_name);
-			p_vecTableInfo.push_back(ti_ptr);
-			continue;
-		}
-		decl <<  boost::format("\tWt::WLabel * wt_%1%;\n")
-					% v_ptr->var_name;
-		defn << 
-			boost::format("\twt_%2% = new Wt::WLabel(Wt::WString::tr(\"%2%\"),\n" 
-					"\t\t\ttable_%3%->elementAt(%1%, 0));\n")
-					% counter % v_ptr->var_name % aTableInfo->tableName_;
-		if (v_ptr->options.ref_table_name!="" 
-				&& v_ptr->var_type != COMPOSITE_TYPE
-				 ) {
-			decl <<  boost::format("\tWt::WLabel * wt_%1%_value;\n")
-						% v_ptr->var_name;
-			decl <<  boost::format("\tWt::WPushButton * wpb_choose_%1%;\n")
-						% v_ptr->var_name;
-			decl << format("\tWt::WTable *table_%1%_view;\n") %
-						v_ptr->options.ref_table_name;
-			defn << 
-				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
-						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
-						% counter % v_ptr->var_name % aTableInfo->tableName_;
-			defn << 
-				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString(\" ... \"),\n" 
-						"\t\t\ttable_%3%->elementAt(%1%, 2));\n")
-						% counter % v_ptr->var_name % aTableInfo->tableName_;
-			defn << 
-				boost::format("\twpb_choose_%2%->setToolTip( Wt::WString(\"Choose \") + Wt::WString::tr(\"%2%\"));\n" )
-						% counter % v_ptr->var_name;
-			defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::disable);\n")
-				% v_ptr->var_name;
-			defn << boost::format("\twpb_choose_%1%->clicked().connect(this, &%2%_ui::HandleChoose%1%);\n")
-							% v_ptr->var_name % tableInfo_->tableName_;
-			decl << boost::format("\tWt::Ext::Dialog * wd_choose_%1%;\n")
-						% v_ptr->var_name;
-			stringstream handle_func_decl;
-			handle_func_decl << boost::format("\tvoid HandleChoose%1%();\n")
-				% v_ptr->var_name;
-			vec_handler_decls.push_back(handle_func_decl.str());
-			
-			stringstream handle_func_defn;
-			handle_func_defn << print_ChoiceHandler(v_ptr, headers  );
-			vec_handler_defns.push_back(handle_func_defn.str());
-			stringstream xfer_func_decl;
-			// xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
-			// 	v_ptr->var_name;
-			// vec_handler_decls.push_back(xfer_func_decl.str());
-			
-			stringstream xfer_func_defn;
-			xfer_func_defn << print_XferFunction(v_ptr, headers, xfer_func_decl  );
-			vec_handler_decls.push_back(xfer_func_decl.str());
-			vec_handler_defns.push_back(xfer_func_defn.str());
-		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
-			decl <<  boost::format("\tWt::Ext::DateField * we_%1%;\n")
-						% v_ptr->var_name;
-			decl << format("\tWt::WDateValidator * wdv_%1%;\n")
-						% v_ptr->var_name;
-			defn << boost::format("\twe_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			defn << format("\twdv_%1% = new Wt::WDateValidator();\n")
-						% v_ptr->var_name;
-			defn << format("\twe_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
-			defn << format("\twdv_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
-			defn << format("\twe_%1%->setValidator(wdv_%1%);\n") % v_ptr->var_name;
-			if (v_ptr->options.null == false) {
-				defn << format("\twdv_%1%->setMandatory(true);\n") % v_ptr->var_name;
-			}
-		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == true) {
-			decl <<  boost::format("\tTimesheetCalendar * ts_cal_%1%;\n")
-						% v_ptr->var_name;
-			defn << boost::format("\tts_cal_%2% = new TimesheetCalendar(table_%3%->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name% aTableInfo->tableName_;
-		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
-			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
-						% v_ptr->var_name;
-			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
-						% v_ptr->var_name;
-			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			defn << format("\twv_%1% = new Wt::WDoubleValidator();\n")
-						% v_ptr->var_name;
-			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
-			if (v_ptr->options.null == false) {
-				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
-			}
-		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
-			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
-						% v_ptr->var_name;
-			decl << format("\tWt::WIntValidator * wv_%1%;\n")
-						% v_ptr->var_name;
-			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			defn << format("\twv_%1% = new Wt::WIntValidator();\n")
-						% v_ptr->var_name;
-			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
-			defn << format("\twe_%1%->setDecimalPrecision(0);\n") % v_ptr->var_name;
-			if (v_ptr->options.null == false) {
-				defn << format("\twv_%1%->setMandatory(true);\n") % v_ptr->var_name;
-			}
-		} else {
-			decl <<  boost::format("\tWt::Ext::LineEdit * we_%1%;\n")
-						% v_ptr->var_name;
-			defn << boost::format("\twe_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
-					% counter % v_ptr->var_name% aTableInfo->tableName_;
-			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
-		}
-	}
-	*/
 
 	if (called_recursively==false) {
 		decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
@@ -883,123 +749,6 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 				% aTableInfo->tableName_;
 		defn << "\tLoadSummaryTableView(page1);\n";
 
-		/*
-		stringstream load_table_view_str;
-		struct var_list* v_ptr=aTableInfo->param_list;
-		{
-			int counter =0;
-			for (; v_ptr; v_ptr=v_ptr->prev) {
-				// I need to fix this - like add a function which states "simple_variable" - 
-				// functional programming style - as mentioned in the LISP books
-				if (v_ptr->options.ui_view) {
-					if (v_ptr->options.ref_table_name == "") {
-						load_table_view_str << format("\ttable_%1%_view->elementAt(0, %2%)->addWidget(new Wt::WText(Wt::WString::tr(\"%3%\")));\n") %
-							aTableInfo->tableName_ % counter++ % v_ptr->var_name;
-					}
-				}
-				if (v_ptr->options.ref_table_name != "" 
-						&& v_ptr->options.many == false) {
-					struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
-								(TableCollectionSingleton::Instance()
-									.my_find_table(v_ptr->options.ref_table_name)));
-					vector<TableInfoType *> vec_list_view_stack;
-					vec_list_view_stack.push_back(tbl_ptr->tableInfo_);
-					int max_recursion_level=2;
-					int recursion_level = 1;
-					PrintListViewHeaders(load_table_view_str, vec_list_view_stack, max_recursion_level, recursion_level, counter);
-				}
-			}
-		}
-		load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
-		v_ptr=aTableInfo->param_list;
-		load_table_view_str << "\t\tstd::stringstream temp1;\n";
-		{
-			int counter =0; // start at row 2 - titles in row 1
-			for (; v_ptr; v_ptr=v_ptr->prev) {
-				if (v_ptr->options.primary_key) {
-					load_table_view_str << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", table_%1%_view->elementAt(i+1, %2%));\n") %
-						aTableInfo->tableName_ % counter++;
-					load_table_view_str << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::LoadForm, this, page1[i]->%2%_));\n") %
-						tableInfo_->tableName_ % v_ptr->var_name;
-				} else if (v_ptr->options.ui_view) {
-					if (v_ptr->options.ref_table_name == "") {
-						load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
-							v_ptr->var_name;
-						load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
-							aTableInfo->tableName_ % counter++;
-						load_table_view_str << "\t\ttemp1.str(\"\");\n";
-					}
-				}
-				if (v_ptr->options.ref_table_name != "" 
-						&& v_ptr->options.many == false
-						&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
-						&& (!v_ptr->options.session)
-						) {
-					struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
-								(TableCollectionSingleton::Instance()
-									.my_find_table(v_ptr->options.ref_table_name)));
-					vector<TableInfoType *> vec_list_view_stack;
-					vec_list_view_stack.push_back(tbl_ptr->tableInfo_);
-					int max_recursion_level=2;
-					int recursion_level = 1;
-					PrintListViewData(load_table_view_str, vec_list_view_stack, max_recursion_level, recursion_level, counter);
-				}
-			}
-			load_table_view_str << "\t\tif ( (i+1)%10 == 0 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_0\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 1 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_1\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 2 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_2\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 3 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_3\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 4 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_4\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 5 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_5\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 6 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_6\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 7 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_7\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 8 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_8\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-			
-			load_table_view_str << "\t\tif ( (i+1)%10 == 9 ) {\n";
-			load_table_view_str << format("\t\t\ttable_%1%_view->rowAt(i+1)->setStyleClass(\"alt_row_9\");\n") %
-				aTableInfo->tableName_ ;
-			load_table_view_str << "\t\t}\n";
-		}
-		load_table_view_str << "\t}\n";
-		load_table_view_str << format("\ttable_%1%_view->setHeaderCount(1);\n") %
-						aTableInfo->tableName_ ;
-		defn << load_table_view_str.str();
-		*/
 
 	}
 
