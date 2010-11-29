@@ -11,6 +11,7 @@
 #include "ForwardDecl.h"
 #include "AbstractCodeGenerator.h"
 #include "AbstractCodeGeneratorFactory.h"
+#include "ui_field_order.h"
 
 	int search_for_func(string& search_for);
 	extern scope* active_scope;
@@ -72,13 +73,15 @@ struct table_decl_stmt: public stmt
 			 AbstractCodeGeneratorFactory * p_codeGeneratorFactory,
 			 vector<var_list*>& vec_var_list,
 			 struct tab_level_options_list_type & p_tab_options,
-			multimap<string, vector<var_list*> > & p_field_groups
+			 multimap<string, vector<var_list*> > & p_field_groups,
+			 UiFieldOrderType & p_ui_field_order
 			 );
 
 	void GenerateCode(FILE * & fptr);
 	virtual void RunPreCodeGenerationChecks();
 	struct tab_level_options_list_type tab_options;
 	multimap<string, vector<var_list*> > field_groups;
+	UiFieldOrderType ui_field_order;
 
 	private:
 	table_decl_stmt& operator=(const table_decl_stmt&);	

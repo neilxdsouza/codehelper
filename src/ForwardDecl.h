@@ -4,5 +4,6 @@
 struct AbstractCodeGenerator;
 struct CSharpAspNetCodeGenerator;
 struct TableInfoType;
+struct var_list;
 
 #endif /* FORWARD_DECL_H */

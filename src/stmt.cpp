@@ -27,14 +27,16 @@ TableCollectionSingleton<T>& TableCollectionSingleton<T>::Instance()
 table_decl_stmt::table_decl_stmt( datatype dtype, int lline_number, char * & name,
 		struct var_list* & v_list, AbstractCodeGeneratorFactory * p_codeGeneratorFactory,
 		vector<var_list*>& vec_var_list, struct tab_level_options_list_type & p_tab_options,
-		multimap<string, vector<var_list*> > & p_field_groups
+		multimap<string, vector<var_list*> > & p_field_groups,
+		UiFieldOrderType & p_ui_field_order
 		)
 	: stmt(dtype, lline_number), codeGenerator_(0), tab_options(p_tab_options), 
-		field_groups(p_field_groups)
+		field_groups(p_field_groups), ui_field_order(p_ui_field_order)
 {
 	// cout << __PRETTY_FUNCTION__ << "," << __FILE__ << "," << __LINE__ << endl;
 	if ( active_scope->sym_tab.find(name) == active_scope->sym_tab.end() ){
-		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list, tab_options, p_field_groups );
+		struct TableInfoType* ti=new TableInfoType(name, v_list, vec_var_list, tab_options, p_field_groups,
+				p_ui_field_order);
 		codeGenerator_ = p_codeGeneratorFactory->CreateCodeGenerator(ti);
 		TableCollectionSingleton::Instance().Tables.push_back(codeGenerator_);
 		if (ti->tab_options.has_ui_group_name) {

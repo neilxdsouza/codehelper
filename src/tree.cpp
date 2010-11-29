@@ -16,13 +16,14 @@ extern std::vector<std::string> dict;
 
 TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		vector<var_list*> & p_vec_var_list, tab_level_options_list_type & p_tab_options,
-		std::multimap<std::string, std::vector<var_list*> > & p_field_groups
+		std::multimap<std::string, std::vector<var_list*> > & p_field_groups,
+		UiFieldOrderType & p_ui_field_order
 		)
 	: 
 	tableName_(name), param_list(elist), table_scope(0), has_composite_objs(0),
 	has_multi(0), has_search_key(0), nInvisible(0), nSessionParams(0),
 	vec_var_list(p_vec_var_list), nReferencedAsMulti(0), tab_options(p_tab_options),
-	field_groups(p_field_groups), nUIDialogSelectXfer(0)
+	field_groups(p_field_groups), nUIDialogSelectXfer(0), ui_field_order(p_ui_field_order)
 {
 	//printf("ENTER: %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 	
@@ -51,6 +52,23 @@ TableInfoType::TableInfoType(string name, struct var_list*  elist,
 		}
 		//cout << v_ptr->var_name << " ";
 		v_ptr=v_ptr->prev;
+	}
+	if (ui_field_order.uiFieldGroups_.size()) {
+		cout << "THE : " << ui_field_order.uiFieldGroups_.size() << ": UI FIELD GROUPS ARE: " << endl;
+		typedef multimap<string, vector<var_list*> >::const_iterator I;
+		for (int i=0; i<ui_field_order.uiFieldGroups_.size(); ++i) {
+			cout << " " << ui_field_order.uiFieldGroups_[i] << ": ";
+			pair<I,I> field_group = ui_field_order.uiFieldGroupVars_.equal_range(
+							ui_field_order.uiFieldGroups_[i]);
+			for(I iter = field_group.first; iter!=field_group.second; ++iter) {
+				vector<var_list*> const & v = iter->second;
+				cout << " " << v.size();
+				for(int j=0; j<v.size(); ++j) {
+				 	cout << " " << v[j]->var_name;
+				}
+			}
+		}
+		cout << endl;
 	}
 	//printf("EXIT %s: tableName_: %s\n", __PRETTY_FUNCTION__, tableName_.c_str());
 }

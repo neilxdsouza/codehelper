@@ -74,10 +74,11 @@
      SESSION = 290,
      ARROW = 291,
      UI_DIALOG_SELECT_XFER = 292,
-     UI_GROUP = 293,
-     TABLE = 294,
-     NAME = 295,
-     INUMBER = 296
+     PASSWORD = 293,
+     UI_GROUP = 294,
+     TABLE = 295,
+     NAME = 296,
+     INUMBER = 297
    };
 #endif
 
@@ -88,7 +89,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 46 "src/integrated_sql_gram.y"
+#line 48 "src/integrated_sql_gram.y"
 
 	double dval;
 	int ival ;
@@ -100,7 +101,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 104 "src/integrated_sql_gram.hpp"
+#line 105 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

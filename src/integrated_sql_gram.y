@@ -16,6 +16,7 @@
 #include "stmt.h"
 #include "global_variables.h"
 #include "error.h"
+#include "ui_field_order.h"
 //#include "stmt.h"
 
 	extern int line_no;
@@ -40,6 +41,7 @@
 
 	multimap<string, vector<var_list*> > mm_field_groups;
 	vector<var_list*> current_field_group;
+	UiFieldOrderType ui_field_order;
 
 %}
 
@@ -79,7 +81,7 @@
 %token <dt> NCHAR_T
 %token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
-%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION ARROW UI_DIALOG_SELECT_XFER
+%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION ARROW UI_DIALOG_SELECT_XFER PASSWORD
 %token UI_GROUP
 
 %token TABLE
@@ -110,7 +112,7 @@ statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 		char *name=strdup($3);
 		struct var_list* v_list=trav_chain($6);
 		$$=new table_decl_stmt( TABLE_TYPE, line_no, name,  v_list, codeGeneratorFactory,
-				vec_var_list, tab_options, mm_field_groups);
+				vec_var_list, tab_options, mm_field_groups, ui_field_order);
 		vec_var_list.clear();
 		global_variables::nGraphNodes++;
 		typedef multimap<string, vector<var_list*> >::const_iterator mm_it_type;
@@ -127,7 +129,27 @@ statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 		//	}
 		//	cout << endl;
 		//}
+		if (ui_field_order.uiFieldGroups_.size()) {
+			cout << "THE : " << ui_field_order.uiFieldGroups_.size() 
+				<< ": UI FIELD GROUPS ARE: " << endl;
+			typedef multimap<string, vector<var_list*> >::const_iterator I;
+			for (int i=0; i<ui_field_order.uiFieldGroups_.size(); ++i) {
+				cout << " " << ui_field_order.uiFieldGroups_[i] << ": ";
+				pair<I,I> field_group = ui_field_order.uiFieldGroupVars_.equal_range(
+								ui_field_order.uiFieldGroups_[i]);
+				for(I iter = field_group.first; iter!=field_group.second; ++iter) {
+					vector<var_list*> const & v = iter->second;
+					cout << " " << v.size();
+					for(int j=0; j<v.size(); ++j) {
+					 	cout << " " << v[j]->var_name;
+					}
+				}
+			}
+			cout << endl;
+		}
+		
 		mm_field_groups.clear();
+		ui_field_order.clear();
 	 }
 	 ;
 
@@ -186,9 +208,19 @@ ui_field_group:	NAME ARROW decl_comma_list {
 			vv_ptr = vv_ptr->prev;
 		}
 		string field_group_name($1);
-		//if (mm_field_groups.find(field_group_name) == mm_field_groups.end()) {
-			mm_field_groups.insert(make_pair(field_group_name, current_field_group));
-		//}
+		if (mm_field_groups.find(field_group_name) == mm_field_groups.end()) {
+			ui_field_order.uiFieldGroups_.push_back(field_group_name);
+			ui_field_order.uiFieldGroupVars_.insert(make_pair(field_group_name, current_field_group));
+		} else {
+			ui_field_order.uiFieldGroupVars_.insert(make_pair(field_group_name, current_field_group));
+		}
+		mm_field_groups.insert(make_pair(field_group_name, current_field_group));
+		cout << "got field group: " << $1 << ": ";
+		for (int i=0; i<current_field_group.size(); ++i){
+			cout << current_field_group[i]->var_name << " ";
+		}
+		cout << endl;
+
 		current_field_group.clear();
 		//$$ = head;
 		$$ = $3;
@@ -303,6 +335,9 @@ options: REFERENCES NAME '(' NAME ')' {
 	}
 	|	UI_DIALOG_SELECT_XFER {
 		options_list.ui_dialog_select_xfer = true;
+	}
+	|	PASSWORD {
+		options_list.password = true;
 	}
 	;
 

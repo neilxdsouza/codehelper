@@ -16,6 +16,7 @@
 
 #include "my_defs.h"
 #include "symtab.h"
+#include "ui_field_order.h"
 
 datatype lcm_type(datatype d1, datatype d2);
 //struct expr;
@@ -47,15 +48,19 @@ struct options_list_type
 	bool embedded;
 	bool session;
 	bool ui_dialog_select_xfer;
+	bool password;
 
 	options_list_type(string l_ref_table_name, string l_ref_field_name, 
 			  bool l_many, bool l_null, bool l_unique, bool l_search_key, 
 			  validator_types l_validator, bool l_primary_key, bool l_visible, 
-			  bool l_ui_select, bool l_ui_view, bool l_embedded, bool l_session)
+			  bool l_ui_select, bool l_ui_view, bool l_embedded, bool l_session,
+			  bool l_ui_dialog_select_xfer,
+			  bool l_password)
 		: ref_table_name(l_ref_table_name), ref_field_name(l_ref_field_name),
 		  many(l_many), null(l_null), unique(l_unique), search_key(l_search_key),
 		  validator(l_validator), primary_key(l_primary_key), visible(l_visible),
-		  ui_select(l_ui_select), ui_view(l_ui_view), embedded(l_embedded), session(l_session)
+		  ui_select(l_ui_select), ui_view(l_ui_view), embedded(l_embedded), session(l_session),
+		  ui_dialog_select_xfer(l_ui_dialog_select_xfer), password(l_password)
 	{ }
 
 	options_list_type()
@@ -63,7 +68,7 @@ struct options_list_type
 		  many(false), null(false), unique(false), search_key(false),
 		  validator(none), primary_key(false), visible(true),
 		  ui_select(false), ui_view(false), embedded(false), session(false),
-		  ui_dialog_select_xfer(false)
+		  ui_dialog_select_xfer(false), password(false)
 	{ }
 			   
 	public:
@@ -83,6 +88,7 @@ struct options_list_type
 		embedded = false;
 		session = false;
 		ui_dialog_select_xfer = false;
+		password = false;
 	}
 };
 
@@ -232,6 +238,7 @@ struct TableInfoType
 			, vector<var_list*> & p_vec_var_list
 			, tab_level_options_list_type & p_tab_options
 			, std::multimap<std::string, std::vector<var_list*> > & p_field_groups
+			, UiFieldOrderType & p_ui_field_order
 			); 
 
 	// I need to move this function to CppCodeGenerator
@@ -239,6 +246,7 @@ struct TableInfoType
 	// I need to move this function to CppCodeGenerator
 	std::string print_cpp_session_key_args();
 	std::multimap<std::string, std::vector<var_list*> > & field_groups;
+	UiFieldOrderType ui_field_order;
 
 
 	private:

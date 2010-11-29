@@ -118,6 +118,10 @@ UI_DIALOG_SELECT_XFER {
 	return UI_DIALOG_SELECT_XFER;
 }
 
+PASSWORD {
+	return PASSWORD;
+}
+
 
 ")"	{
 	return ')';

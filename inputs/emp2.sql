@@ -167,3 +167,24 @@ create Table Timesheet: UI_GROUP (Project_Admin) (
 	Entry_Date datetime: embedded SEARCH_KEY,
 	TimeSpent double: not null
 	);
+
+create table Timesheet_Tables: UI_GROUP(Admin) (
+	Timesheet_Tables_Code int: primary_key UI_VIEW UI_SELECT,
+	Table_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
+
+create table Role: UI_GROUP(Admin)(
+	Role_Code int: primary_key UI_VIEW UI_SELECT,
+	Role_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
+
+create table Table_Security: UI_GROUP(Admin) (
+	Table_Security_Code int: primary_key UI_VIEW UI_SELECT,
+	Timesheet_Tables_Code int: UI_VIEW UI_SELECT references Timesheet_Tables(Timesheet_Tables_Code),
+	Role_Code int: UI_VIEW UI_SELECT references Role(Role_Code)
+		);
+
+create table User_Login: UI_GROUP(Admin) (
+	User_Login_Code int: primary_key,
+	User_Login_Name varchar(20): unique,
+	User_Password varchar(250): password,
+	Employee_Code int: references Employee(Employee_Code)
+	);
