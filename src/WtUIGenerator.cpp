@@ -1726,4 +1726,48 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 
 void WtUIGenerator::PrintLoginWidget()
 {
+	using boost::format;
+	stringstream login_widget_h_str, login_widget_h_str2;
+	string tn(tableInfo_->tableName_ );
+	login_widget_h_str << "#ifndef " << tn << "_h\n"
+		<< "#define " << tn << "_h\n\n";
+	
+	login_widget_h_str << "#include <Wt/WContainerWidget>\n\n";
+	login_widget_h_str << format("class %1%_Widget : public WContainerWidget\n") %
+				tn;	
+	login_widget_h_str << format("{\npublic:\n\t%1%_Widget(WContainerWidget *parent=0);\n") %
+				tn;
+	login_widget_h_str << format("\tWt::Signal<std::wstring> loginSuccessful;\n");
+	login_widget_h_str << "private:\n";
+
+	login_widget_h_str<< "\tWText     *IntroText;\n";
+	struct var_list* v_ptr = tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			login_widget_h_str << format("\tWLineEdit * %1%;\n") %
+					v_ptr->var_name;
+			login_widget_h_str2 << format("\tstd::wstring %1%;\n") %
+					v_ptr->var_name;
+		} else if (v_ptr->options.is_login_password_field) {
+			login_widget_h_str << format("\tWLineEdit * %1%;\n") %
+					v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	login_widget_h_str << login_widget_h_str2.str();
+
+
+	login_widget_h_str << "\tvoid confirmLogin(const std::wstring text);\n";
+	login_widget_h_str << "\tvoid checkCredentials();\n";
+	login_widget_h_str << "};\n";
+
+
+	login_widget_h_str << "#endif /* " << tableInfo_->tableName_ << " */\n";
+
+	string login_widget_fname_h (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ tn
+				+ string("_Widget.h"))); 
+	std::ofstream login_widget_h(login_widget_fname_h.c_str(), ios_base::out|ios_base::trunc);
+	login_widget_h << login_widget_h_str.str();
 }
