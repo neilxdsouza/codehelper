@@ -81,8 +81,10 @@
 %token <dt> NCHAR_T
 %token <dt> COMPOSITE_T
 %token CREATE REFERENCES MANY NOT DBNULL UNIQUE
-%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION ARROW UI_DIALOG_SELECT_XFER PASSWORD
-%token UI_GROUP
+%token VALIDATOR_REQ_FIELD VALIDATOR_RE_INTEGER VALIDATOR_RE_FLOAT VALIDATOR_RE_ALPHANUM VALIDATOR_RE_ALPHANUMWSP  
+%token SEARCH_KEY PRIMARY_KEY VISIBLE INVISIBLE UI_VIEW UI_SELECT EMBEDDED SESSION ARROW UI_DIALOG_SELECT_XFER PASSWORD
+%token	IS_LOGIN_USERNAME_FIELD IS_LOGIN_PASSWORD_FIELD
+%token UI_GROUP IS_LOGIN_PAGE
 
 %token TABLE
 %token ','
@@ -150,6 +152,7 @@ statement:	CREATE TABLE NAME tab_level_options '(' opt_ui_field_groups ')' ';' {
 		
 		mm_field_groups.clear();
 		ui_field_order.clear();
+		tab_options.reinit();
 	 }
 	 ;
 
@@ -179,6 +182,9 @@ non_empty_tab_level_options: tab_option
 
 tab_option: UI_GROUP '(' NAME ')' {
 		tab_options.setUIGroupName($3);
+	}
+	|	IS_LOGIN_PAGE {
+		tab_options.setIsLoginPage();
 	}
 	;
 
@@ -338,6 +344,12 @@ options: REFERENCES NAME '(' NAME ')' {
 	}
 	|	PASSWORD {
 		options_list.password = true;
+	}
+	|	IS_LOGIN_USERNAME_FIELD	{
+		options_list.is_login_username_field = true;
+	}
+	|	IS_LOGIN_PASSWORD_FIELD {
+		options_list.is_login_password_field = true;
 	}
 	;
 

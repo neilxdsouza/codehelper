@@ -182,9 +182,15 @@ create table Table_Security: UI_GROUP(Admin) (
 	Role_Code int: UI_VIEW UI_SELECT references Role(Role_Code)
 		);
 
-create table User_Login: UI_GROUP(Admin) (
+create table User_Login: UI_GROUP(Admin) IS_LOGIN_PAGE (
 	User_Login_Code int: primary_key,
-	User_Login_Name varchar(20): unique,
-	User_Password varchar(250): password,
+	User_Login_Name varchar(20): unique IS_LOGIN_USERNAME_FIELD,
+	User_Password varchar(250): password IS_LOGIN_PASSWORD_FIELD,
 	Employee_Code int: references Employee(Employee_Code)
+	);
+
+create table User_Role : UI_GROUP(Admin) (
+	User_Role_Code int: primary_key UI_VIEW UI_SELECT,
+	User_Login_Code int : references User_Login(User_Login_Code),
+	Role_Code int: references Role(Role_Code)
 	);

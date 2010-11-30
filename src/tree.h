@@ -49,18 +49,22 @@ struct options_list_type
 	bool session;
 	bool ui_dialog_select_xfer;
 	bool password;
+	bool is_login_username_field;
+	bool is_login_password_field;
 
 	options_list_type(string l_ref_table_name, string l_ref_field_name, 
 			  bool l_many, bool l_null, bool l_unique, bool l_search_key, 
 			  validator_types l_validator, bool l_primary_key, bool l_visible, 
 			  bool l_ui_select, bool l_ui_view, bool l_embedded, bool l_session,
 			  bool l_ui_dialog_select_xfer,
-			  bool l_password)
+			  bool l_password, bool l_is_login_username_field, bool l_is_login_password_field)
 		: ref_table_name(l_ref_table_name), ref_field_name(l_ref_field_name),
 		  many(l_many), null(l_null), unique(l_unique), search_key(l_search_key),
 		  validator(l_validator), primary_key(l_primary_key), visible(l_visible),
 		  ui_select(l_ui_select), ui_view(l_ui_view), embedded(l_embedded), session(l_session),
-		  ui_dialog_select_xfer(l_ui_dialog_select_xfer), password(l_password)
+		  ui_dialog_select_xfer(l_ui_dialog_select_xfer), password(l_password),
+		  is_login_username_field(l_is_login_username_field), 
+		  is_login_password_field(l_is_login_password_field)
 	{ }
 
 	options_list_type()
@@ -68,7 +72,8 @@ struct options_list_type
 		  many(false), null(false), unique(false), search_key(false),
 		  validator(none), primary_key(false), visible(true),
 		  ui_select(false), ui_view(false), embedded(false), session(false),
-		  ui_dialog_select_xfer(false), password(false)
+		  ui_dialog_select_xfer(false), password(false), is_login_username_field(false),
+		  is_login_password_field(false)
 	{ }
 			   
 	public:
@@ -89,6 +94,8 @@ struct options_list_type
 		session = false;
 		ui_dialog_select_xfer = false;
 		password = false;
+		is_login_username_field = false;
+		is_login_password_field = false;
 	}
 };
 
@@ -96,10 +103,16 @@ struct tab_level_options_list_type
 {
 	bool has_ui_group_name;
 	string ui_group_name;
+	bool is_login_page;
 	void setUIGroupName(std::string p_ui_group_name)
 	{
 		ui_group_name = p_ui_group_name;
 		has_ui_group_name=true;
+	}
+
+	void setIsLoginPage() 
+	{
+		is_login_page = true;
 	}
 
 	tab_level_options_list_type():
@@ -111,6 +124,7 @@ struct tab_level_options_list_type
 	{
 		ui_group_name="";
 		has_ui_group_name=false;
+		is_login_page = false;
 	}
 };
 

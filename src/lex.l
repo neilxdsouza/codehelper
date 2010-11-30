@@ -122,6 +122,18 @@ PASSWORD {
 	return PASSWORD;
 }
 
+IS_LOGIN_PAGE {
+	return IS_LOGIN_PAGE;
+}
+
+IS_LOGIN_USERNAME_FIELD {
+	return IS_LOGIN_USERNAME_FIELD;
+}
+
+IS_LOGIN_PASSWORD_FIELD {
+	return IS_LOGIN_PASSWORD_FIELD;
+}
+
 
 ")"	{
 	return ')';

@@ -52,6 +52,13 @@ void WtUIGenerator::GenerateCode()
 		AddFunctionDefn(setup_app_func_defn.str());
 		once = false;
 	}
+
+	if (tableInfo_->tab_options.is_login_page) {
+		cout << "We need to generate the login widget for this table:" 
+			<< tableInfo_->tableName_
+			<< endl;
+		PrintLoginWidget();
+	}
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
 	
@@ -1715,4 +1722,8 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 					p_ptrTableInfo->tableName_ ;
 	load_table_view_str << "}\n\n";
 	defn << load_table_view_str.str();
+}
+
+void WtUIGenerator::PrintLoginWidget()
+{
 }

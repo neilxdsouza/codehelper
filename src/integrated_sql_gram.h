@@ -75,10 +75,13 @@
      ARROW = 291,
      UI_DIALOG_SELECT_XFER = 292,
      PASSWORD = 293,
-     UI_GROUP = 294,
-     TABLE = 295,
-     NAME = 296,
-     INUMBER = 297
+     IS_LOGIN_USERNAME_FIELD = 294,
+     IS_LOGIN_PASSWORD_FIELD = 295,
+     UI_GROUP = 296,
+     IS_LOGIN_PAGE = 297,
+     TABLE = 298,
+     NAME = 299,
+     INUMBER = 300
    };
 #endif
 
@@ -101,7 +104,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 105 "src/integrated_sql_gram.hpp"
+#line 108 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

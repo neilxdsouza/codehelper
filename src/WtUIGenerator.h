@@ -34,7 +34,8 @@ public:
 	void GenerateForms();
 	void GenerateMakefile();
 	string print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl);
-	string print_XferFunction(struct var_list * p_vptr, std::stringstream & decl, std::stringstream & p_prototype);
+	string print_XferFunction(struct var_list * p_vptr, 
+			std::stringstream & decl, std::stringstream & p_prototype);
 
 	static std::stringstream class_vars;
 	static std::stringstream class_functions_decl;
@@ -51,11 +52,13 @@ public:
 	std::string PrintUIMenu();
 	void print_SearchFunction(stringstream & decl, stringstream & defn);
 
-	void PrintListViewHeaders(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
-			, int max_recursion_level, int recursion_level, int & nColumns);
+	void PrintListViewHeaders(stringstream  & p_load_table_view_str, 
+			vector<TableInfoType* > & p_vec_list_view_stack, 
+			int max_recursion_level, int recursion_level, int & nColumns);
 
-	void PrintListViewData(stringstream  & p_load_table_view_str, vector<TableInfoType* > & p_vec_list_view_stack
-			, int max_recursion_level, int recursion_level, int & nColumns);
+	void PrintListViewData(stringstream  & p_load_table_view_str, 
+			vector<TableInfoType* > & p_vec_list_view_stack, 
+			int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
 	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl );
@@ -72,6 +75,7 @@ public:
 			);
 	void PrintSetupLogin(stringstream & func_defn, stringstream & func_decl);
 	void PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn);
+	void PrintLoginWidget();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);
