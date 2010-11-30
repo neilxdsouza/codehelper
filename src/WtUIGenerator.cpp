@@ -98,97 +98,6 @@ string WtUIGenerator::GenerateUIScaffolding()
 
 	uiScaffolding << PrintNavigationDecl();
 
-	// uiScaffolding << "\n";
-	// uiScaffolding << "void good1::formWidgetsExample()\n";
-	// uiScaffolding << "{\n";
-	// uiScaffolding << "	WContainerWidget *ex = new WContainerWidget();\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	WText *wt = new WText( Wt::WString::tr(\"ex-form-widgets\"), ex);\n";
-	// uiScaffolding << "	wt->setMargin(5, Bottom);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	WTable *table = new WTable(ex);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// ComboBox\n";
-	// uiScaffolding << "	cb = new Ext::ComboBox(table->elementAt(0, 0));\n";
-	// uiScaffolding << "	cb->addItem(\"One\");\n";
-	// uiScaffolding << "	cb->addItem(\"Two\");\n";
-	// uiScaffolding << "	cb->addItem(\"Three\");\n";
-	// uiScaffolding << "	cb->setFocus();\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	/*\n";
-	// uiScaffolding << "	This is how you would keep the data on the server (for really big\n";
-	// uiScaffolding << "	data models:\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	cb->setDataLocation(Ext::ServerSide);\n";
-	// uiScaffolding << "	cb->setMinQueryLength(0);\n";
-	// uiScaffolding << "	cb->setQueryDelay(0);\n";
-	// uiScaffolding << "	cb->setPageSize(10);\n";
-	// uiScaffolding << "	cb->setTextSize(20);\n";
-	// uiScaffolding << "	*/\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// Button\n";
-	// uiScaffolding << "	Ext::Button *button = new Ext::Button(\"Modify\", table->elementAt(0, 1));\n";
-	// uiScaffolding << "	button->setMargin(5, Left);\n";
-	// uiScaffolding << "	button->activated().connect(this, &good1::formModify);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// CheckBox\n";
-	// uiScaffolding << "	Ext::CheckBox *cb1 = new Ext::CheckBox(\"Check 1\", table->elementAt(1, 0));\n";
-	// uiScaffolding << "	Ext::CheckBox *cb2 = new Ext::CheckBox(\"Check 2\", table->elementAt(2, 0));\n";
-	// uiScaffolding << "	cb2->setChecked();\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	/*\n";
-	// uiScaffolding << "	-- test setHideWithOffsets() of Ext::ComboBox\n";
-	// uiScaffolding << "	table->hide();\n";
-	// uiScaffolding << "	WPushButton *b = new WPushButton(\"show\", ex);\n";
-	// uiScaffolding << "	b->clicked().connect(table, &WWidget::show);\n";
-	// uiScaffolding << "	*/\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// DateField\n";
-	// uiScaffolding << "	WContainerWidget *w = new WContainerWidget(ex);\n";
-	// uiScaffolding << "	w->setMargin(5, Top | Bottom);\n";
-	// uiScaffolding << "	Ext::DateField *df = new Ext::DateField(w);\n";
-	// uiScaffolding << "	df->setDate(WDate(2007, 9, 7));\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// Calendar\n";
-	// uiScaffolding << "	Ext::Calendar *dp = new Ext::Calendar(false, ex);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// TextEdit\n";
-	// uiScaffolding << "	html_ = new Ext::TextEdit(\"Hello there, <b>brothers and sisters</b>\", ex);\n";
-	// uiScaffolding << "	html_->setMargin(5, Top | Bottom);\n";
-	// uiScaffolding << "	html_->resize(600, 300);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// Horizontal Splitter\n";
-	// uiScaffolding << "	Ext::Splitter *split = new Ext::Splitter(ex);\n";
-	// uiScaffolding << "	split->resize(400, 100);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	split->addWidget(new WText(\"Left\"));\n";
-	// uiScaffolding << "	split->children().back()->resize(150, WLength::Auto);\n";
-	// uiScaffolding << "	split->children().back()->setMinimumSize(130, WLength::Auto);\n";
-	// uiScaffolding << "	split->children().back()->setMaximumSize(170, WLength::Auto);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
-	// uiScaffolding << "	split->children().back()->resize(100, WLength::Auto);\n";
-	// uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	split->addWidget(new WText(\"Right\"));\n";
-	// uiScaffolding << "	split->children().back()->resize(50, WLength::Auto);\n";
-	// uiScaffolding << "	split->children().back()->setMinimumSize(50, WLength::Auto);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	// Vertical Splitter\n";
-	// uiScaffolding << "	split = new Ext::Splitter(Vertical, ex);\n";
-	// uiScaffolding << "	split->resize(100, 200);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	split->addWidget(new WText(\"Top\"));\n";
-	// uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
-	// uiScaffolding << "	split->children().back()->setMinimumSize(WLength::Auto, 50);\n";
-	// uiScaffolding << "	split->children().back()->setMaximumSize(WLength::Auto, 196);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	split->addWidget(new WText(\"Center\"));\n";
-	// uiScaffolding << "	split->children().back()->resize(WLength::Auto, 100);\n";
-	// uiScaffolding << "\n";
-	// uiScaffolding << "	setCentralWidget(ex);\n";
-	// uiScaffolding << "}\n";
-	
 	uiScaffolding << "\n";
 	uiScaffolding << "WTreeNode *good1::createNavigationNode(const Wt::WString& label,\n";
 	uiScaffolding << "				    WTreeNode *parentNode,\n";
@@ -1732,24 +1641,25 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_h_str << "#ifndef " << tn << "_h\n"
 		<< "#define " << tn << "_h\n\n";
 	
-	login_widget_h_str << "#include <Wt/WContainerWidget>\n\n";
-	login_widget_h_str << format("class %1%_Widget : public WContainerWidget\n") %
+	login_widget_h_str << "#include <Wt/WContainerWidget>\n";
+	login_widget_h_str << "#include <Wt/WText>\n";
+	login_widget_h_str << "#include <Wt/WLineEdit>\n\n";
+	login_widget_h_str << format("class %1%_Widget : public Wt::WContainerWidget\n") %
 				tn;	
-	login_widget_h_str << format("{\npublic:\n\t%1%_Widget(WContainerWidget *parent=0);\n") %
+	login_widget_h_str << format("{\npublic:\n\t%1%_Widget(Wt::WContainerWidget *parent=0);\n") %
 				tn;
 	login_widget_h_str << format("\tWt::Signal<std::wstring> loginSuccessful;\n");
 	login_widget_h_str << "private:\n";
 
-	login_widget_h_str<< "\tWText     *IntroText;\n";
+	login_widget_h_str<< "\tWt::WText     *IntroText;\n";
 	struct var_list* v_ptr = tableInfo_->param_list;
 	while (v_ptr) {
 		if (v_ptr->options.is_login_username_field) {
-			login_widget_h_str << format("\tWLineEdit * %1%;\n") %
+			login_widget_h_str << format("\tWt::WLineEdit * %1%;\n") %
 					v_ptr->var_name;
-			login_widget_h_str2 << format("\tstd::wstring %1%;\n") %
-					v_ptr->var_name;
+			login_widget_h_str2 << format("\tstd::wstring userName_;\n") ;
 		} else if (v_ptr->options.is_login_password_field) {
-			login_widget_h_str << format("\tWLineEdit * %1%;\n") %
+			login_widget_h_str << format("\tWt::WLineEdit * %1%;\n") %
 					v_ptr->var_name;
 		}
 		v_ptr=v_ptr->prev;
@@ -1770,4 +1680,145 @@ void WtUIGenerator::PrintLoginWidget()
 				+ string("_Widget.h"))); 
 	std::ofstream login_widget_h(login_widget_fname_h.c_str(), ios_base::out|ios_base::trunc);
 	login_widget_h << login_widget_h_str.str();
+
+
+	stringstream login_widget_cpp_str;
+
+
+	login_widget_cpp_str << "#include <Wt/WText>\n";
+	login_widget_cpp_str << "#include <Wt/WLabel>\n";
+	login_widget_cpp_str << "#include <Wt/WLineEdit>\n";
+	login_widget_cpp_str << "#include <Wt/WBreak>\n";
+	login_widget_cpp_str << "#include <Wt/WCssDecorationStyle>\n";
+	login_widget_cpp_str << "#include <Wt/WPushButton>\n";
+	login_widget_cpp_str << "#include <Wt/WTable>\n";
+	login_widget_cpp_str << "#include <Wt/WTableCell>\n";
+	login_widget_cpp_str << "#include <Wt/WComboBox>\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << format("#include \"%1%_Widget.h\"\n") % tableInfo_->tableName_;
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << format("%1%_Widget::%1%_Widget(WContainerWidget *parent)\n") % tableInfo_->tableName_;
+	login_widget_cpp_str << "	: Wt::WContainerWidget(parent)\n";
+	login_widget_cpp_str << "{\n";
+	login_widget_cpp_str << "	setPadding(100, Wt::Left | Wt::Right);\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "	Wt::WText *title = new Wt::WText(\"%1%\", this);\n";
+	login_widget_cpp_str << "	title->decorationStyle().font().setSize(Wt::WFont::XLarge);\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "	IntroText =\n";
+	login_widget_cpp_str << "	new Wt::WText(\"<p>Enter Login Details</p>\", this);\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "	Wt::WTable *layout = new Wt::WTable(this);\n";
+
+	v_ptr = tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			// login_widget_h_str << format("\tWt::WLineEdit * %1%;\n") %
+			// 		v_ptr->var_name;
+			// login_widget_h_str2 << format("\tstd::wstring %1%;\n") %
+			// 		v_ptr->var_name;
+
+			login_widget_cpp_str << "	Wt::WLabel *usernameLabel = new Wt::WLabel(\"User name: \", layout->elementAt(0, 0));\n";
+			login_widget_cpp_str << "	layout->elementAt(0, 0)->resize(Wt::WLength(14, Wt::WLength::FontEx), Wt::WLength::Auto);\n";
+			login_widget_cpp_str << format("	%1% = new Wt::WLineEdit(layout->elementAt(0, 1));\n")
+							% v_ptr->var_name;
+			login_widget_cpp_str << format("	usernameLabel->setBuddy(%1%);\n")
+							% v_ptr->var_name;
+			login_widget_cpp_str << "\n";
+		} else if (v_ptr->options.is_login_password_field) {
+			// login_widget_h_str << format("\tWt::WLineEdit * %1%;\n") %
+			// 		v_ptr->var_name;
+
+			login_widget_cpp_str << "	Wt::WLabel *passwordLabel = new Wt::WLabel(\"Password: \", layout->elementAt(1, 0));\n";
+			login_widget_cpp_str << format("	%1% = new Wt::WLineEdit(layout->elementAt(1, 1));\n")
+							% v_ptr->var_name;
+			login_widget_cpp_str << format("	%1%->setEchoMode(Wt::WLineEdit::Password);\n")
+							% v_ptr->var_name ;
+			login_widget_cpp_str << format("	passwordLabel->setBuddy(%1%);\n") 
+							% v_ptr->var_name;
+			login_widget_cpp_str << "\n";
+		}
+		v_ptr=v_ptr->prev;
+	}
+	login_widget_h_str << login_widget_h_str2.str();
+
+
+
+	login_widget_cpp_str << "	new Wt::WBreak(this);\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << format("	Wt::WPushButton *%1%Button = new Wt::WPushButton(\"%1%\", this);\n")
+						% tn;
+	login_widget_cpp_str << format("	%1%Button->clicked().connect(this, &%1%_Widget::checkCredentials);\n")
+				% tn;
+	login_widget_cpp_str << "}\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << format("void %1%_Widget::checkCredentials()\n") % tn;
+	login_widget_cpp_str << "{\n";
+	
+	v_ptr = tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			// login_widget_cpp_str << "	userName_ = Username->text();\n";
+			login_widget_cpp_str << format("\tuserName_ =  %1%->text();\n") %
+					v_ptr->var_name;
+		} else if (v_ptr->options.is_login_password_field) {
+			// login_widget_cpp_str << "	std::wstring pass = Password->text();\n";
+			login_widget_cpp_str << format("\tstd::wstring pass = %1%->text();\n") %
+					v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "	if (userName_ == L\"nxd\") {\n";
+	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\");\n";
+	login_widget_cpp_str << "	} else if (userName_ == L\"guest\" && pass == L\"guest\") {\n";
+	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome guest.</p>\");\n";
+	login_widget_cpp_str << "	} else {\n";
+	login_widget_cpp_str << "		IntroText\n";
+	login_widget_cpp_str << "		->setText(\"<p>You entered the wrong password, or the username \"\n";
+	login_widget_cpp_str << "			  \"combination is already in use. If you are a returning \"\n";
+	login_widget_cpp_str << "			  \"user, please try again. If you are a new user, please \"\n";
+	login_widget_cpp_str << "			  \"try a different name.</p>\");\n";
+	login_widget_cpp_str << "		IntroText->decorationStyle().setForegroundColor(Wt::red);\n";
+	v_ptr = tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			// login_widget_cpp_str << "	userName_ = Username->text();\n";
+			login_widget_cpp_str << format("\t\t%1%->setText(\"\");\n") %
+					v_ptr->var_name;
+		} else if (v_ptr->options.is_login_password_field) {
+			// login_widget_cpp_str << "	std::wstring pass = Password->text();\n";
+			login_widget_cpp_str << format("\t\t%1%->setText(\"\");\n") %
+					v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+	}
+
+
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "	}\n";
+
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "}\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << format("void %1%_Widget::confirmLogin(const std::wstring text)\n") % tn;
+	login_widget_cpp_str << "{\n";
+	login_widget_cpp_str << "	clear();\n";
+	login_widget_cpp_str << "	loginSuccessful.emit(userName_);\n";
+	login_widget_cpp_str << "}\n\n";
+	login_widget_cpp_str << "\n";
+	//login_widget_cpp_str << format("void %1%_Widget::startPlaying()\n") % tn; 
+	//login_widget_cpp_str << "{\n";
+	//login_widget_cpp_str << "	loginSuccessful.emit(userName_);\n";
+	//login_widget_cpp_str << "}\n";
+	login_widget_cpp_str << "\n";
+	login_widget_cpp_str << "\n";
+
+
+	string login_widget_fname_cpp (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ tn
+				+ string("_Widget.cpp"))); 
+	std::ofstream login_widget_cpp(login_widget_fname_cpp.c_str(), ios_base::out|ios_base::trunc);
+	login_widget_cpp << login_widget_cpp_str.str();
 }
