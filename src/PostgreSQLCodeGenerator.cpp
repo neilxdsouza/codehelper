@@ -43,6 +43,9 @@ void PostgreSQLCodeGenerator::GenerateStoredProcedures()
 	GenerateSelectSingleRecordSP();
 	GenerateCreateSQL();
 	GenerateRandomData();
+	if (tableInfo_->tab_options.is_login_page) {
+		GenerateAuthenticateLoginSP();
+	}
 }
 
 /*
@@ -1970,4 +1973,58 @@ string PostgreSQLCodeGenerator::PrintCppSelectSingleFunc()
 		<< func_body.str()
 		<< "\n";
 	return the_func.str();
+}
+
+
+void PostgreSQLCodeGenerator::GenerateAuthenticateLoginSP()
+{
+	using boost::format;
+	string sp_authenticate_login_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_authenticate_login_postgres.sql"))); 
+	std::ofstream authenticate_login_sp(sp_authenticate_login_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!authenticate_login_sp){
+		string err_msg="unable to open " + sp_authenticate_login_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	stringstream authenticate_login_sp_str;
+	authenticate_login_sp_str << boost::format("create or replace function sp_%1%_authenticate_login(")
+		% tableInfo_->tableName_;
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			authenticate_login_sp_str << format("\tp_%1% ") %
+					v_ptr->var_name;
+			authenticate_login_sp_str << v_ptr->print_sql_var_type()
+				<< endl;
+		} else if (v_ptr->options.is_login_password_field) {
+			// if the password field occurs after the username 
+			// field in the input - the code generated here will be wrong
+			authenticate_login_sp_str << format("\t, p_%1% ") %
+					v_ptr->var_name;
+			authenticate_login_sp_str<< v_ptr->print_sql_var_type()
+				<< endl;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	authenticate_login_sp_str << "\t, out valid_login int)\nas $$\nbegin\n";
+	authenticate_login_sp_str << format("\tselect count(*) into valid_login from %1% where ")
+		% tableInfo_->tableName_ ;
+
+	v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			authenticate_login_sp_str << format("\t%1% = p_%1% ") %
+					v_ptr->var_name;
+		} else if (v_ptr->options.is_login_password_field) {
+			// if the password field occurs after the username 
+			// field in the input - the code generated here will be wrong
+			authenticate_login_sp_str << format("\tand %1% = p_%1% ") %
+					v_ptr->var_name;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	authenticate_login_sp_str << ";\nend\n$$ LANGUAGE plpgsql;\n";
+	authenticate_login_sp << authenticate_login_sp_str.str();
 }
