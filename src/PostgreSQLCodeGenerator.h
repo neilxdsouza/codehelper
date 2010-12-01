@@ -80,6 +80,8 @@ public:
 	std::string print_cpp_sp_invoc_search_keys(int & nActualParams);
 	std::string print_cpp_sp_invoc_session_keys(int & nActualParams);
 	void GenerateAuthenticateLoginSP();
+	void GenerateCppAuthenticateLogin(std::stringstream & p_func_decl,
+			std::stringstream& p_func_defn);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

@@ -214,6 +214,12 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 	print_exit_nicely(cpp_db_impl);
 	PrintGetConn(cpp_db_impl);
 	PrintCppInsertFunc(cpp_db_impl);
+
+	if (tableInfo_->tab_options.is_login_page) {
+		stringstream cpp_auth_func_decl, cpp_auth_func_defn;
+		GenerateCppAuthenticateLogin(cpp_auth_func_decl, cpp_auth_func_defn);
+		cpp_db_impl << cpp_auth_func_defn.str();
+	}
 	cpp_db_impl << PrintCppSelectFunc();
 	cpp_db_impl << PrintCppSelectSingleFunc();
 	cpp_db_impl << PrintGetSingleRecord();
@@ -2027,4 +2033,37 @@ void PostgreSQLCodeGenerator::GenerateAuthenticateLoginSP()
 	}
 	authenticate_login_sp_str << ";\nend\n$$ LANGUAGE plpgsql;\n";
 	authenticate_login_sp << authenticate_login_sp_str.str();
+}
+
+void PostgreSQLCodeGenerator::GenerateCppAuthenticateLogin(std::stringstream & p_func_decl,
+			std::stringstream & p_func_defn)
+{
+	stringstream cpp_auth_login_str;
+	using boost::format;
+	stringstream func_signature;
+	func_signature << format("bool %1%_Authenticate_User(") %
+		tableInfo_->tableName_;
+	
+	struct var_list* v_ptr=tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			func_signature << format("\t%2% p_%1% ") %
+					v_ptr->var_name % v_ptr->print_cpp_var_type();
+		} else if (v_ptr->options.is_login_password_field) {
+			// if the password field occurs after the username 
+			// field in the input - the code generated here will be wrong
+			func_signature << ",\n";
+			func_signature << format("\t%2% p_%1%") %
+					v_ptr->var_name % v_ptr->print_cpp_var_type();
+		}
+		v_ptr=v_ptr->prev;
+	}
+
+	func_signature << ")\n";
+	stringstream func_body;
+	func_body << "{\n";
+	func_body << "}\n\n";
+	p_func_decl << func_signature.str() << ";\n";
+	p_func_defn << func_signature.str() << func_body.str();
+
 }

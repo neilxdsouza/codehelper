@@ -41,10 +41,10 @@ void WtUIGenerator::GenerateCode()
 	//ui << GenerateUIScaffolding();
 	static bool once=true;
 	if (once) {
-		stringstream login_func_decl, login_func_defn;
-		PrintSetupLogin(login_func_decl, login_func_defn);
-		AddFunctionDecl(login_func_decl.str());
-		AddFunctionDefn(login_func_defn.str());
+		// stringstream login_func_decl, login_func_defn;
+		// PrintSetupLogin(login_func_decl, login_func_defn);
+		// AddFunctionDecl(login_func_decl.str());
+		// AddFunctionDefn(login_func_defn.str());
 
 		stringstream setup_app_func_decl, setup_app_func_defn;
 		PrintSetupApplication(setup_app_func_decl, setup_app_func_defn);
@@ -58,6 +58,15 @@ void WtUIGenerator::GenerateCode()
 			<< tableInfo_->tableName_
 			<< endl;
 		PrintLoginWidget();
+		stringstream login_widget_name_str;
+		login_widget_name_str << boost::format("%1%_Widget * login_;\n") %
+					tableInfo_->tableName_;
+		AddVariableDecl(login_widget_name_str.str());
+
+		stringstream login_func_decl, login_func_defn;
+		PrintSetupLogin(login_func_decl, login_func_defn);
+		AddFunctionDecl(login_func_decl.str());
+		AddFunctionDefn(login_func_defn.str());
 	}
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
@@ -224,7 +233,7 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "Wt::WContainerWidget              *formContainer_;\n";
 	class_decl << "	//Wt::WTable              *viewPort;\n";
 	class_decl << "	Wt::WContainerWidget              *viewPort;\n";
-	class_decl << "	LoginWidget             *login_;\n";
+	class_decl << "	//LoginWidget             *login_;\n";
 
 	class_decl << class_vars.str();
 
@@ -282,7 +291,7 @@ void WtUIGenerator::PrintSetupLogin(stringstream & func_decl, stringstream & fun
 	func_defn << "	// viewPort->elementAt(0, 0)->setContentAlignment(AlignTop | AlignCenter);\n";
 	func_defn << "	// login_ = new LoginWidget();\n";
 	func_defn << "	// viewPort->elementAt(1, 0)->addWidget(login_);\n";
-	func_defn << "	login_ = new LoginWidget(viewPort);\n";
+	func_defn << format("	login_ = new %1%_Widget(viewPort);\n") % tableInfo_->tableName_;
 
 	func_defn << "}\n\n";
 }
@@ -566,6 +575,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 				% tableInfo_->tableName_;
 	AddIncludeFile(inc_file.str());
 
+
 	string ui_h_fname (string(outputDirPrefix_.c_str()
 				+ string("/")
 				+ tableInfo_->tableName_
@@ -592,6 +602,14 @@ string WtUIGenerator::GenerateUIInsertForm()
 	ui_cpp << boost::format("#include <sstream>\n\n");
 	ui_cpp << boost::format("#include <boost/shared_ptr.hpp>\n\n");
 	ui_cpp << ui_class_defn.str();
+
+
+	if (tableInfo_->tab_options.is_login_page) {
+		std::stringstream login_inc_file;
+		login_inc_file << boost::format("#include \"%1%_Widget.h\"\n")
+				% tableInfo_->tableName_;
+		AddIncludeFile(login_inc_file.str());
+	}
 
 
 	return form_code.str();
