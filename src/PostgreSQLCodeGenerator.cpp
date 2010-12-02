@@ -1695,41 +1695,63 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 		}
 	}
 	s << "\t) values (\n";
-	int nRecords=50;
-	stringstream final;
-	for (int i=0; i<nRecords; ++i) {
-		stringstream random_data_varying;
-		v_ptr = tableInfo_->param_list->prev; // skip primary key
-		bool print_comma = false;
-		while (v_ptr) {
-			if (v_ptr->var_type == COMPOSITE_TYPE) { 
-				print_comma = false;
-			} else {
-				random_data_varying << "\t" << v_ptr->print_random_value(i, nRecords);
-				print_comma = true;
+	if (tableInfo_->tab_options.is_master_tables_list == false) {
+		int nRecords=50;
+		stringstream final;
+		for (int i=0; i<nRecords; ++i) {
+			stringstream random_data_varying;
+			v_ptr = tableInfo_->param_list->prev; // skip primary key
+			bool print_comma = false;
+			while (v_ptr) {
+				if (v_ptr->var_type == COMPOSITE_TYPE) { 
+					print_comma = false;
+				} else {
+					random_data_varying << "\t" << v_ptr->print_random_value(i, nRecords);
+					print_comma = true;
+				}
+				v_ptr = v_ptr->prev;
+				if (v_ptr && print_comma) {
+					random_data_varying << ",\n";
+					print_comma = false;
+				} else {
+				}
 			}
-			v_ptr = v_ptr->prev;
-			if (v_ptr && print_comma) {
-				random_data_varying << ",\n";
-				print_comma = false;
-			} else {
-			}
+			random_data_varying << ");\n";
+			final << s.str() << random_data_varying.str();
 		}
-		random_data_varying << ");\n";
-		final << s.str() << random_data_varying.str();
+
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << final.str();
+		return final.str();
+	} else {
+		stringstream final;
+		for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
+			final << s.str() << "'" 
+				<< TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tableName_ 
+				<< "'"
+				<< ");\n";
+		}
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << final.str();
+		return final.str();
 	}
-	
-	string sp_random_data_fname (string(outputDirPrefix_.c_str()
-					+ string("/sp_")
-					+ tableInfo_->tableName_ 
-					+ string("_random_data_postgres.sql"))); 
-	std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
-	if(!random_data_sp){
-		string err_msg="unable to open " + sp_random_data_fname + "for writing";
-		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
-	}
-	random_data_sp << final.str();
-	return final.str();
+
 }
 
 std::string PostgreSQLCodeGenerator::print_sp_select_inner_joins()

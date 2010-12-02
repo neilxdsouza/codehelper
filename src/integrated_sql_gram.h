@@ -79,9 +79,10 @@
      IS_LOGIN_PASSWORD_FIELD = 295,
      UI_GROUP = 296,
      IS_LOGIN_PAGE = 297,
-     TABLE = 298,
-     NAME = 299,
-     INUMBER = 300
+     IS_MASTER_TABLES_LIST = 298,
+     TABLE = 299,
+     NAME = 300,
+     INUMBER = 301
    };
 #endif
 
@@ -104,7 +105,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 108 "src/integrated_sql_gram.hpp"
+#line 109 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

@@ -134,6 +134,10 @@ IS_LOGIN_PASSWORD_FIELD {
 	return IS_LOGIN_PASSWORD_FIELD;
 }
 
+IS_MASTER_TABLES_LIST {
+	return IS_MASTER_TABLES_LIST;
+}
+
 
 ")"	{
 	return ')';

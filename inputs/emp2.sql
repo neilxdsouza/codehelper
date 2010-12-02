@@ -168,7 +168,7 @@ create Table Timesheet: UI_GROUP (Project_Admin) (
 	TimeSpent double: not null
 	);
 
-create table Timesheet_Tables: UI_GROUP(Admin) (
+create table Timesheet_Tables: UI_GROUP(Admin) is_master_tables_list (
 	Timesheet_Tables_Code int: primary_key UI_VIEW UI_SELECT,
 	Table_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
 
