@@ -70,6 +70,9 @@ void WtUIGenerator::GenerateCode()
 	}
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
+	if (tableInfo_->tab_options.is_login_page) {
+		makefile_objs << format("%1%_Widget.o ") % tableInfo_->tableName_;
+	}
 	
 	// cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 	// 	% __PRETTY_FUNCTION__;
@@ -1714,6 +1717,7 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "#include <Wt/WComboBox>\n";
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << format("#include \"%1%_Widget.h\"\n") % tableInfo_->tableName_;
+	login_widget_cpp_str << format("#include \"%1%_db_postgres.h\"\n") % tableInfo_->tableName_;
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << format("%1%_Widget::%1%_Widget(WContainerWidget *parent)\n") % tableInfo_->tableName_;
 	login_widget_cpp_str << "	: Wt::WContainerWidget(parent)\n";
@@ -1772,6 +1776,7 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << format("void %1%_Widget::checkCredentials()\n") % tn;
 	login_widget_cpp_str << "{\n";
+	login_widget_cpp_str << "\tstd::string utf8_username, utf8_passwd;\n";
 	
 	v_ptr = tableInfo_->param_list;
 	while (v_ptr) {
@@ -1779,10 +1784,13 @@ void WtUIGenerator::PrintLoginWidget()
 			// login_widget_cpp_str << "	userName_ = Username->text();\n";
 			login_widget_cpp_str << format("\tuserName_ =  %1%->text();\n") %
 					v_ptr->var_name;
+			login_widget_cpp_str << format("\tutf8_username.assign(userName_.begin(), userName_.end());\n");
+
 		} else if (v_ptr->options.is_login_password_field) {
 			// login_widget_cpp_str << "	std::wstring pass = Password->text();\n";
 			login_widget_cpp_str << format("\tstd::wstring pass = %1%->text();\n") %
 					v_ptr->var_name;
+			login_widget_cpp_str << "\tutf8_passwd.assign(pass.begin(), pass.end());\n";
 		}
 		v_ptr=v_ptr->prev;
 	}
@@ -1791,6 +1799,9 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\");\n";
 	login_widget_cpp_str << "	} else if (userName_ == L\"guest\" && pass == L\"guest\") {\n";
 	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome guest.</p>\");\n";
+	login_widget_cpp_str << "	} else if ( top_level_namespace::db::User_Login::User_Login_Authenticate_User(\n"
+			<< "\t\t\tutf8_username , utf8_passwd)	) {\n"
+			<< "\t\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\");\n";
 	login_widget_cpp_str << "	} else {\n";
 	login_widget_cpp_str << "		IntroText\n";
 	login_widget_cpp_str << "		->setText(\"<p>You entered the wrong password, or the username \"\n";

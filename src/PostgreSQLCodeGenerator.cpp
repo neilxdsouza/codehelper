@@ -29,8 +29,8 @@ void PostgreSQLCodeGenerator::GenerateCode()
 //	cout << format("ENTER: FILE: %1%, LINE: %2% FUNCTION:%3%\n") % __FILE__ % __LINE__ 
 //		% __PRETTY_FUNCTION__;
 	GenerateStoredProcedures();
-	GenerateDB_h();
 	GenerateCppFuncs();
+	GenerateDB_h();
 //	cout << format("EXIT: %1% %2% %3%\n") % __FILE__ % __LINE__ 
 //		% __PRETTY_FUNCTION__;
 }
@@ -219,6 +219,7 @@ void PostgreSQLCodeGenerator::GenerateCppFuncs()
 		stringstream cpp_auth_func_decl, cpp_auth_func_defn;
 		GenerateCppAuthenticateLogin(cpp_auth_func_decl, cpp_auth_func_defn);
 		cpp_db_impl << cpp_auth_func_defn.str();
+		AddFuncDecl(cpp_auth_func_decl.str() );
 	}
 	cpp_db_impl << PrintCppSelectFunc();
 	cpp_db_impl << PrintCppSelectSingleFunc();
@@ -446,6 +447,7 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 			% tableInfo_->tableName_;
 
 	db_h << PrintGetSingleRecord_h();
+	db_h << db_function_decls.str();
 	db_h << boost::format("} /* close namespace %1% */ } /*close namespace db*/ } /* close namespace %2% */\n")
 			% tableInfo_->tableName_
 			% project_namespace ;
@@ -2059,11 +2061,68 @@ void PostgreSQLCodeGenerator::GenerateCppAuthenticateLogin(std::stringstream & p
 		v_ptr=v_ptr->prev;
 	}
 
-	func_signature << ")\n";
+	func_signature << ")";
 	stringstream func_body;
 	func_body << "{\n";
+	func_body << "	boost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());;\n";
+	func_body << "	std::vector<boost::shared_ptr<char> > char_ptr_vec(2);;\n";
+	func_body << "	const char * paramValues[2];;\n";
+	func_body << "	std::stringstream ss_param_values[2];;\n";
+	v_ptr=tableInfo_->param_list;
+	int count = 0;
+	while (v_ptr) {
+		if (v_ptr->options.is_login_username_field) {
+			func_body << format("\tss_param_values[%1%] << p_%2%;\n") %
+					count % v_ptr->var_name;
+			func_body << format("boost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+					% count;
+			func_body << format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % count;
+			func_body << format("\tparamValues[%1%]=s_ptr%1%.get();\n") % count++;
+		} else if (v_ptr->options.is_login_password_field) {
+			// if the password field occurs after the username 
+			// field in the input - the code generated here will be wrong
+			func_body << format("\tss_param_values[%1%] << p_%2%;\n") %
+					count % v_ptr->var_name;
+			func_body << format("boost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+					% count;
+			func_body << format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % count;
+			func_body << format("\tparamValues[%1%]=s_ptr%1%.get();\n") % count++;
+		}
+		v_ptr=v_ptr->prev;
+	}
+	func_body << "\t// 3rd param is the output parameter \n";
+
+	func_body << format("\tPGresult *res=PQexecParams(conn.get(), "
+		"\"select * from sp_%1%_authenticate_login($1::varchar, $2::varchar)\"\n"
+			"\t\t, 2, NULL, paramValues, NULL, NULL, 0);\n")
+			% tableInfo_->tableName_ ;
+
+
+	func_body << "	if (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
+	func_body << "		int res_status = PQresultStatus(res);\n";
+	func_body << "		printf(\"res_status=%d, PGRES_COMMAND_OK = %d, PGRES_TUPLES_OK=%d\\n\",\n";
+	func_body << "			res_status, PGRES_COMMAND_OK, PGRES_TUPLES_OK);\n";
+	func_body << format("		fprintf(stderr, \"sp_%1%_authenticate_login failed to execute: %%s\", PQerrorMessage(conn.get()));\n")
+			% tableInfo_->tableName_ ;
+	func_body << "		PQclear(res);\n";
+	func_body << "		exit_nicely(conn.get());\n";
+	func_body << "\t\treturn false;\n";
+	func_body << "	} else {\n";
+	func_body << "	int32_t valid_login_fnum = PQfnumber(res, \"valid_login\");\n";
+	func_body << "\t\tint32_t valid_login = boost::lexical_cast<int32_t> (PQgetvalue(res, 0, valid_login_fnum) );\n";
+	func_body << "\t\tprintf(\"valid_login=%d\\n\", valid_login);\n";
+	func_body << "\t\treturn valid_login==1 ? true:false;\n";
+	func_body << "\t}\n";
+
+
 	func_body << "}\n\n";
 	p_func_decl << func_signature.str() << ";\n";
-	p_func_defn << func_signature.str() << func_body.str();
+	p_func_defn << func_signature.str() << "\n" << func_body.str();
+	//AddFuncDecl(func_signature.str() + string(";\n"));
 
+}
+
+void PostgreSQLCodeGenerator::AddFuncDecl(std::string func_decl)
+{
+	db_function_decls << func_decl;
 }

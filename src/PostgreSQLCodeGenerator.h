@@ -82,6 +82,8 @@ public:
 	void GenerateAuthenticateLoginSP();
 	void GenerateCppAuthenticateLogin(std::stringstream & p_func_decl,
 			std::stringstream& p_func_defn);
+	void AddFuncDecl(std::string func_decl);
+	std::stringstream db_function_decls;
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);
