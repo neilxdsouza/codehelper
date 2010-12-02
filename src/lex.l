@@ -138,6 +138,10 @@ IS_MASTER_TABLES_LIST {
 	return IS_MASTER_TABLES_LIST;
 }
 
+IS_ROLE_TABLE {
+	return IS_ROLE_TABLE;
+}
+
 
 ")"	{
 	return ')';

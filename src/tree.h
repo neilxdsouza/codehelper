@@ -105,6 +105,7 @@ struct tab_level_options_list_type
 	string ui_group_name;
 	bool is_login_page;
 	bool is_master_tables_list;
+	bool is_role_table;
 	void setUIGroupName(std::string p_ui_group_name)
 	{
 		ui_group_name = p_ui_group_name;
@@ -121,11 +122,16 @@ struct tab_level_options_list_type
 		is_master_tables_list = true;
 	}
 
+	void setIsRoleTable ()
+	{
+		is_role_table = true;
+	}
+
 
 	tab_level_options_list_type():
 		has_ui_group_name(false), ui_group_name(""),
 		is_login_page(false),
-		is_master_tables_list(false)
+		is_master_tables_list(false), is_role_table(false)
 	{ }
 
 
@@ -135,6 +141,7 @@ struct tab_level_options_list_type
 		has_ui_group_name=false;
 		is_login_page = false;
 		is_master_tables_list = false;
+		is_role_table = false;
 	}
 };
 

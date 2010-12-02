@@ -1695,7 +1695,58 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 		}
 	}
 	s << "\t) values (\n";
-	if (tableInfo_->tab_options.is_master_tables_list == false) {
+	if (tableInfo_->tab_options.is_master_tables_list == true) {
+		stringstream final;
+		for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
+			final << s.str() << "'" 
+				<< TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tableName_ 
+				<< "'"
+				<< ");\n";
+		}
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << "/*tabIndex_->tab_options.is_master_tables_list is SET*/" << endl;
+		random_data_sp << final.str();
+		return final.str();
+	} else if (tableInfo_->tab_options.is_role_table == true) {
+		stringstream final;
+		for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
+			for(int j=0; j<3; ++j) {
+				string perm;
+				if ( j==0 ) {
+					perm = "View";
+				} else if (j==1) { 
+					perm = "Add";
+				} else if (j==2) {
+					perm = "Edit";
+				}
+				final << s.str() << "'" 
+					<< (TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tableName_ + string(":")
+							+ perm)
+					<< "'"
+					<< ");\n";
+			}
+		}
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << "/*tabIndex_->tab_options.is_role_table is SET*/" << endl;
+		random_data_sp << final.str();
+		return final.str();
+	} else {
 		int nRecords=50;
 		stringstream final;
 		for (int i=0; i<nRecords; ++i) {
@@ -1720,25 +1771,6 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 			final << s.str() << random_data_varying.str();
 		}
 
-		string sp_random_data_fname (string(outputDirPrefix_.c_str()
-						+ string("/sp_")
-						+ tableInfo_->tableName_ 
-						+ string("_random_data_postgres.sql"))); 
-		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
-		if(!random_data_sp){
-			string err_msg="unable to open " + sp_random_data_fname + "for writing";
-			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
-		}
-		random_data_sp << final.str();
-		return final.str();
-	} else {
-		stringstream final;
-		for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
-			final << s.str() << "'" 
-				<< TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tableName_ 
-				<< "'"
-				<< ");\n";
-		}
 		string sp_random_data_fname (string(outputDirPrefix_.c_str()
 						+ string("/sp_")
 						+ tableInfo_->tableName_ 
