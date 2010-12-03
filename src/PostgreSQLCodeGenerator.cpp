@@ -1746,6 +1746,378 @@ std::string PostgreSQLCodeGenerator::GenerateRandomData()
 		random_data_sp << "/*tabIndex_->tab_options.is_role_table is SET*/" << endl;
 		random_data_sp << final.str();
 		return final.str();
+	} else if (tableInfo_->tableName_ == "Employee") {
+		stringstream final;
+		stringstream emp;
+		emp << "'Zenon', 'Andrew', 'DSouza', '1', 'Mr', 'Z', '13-jan-1976', 0, '1-may-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Atul', 'Francis', 'DSouza', '1', 'Mr', 'Atul', '9-dec-1979', 0, '1-dec-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Michael', '', 'DSouza', '1', 'Mr', 'Mike', '12-mar-1968', 0, '1-may-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Neil', 'Xavier', 'DSouza', '1', 'Mr', 'NxD', '24-dec-1977', 0, '1-may-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Veera', 'Olivia', 'DSouza', '0', 'Ms', 'V', '25-nov-1981', 0, '1-may-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Chanchal', 'Singh', 'DSouza', '0', 'Ms', 'chanchu', '4-feb-1978', 0, '1-dec-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Wilbur', '', 'DSouza', '1', 'Mr', 'W', '25-feb-1979', 0, '1-dec-2010');\n";
+		final << s.str() << emp.str();
+
+		emp.str("");
+		emp << "'Abhishek', 'V', 'Chetnani', '1', 'Mr', 'A', '14-jul-1978', 0, '1-jan-2011');\n";
+		final << s.str() << emp.str();
+
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << final.str();
+		return final.str();
+	} else if (tableInfo_->tableName_ == "User_Login") {
+		stringstream final;
+		stringstream user_login;
+		user_login << "'zenond', 'zenond123', 1);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'atuld', 'atul123', 2);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'michaeld', 'michael123', 3);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'nxd', 'nxd123', 4);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'veerad', 'veerad123', 5);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'chanchud', 'chanchud', 6);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'wilburd', 'wilburd123', 7);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+
+		user_login << "'abhishekc', 'abhishekc123', 8);\n";
+		final << s.str() << user_login.str();
+		user_login.str("");
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << final.str();
+
+		return final.str();
+	} else if (tableInfo_->tableName_ == "User_Role") {
+		stringstream final;
+		stringstream user_role;
+
+		user_role << "1, 1);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "1, 2);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "1, 3);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 5);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 6);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 7);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 8);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 9);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 10);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 11);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 12);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 13);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 14);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 15);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 16);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 17);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 18);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 19);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 20);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 21);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "6, 22);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 23);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 24);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 25);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 26);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 27);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 28);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 29);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 30);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 31);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 32);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 33);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "7, 34);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 35);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 36);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 37);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 38);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 39);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 40);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 41);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 42);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 43);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 44);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 45);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 46);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 47);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 48);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 49);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 50);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 51);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 52);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 53);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 54);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "8, 55);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 62);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 63);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 64);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 65);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 66);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 67);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 68);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 69);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 70);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 71);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 72);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		user_role << "5, 73);\n";
+		final << s.str() << user_role.str();
+		user_role.str("");
+
+		string sp_random_data_fname (string(outputDirPrefix_.c_str()
+						+ string("/sp_")
+						+ tableInfo_->tableName_ 
+						+ string("_random_data_postgres.sql"))); 
+		std::ofstream random_data_sp(sp_random_data_fname.c_str(), ios_base::out|ios_base::trunc);
+		if(!random_data_sp){
+			string err_msg="unable to open " + sp_random_data_fname + "for writing";
+			error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+		}
+		random_data_sp << final.str();
+
+		return final.str();
+
 	} else {
 		int nRecords=50;
 		stringstream final;

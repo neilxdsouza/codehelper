@@ -172,7 +172,7 @@ create table Timesheet_Tables: UI_GROUP(Admin) is_master_tables_list (
 	Timesheet_Tables_Code int: primary_key UI_VIEW UI_SELECT,
 	Table_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
 
-create table Role: UI_GROUP(Admin)(
+create table Role: UI_GROUP(Admin) IS_ROLE_TABLE (
 	Role_Code int: primary_key UI_VIEW UI_SELECT,
 	Role_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
 
@@ -183,8 +183,8 @@ create table Table_Security: UI_GROUP(Admin) (
 		);
 
 create table User_Login: UI_GROUP(Admin) IS_LOGIN_PAGE (
-	User_Login_Code int: primary_key,
-	User_Login_Name varchar(20): unique IS_LOGIN_USERNAME_FIELD,
+	User_Login_Code int: primary_key UI_VIEW UI_SELECT,
+	User_Login_Name varchar(20): unique IS_LOGIN_USERNAME_FIELD UI_VIEW UI_SELECT,
 	User_Password varchar(250): password IS_LOGIN_PASSWORD_FIELD,
 	Employee_Code int: references Employee(Employee_Code)
 	);
