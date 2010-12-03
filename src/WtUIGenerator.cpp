@@ -46,10 +46,6 @@ void WtUIGenerator::GenerateCode()
 		// AddFunctionDecl(login_func_decl.str());
 		// AddFunctionDefn(login_func_defn.str());
 
-		stringstream setup_app_func_decl, setup_app_func_defn;
-		PrintSetupApplication(setup_app_func_decl, setup_app_func_defn);
-		AddFunctionDecl(setup_app_func_decl.str());
-		AddFunctionDefn(setup_app_func_defn.str());
 		once = false;
 	}
 
@@ -67,6 +63,11 @@ void WtUIGenerator::GenerateCode()
 		PrintSetupLogin(login_func_decl, login_func_defn);
 		AddFunctionDecl(login_func_decl.str());
 		AddFunctionDefn(login_func_defn.str());
+
+		stringstream setup_app_func_decl, setup_app_func_defn;
+		PrintSetupApplication(setup_app_func_decl, setup_app_func_defn);
+		AddFunctionDecl(setup_app_func_decl.str());
+		AddFunctionDefn(setup_app_func_defn.str());
 	}
 	GenerateForms();
 	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
@@ -301,11 +302,17 @@ void WtUIGenerator::PrintSetupLogin(stringstream & func_decl, stringstream & fun
 
 void WtUIGenerator::PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn)
 {
-	func_decl << "\tvoid SetupApplication();\n";
-	func_defn << "\tvoid good1::SetupApplication()\n\{\n";
+	// is only invoked in the context of the Login table
+	using boost::format;
+	string tn(tableInfo_->tableName_ );
+	func_decl << format("\tvoid SetupApplication(boost::shared_ptr<Biz%1%> p_%1%);\n")
+			% tn;
+	func_defn << format("\tvoid good1::SetupApplication(boost::shared_ptr<Biz%1%> p_%1%)\n\{\n")
+			% tn;
 
 	func_defn << "\tviewPort->clear();\n";
-	func_defn << "	setTitle(\"Timesheet Application Program\");\n";
+	func_defn << format("	setTitle(std::string(\"Timesheet Application Program: \") + p_%1%->biz_Employee_->ForeName_);\n")
+			% tn;
 	func_defn << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
 	func_defn << "\n";
 	func_defn << "	useStyleSheet(\"good1.css\");\n";
@@ -1679,11 +1686,14 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_h_str << "#include <Wt/WContainerWidget>\n";
 	login_widget_h_str << "#include <Wt/WText>\n";
 	login_widget_h_str << "#include <Wt/WLineEdit>\n\n";
+	login_widget_h_str << format("#include \"%1%_bll.h\"\n\n") % tableInfo_->tableName_;
 	login_widget_h_str << format("class %1%_Widget : public Wt::WContainerWidget\n") %
 				tn;	
 	login_widget_h_str << format("{\npublic:\n\t%1%_Widget(Wt::WContainerWidget *parent=0);\n") %
 				tn;
-	login_widget_h_str << format("\tWt::Signal<std::wstring> loginSuccessful;\n");
+	login_widget_h_str << format("\t//Wt::Signal<std::wstring> loginSuccessful;\n");
+	login_widget_h_str << format("\tWt::Signal<boost::shared_ptr<Biz%1%> > loginSuccessful;\n")
+				% tableInfo_->tableName_;
 	login_widget_h_str << "private:\n";
 
 	login_widget_h_str<< "\tWt::WText     *IntroText;\n";
@@ -1702,7 +1712,8 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_h_str << login_widget_h_str2.str();
 
 
-	login_widget_h_str << "\tvoid confirmLogin(const std::wstring text);\n";
+	login_widget_h_str << format("\tvoid confirmLogin(const std::wstring text, boost::shared_ptr<Biz%1%> p_%1%);\n")
+				% tn;
 	login_widget_h_str << "\tvoid checkCredentials();\n";
 	login_widget_h_str << "};\n";
 
@@ -1809,13 +1820,18 @@ void WtUIGenerator::PrintLoginWidget()
 		v_ptr=v_ptr->prev;
 	}
 	login_widget_cpp_str << "\n";
-	login_widget_cpp_str << "	if (userName_ == L\"nxd\") {\n";
+	login_widget_cpp_str << "	/*if (userName_ == L\"nxd\") {\n";
 	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\");\n";
 	login_widget_cpp_str << "	} else if (userName_ == L\"guest\" && pass == L\"guest\") {\n";
 	login_widget_cpp_str << "		confirmLogin(L\"<p>Welcome guest.</p>\");\n";
-	login_widget_cpp_str << "	} else if ( top_level_namespace::db::User_Login::User_Login_Authenticate_User(\n"
+	login_widget_cpp_str << format("	} else */ if (int r_%3%= %1%::db::%2%::%2%_Authenticate_User(\n")
+						% project_namespace % tn % tableInfo_->param_list->var_name
 			<< "\t\t\tutf8_username , utf8_passwd)	) {\n"
-			<< "\t\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\");\n";
+			<< format("\t\t\tboost::shared_ptr<Biz%2%> l_%2% = %1%::db::%2%::GetSingle%2%(r_%3%);\n")
+						% project_namespace % tn % tableInfo_->param_list->var_name
+			<< format("\t\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\", l_%1%);\n")
+						% tn
+			;
 	login_widget_cpp_str << "	} else {\n";
 	login_widget_cpp_str << "		IntroText\n";
 	login_widget_cpp_str << "		->setText(\"<p>You entered the wrong password, or the username \"\n";
@@ -1844,10 +1860,14 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << "}\n";
 	login_widget_cpp_str << "\n";
-	login_widget_cpp_str << format("void %1%_Widget::confirmLogin(const std::wstring text)\n") % tn;
+	//login_widget_cpp_str << format("void %1%_Widget::confirmLogin(const std::wstring text)\n") % tn;
+
+	login_widget_cpp_str << format("\tvoid %1%_Widget::confirmLogin(const std::wstring text, boost::shared_ptr<Biz%1%> p_%1%)\n")
+				% tn;
 	login_widget_cpp_str << "{\n";
 	login_widget_cpp_str << "	clear();\n";
-	login_widget_cpp_str << "	loginSuccessful.emit(userName_);\n";
+	login_widget_cpp_str << format("	loginSuccessful.emit(p_%1%);\n") 
+				% tn;
 	login_widget_cpp_str << "}\n\n";
 	login_widget_cpp_str << "\n";
 	//login_widget_cpp_str << format("void %1%_Widget::startPlaying()\n") % tn; 
