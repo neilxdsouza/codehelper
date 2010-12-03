@@ -1026,30 +1026,31 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	int count1=2;
 	if (tableInfo_->has_search_key) {
 		struct var_list* v_ptr1=tableInfo_->param_list;
-		func_body << "\t\t\t\",";
+		func_body << "\t\t\t /*1*/ \",";
 		while (v_ptr1) {
 			if (v_ptr1->options.search_key) {
 				func_body << boost::format("$%1%::%2%")
 					% ++count1 % print_sp_types(v_ptr1->var_type);
-				if (count1 < nActualParams ){
-					func_body << ", ";
+				if (count1 < tableInfo_->has_search_key ){
+					func_body << " /*2*/ , ";
 				} else {
 					break;
 				}
 			}
 			v_ptr1=v_ptr1->prev;
 		}
+		func_body << "\"\n";
 	}
 
 	if (tableInfo_->nSessionParams) {
 		struct var_list * v_ptr1=tableInfo_->param_list;
-		func_body << "\t\t\t\",";
+		func_body << "\t\t\t /*3*/ \",";
 		while (v_ptr1) {
 			if (v_ptr1->options.session) {
 				func_body << boost::format("$%1%::%2%")
 					% ++count1 % print_sp_types(v_ptr1->var_type);
-				if (count1 < nActualParams ){
-					func_body << ", ";
+				if (count1 < tableInfo_->nSessionParams ){
+					func_body << " /*4*/ , ";
 				} else {
 					break;
 				}
@@ -1058,10 +1059,16 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		}
 		//func_body << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
 		//		nActualParams;
+		func_body << "\"\n";
 	} 
 	//else {
-		func_body << boost::format("\t\t\t)\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+	//if (tableInfo_->has_search_key || tableInfo_->nSessionParams) {
+	//	func_body << boost::format("\t\t\t)\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+	//			nActualParams;
+	//} else {
+		func_body << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
 				nActualParams;
+	//}
 	//}
 
 	func_body << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
@@ -2451,8 +2458,8 @@ void PostgreSQLCodeGenerator::GenerateAuthenticateLoginSP()
 		}
 		v_ptr=v_ptr->prev;
 	}
-	authenticate_login_sp_str << "\t, out valid_login int)\nas $$\nbegin\n";
-	authenticate_login_sp_str << format("\tselect count(*) into valid_login from %1% where ")
+	authenticate_login_sp_str << "\t, out r_user_login_code int)\nas $$\nbegin\n";
+	authenticate_login_sp_str << format("\tselect user_login_code into r_user_login_code from %1% where ")
 		% tableInfo_->tableName_ ;
 
 	v_ptr=tableInfo_->param_list;
@@ -2478,7 +2485,7 @@ void PostgreSQLCodeGenerator::GenerateCppAuthenticateLogin(std::stringstream & p
 	stringstream cpp_auth_login_str;
 	using boost::format;
 	stringstream func_signature;
-	func_signature << format("bool %1%_Authenticate_User(") %
+	func_signature << format("int32_t %1%_Authenticate_User(") %
 		tableInfo_->tableName_;
 	
 	struct var_list* v_ptr=tableInfo_->param_list;
@@ -2499,10 +2506,10 @@ void PostgreSQLCodeGenerator::GenerateCppAuthenticateLogin(std::stringstream & p
 	func_signature << ")";
 	stringstream func_body;
 	func_body << "{\n";
-	func_body << "	boost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());;\n";
-	func_body << "	std::vector<boost::shared_ptr<char> > char_ptr_vec(2);;\n";
-	func_body << "	const char * paramValues[2];;\n";
-	func_body << "	std::stringstream ss_param_values[2];;\n";
+	func_body << "	boost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
+	func_body << "	std::vector<boost::shared_ptr<char> > char_ptr_vec(2);\n";
+	func_body << "	const char * paramValues[2];\n";
+	func_body << "	std::stringstream ss_param_values[2];\n";
 	v_ptr=tableInfo_->param_list;
 	int count = 0;
 	while (v_ptr) {
@@ -2543,10 +2550,20 @@ void PostgreSQLCodeGenerator::GenerateCppAuthenticateLogin(std::stringstream & p
 	func_body << "		exit_nicely(conn.get());\n";
 	func_body << "\t\treturn false;\n";
 	func_body << "	} else {\n";
-	func_body << "	int32_t valid_login_fnum = PQfnumber(res, \"valid_login\");\n";
-	func_body << "\t\tint32_t valid_login = boost::lexical_cast<int32_t> (PQgetvalue(res, 0, valid_login_fnum) );\n";
-	func_body << "\t\tprintf(\"valid_login=%d\\n\", valid_login);\n";
-	func_body << "\t\treturn valid_login==1 ? true:false;\n";
+	//func_body << "	int32_t valid_login_fnum = PQfnumber(res, \"valid_login\");\n";
+	//func_body << "\t\tint32_t valid_login = boost::lexical_cast<int32_t> (PQgetvalue(res, 0, valid_login_fnum) );\n";
+	//func_body << "\t\tprintf(\"valid_login=%d\\n\", valid_login);\n";
+	//func_body << "\t\treturn valid_login==1 ? true:false;\n";
+
+	v_ptr=tableInfo_->param_list;
+	func_body << format("		int nTuples = PQntuples(res);\n");
+	func_body << format("		if (nTuples==0) {\n");
+	func_body << format("			return 0;\n");
+	func_body << format("		}\n");
+	func_body << format("		int32_t %1%_fnum = PQfnumber(res, \"r_%1%\");\n") % v_ptr->var_name;
+	func_body << format("		int32_t %1% = boost::lexical_cast<int32_t> (PQgetvalue(res, 0, %1%_fnum) );\n") % v_ptr->var_name;
+	func_body << format("		printf(\"%1%=%%d\\n\", %1%);\n") % v_ptr->var_name;
+	func_body << format("		return %1%;\n") % v_ptr->var_name;
 	func_body << "\t}\n";
 
 
