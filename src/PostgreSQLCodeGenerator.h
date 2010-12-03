@@ -43,6 +43,7 @@ public:
 	std::string print_cpp_search_key_params();
 	std::string print_sp_search_key_fields();
 	std::string print_sp_search_key_whereclause();
+	std::string print_sp_session_key_whereclause();
 
 	void print_sp_select_fields(std::stringstream & p_sp_select_fields);
 	void print_sp_select_params(std::stringstream & p_sp_select_fields, 
