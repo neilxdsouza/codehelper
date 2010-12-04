@@ -1075,7 +1075,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 			if (v_ptr1->options.search_key) {
 				func_body << boost::format("$%1%::%2%")
 					% ++count1 % print_sp_types(v_ptr1->var_type);
-				if (count1 < tableInfo_->has_search_key ){
+				if (count1 < tableInfo_->has_search_key + 2 ){
 					func_body << " /*2*/ , ";
 				} else {
 					break;
@@ -1086,14 +1086,15 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 		func_body << "\"\n";
 	}
 
+	int count2 = count1;
 	if (tableInfo_->nSessionParams) {
 		struct var_list * v_ptr1=tableInfo_->param_list;
 		func_body << "\t\t\t /*3*/ \",";
 		while (v_ptr1) {
 			if (v_ptr1->options.session) {
 				func_body << boost::format("$%1%::%2%")
-					% ++count1 % print_sp_types(v_ptr1->var_type);
-				if (count1 < tableInfo_->nSessionParams ){
+					% ++count2 % print_sp_types(v_ptr1->var_type);
+				if (count2 < tableInfo_->nSessionParams +2 + count1){
 					func_body << " /*4*/ , ";
 				} else {
 					break;
