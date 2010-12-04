@@ -221,6 +221,16 @@ void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_Verti
 		exit(1);
 	}
 
+	string drop_functions_sql_sh_fname( output_dir.str()
+				+ string("/unified_drop_func_sql.sh"));
+	fstream drop_functions_sql_sh(drop_functions_sql_sh_fname.c_str(), ios_base::out | ios_base::trunc);
+	if (!drop_functions_sql_sh) {
+		stringstream err_msg;
+		err_msg << "unable to open file for writing: " << drop_functions_sql_sh_fname;
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg.str());
+		exit(1);
+	}
+
 	for(int i=p_VerticesInTopologicalOrder.size()-1, j=0; i>=0 ; --i, ++j) {
 		int graph_node_index = p_VerticesInTopologicalOrder[i];
 		int graph_node_drop_index = p_VerticesInTopologicalOrder[j];
@@ -253,8 +263,15 @@ void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_Verti
 		//std::cout << gn->tiPtr_->tableName_ << endl;
 		drop_tables_sql << "drop table " << gn_drop->tiPtr_->tableName_ << ";\n";
 
+		drop_functions_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
+			<< "_drop_insert_postgres.sql >> unified_drop_func.sql" << endl;
+		drop_functions_sql_sh << "cat " << "../sp_select_" << gn->tiPtr_->tableName_ 
+			<< "_drop_postgres.sql >> unified_drop_func.sql" << endl;
+
+
 
 	}
+
 	cout << "unified sql scripts, script generators have been written to : " 
 		<< output_dir.str() << " directory." << endl
 		<< "Things are done this way so that all scripts are together and match as a set"

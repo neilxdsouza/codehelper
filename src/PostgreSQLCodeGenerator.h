@@ -19,7 +19,7 @@ public:
 	string print_sp_param_decls(print_sp_params_mode mode);
 	string print_sp_params( print_sp_params_mode mode);
 	string print_sp_fields( print_sp_params_mode mode);
-	void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
+	//void print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode);
 	string print_sp_pkey_param();
 	string print_sp_pkey_field();
 	void print_lower_fname(ofstream & file);

@@ -57,6 +57,28 @@ void PostgreSQLCodeGenerator::SetOutputDirectory(output_code_directory_prefix)
 
 void PostgreSQLCodeGenerator::GenerateInsertSP()
 {
+	stringstream insert_sp_decl_str, insert_sp_body_str;
+
+	insert_sp_decl_str << boost::format("function sp_%1%_insert_%1%(")
+		% tableInfo_->tableName_;
+	insert_sp_decl_str << print_sp_param_decls( INSERT);
+	insert_sp_decl_str << ")";
+	insert_sp_body_str << "AS $$\n";
+	insert_sp_body_str << "BEGIN\n";
+	insert_sp_body_str << "\tINSERT INTO " << tableInfo_->tableName_ 
+		<< "(";
+	insert_sp_body_str << print_sp_fields(  INSERT);
+	insert_sp_body_str << "\t\t) values (";
+	insert_sp_body_str << print_sp_params(  INSERT);
+	insert_sp_body_str << "\t\t);\n";
+	insert_sp_body_str << "\tselect last_value into ";
+	//print_sp_1st_param( insert_sp_body_str, INSERT);
+	insert_sp_body_str << "p_" << tableInfo_->param_list->var_name;
+	
+	insert_sp_body_str << boost::format(" from %1%_%2%_seq;\n")
+		% tableInfo_->tableName_ % print_sp_pkey_field();
+	insert_sp_body_str << endl << "END\n$$ LANGUAGE plpgsql;\n";
+
 	// cout << "outputDirPrefix_: " << outputDirPrefix_ << endl;
 	string sp_insert_fname (string(outputDirPrefix_.c_str()
 					+ string("/sp_")
@@ -67,24 +89,23 @@ void PostgreSQLCodeGenerator::GenerateInsertSP()
 		string err_msg="unable to open " + sp_insert_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	insert_sp << boost::format("create or replace function sp_%1%_insert_%1%(")
-		% tableInfo_->tableName_;
-	insert_sp << print_sp_param_decls( INSERT);
-	insert_sp << ") AS $$\n";
-	insert_sp << "BEGIN\n";
-	insert_sp << "\tINSERT INTO " << tableInfo_->tableName_ 
-		<< "(";
-	insert_sp << print_sp_fields(  INSERT);
-	insert_sp << "\t\t) values (";
-	insert_sp << print_sp_params(  INSERT);
-	insert_sp << "\t\t);\n";
-	insert_sp << "\tselect last_value into ";
-	print_sp_1st_param( insert_sp, INSERT);
-	insert_sp << boost::format(" from %1%_%2%_seq;\n")
-		% tableInfo_->tableName_ % print_sp_pkey_field();
-	insert_sp << endl << "END\n$$ LANGUAGE plpgsql;\n";
-	if(insert_sp)
-		insert_sp.close();
+	insert_sp << "create or replace "
+		<< insert_sp_decl_str.str() << endl
+		<< insert_sp_body_str.str();
+
+	string sp_drop_insert_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_drop_insert_postgres.sql"))); 
+	std::ofstream drop_insert_sp(sp_drop_insert_fname.c_str(), ios_base::out|ios_base::trunc);
+	if(!drop_insert_sp){
+		string err_msg="unable to open " + sp_drop_insert_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	drop_insert_sp << "drop "
+		<< insert_sp_decl_str.str() << ";"
+		<< endl;
+
 }
 
 string PostgreSQLCodeGenerator::print_sp_param_decls(print_sp_params_mode mode)
@@ -192,11 +213,13 @@ string PostgreSQLCodeGenerator::print_sp_fields( print_sp_params_mode mode)
 }
 
 
+/*
 void PostgreSQLCodeGenerator::print_sp_1st_param(ofstream & ofile, print_sp_params_mode mode)
 {
 	struct var_list * v_ptr=tableInfo_->param_list;
 	ofile << boost::format("\tp_%1%") %v_ptr->var_name;
 }
+*/
 
 void PostgreSQLCodeGenerator::GenerateCppFuncs()
 {
@@ -467,7 +490,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 {
 	// search key params
 	stringstream sp_decl;
-	sp_decl << boost::format("create or replace function sp_%1%_select_%1%(\n")
+	sp_decl << boost::format("function sp_%1%_select_%1%(\n")
 		% tableInfo_->tableName_;
 	sp_decl << "\tp_PageIndex  int,\n";
 	sp_decl << "\tp_PageSize   int";
@@ -526,13 +549,26 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		string err_msg="unable to open " + sp_select_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	select_sp << sp_decl.str() 
+	select_sp << "create or replace " <<  sp_decl.str() 
 		<< "\nRETURNS TABLE (\n"
 		<< sp_select_fields_with_type.str() 
 		<< "\n)"
 		<< sp_body.str()
 		<< endl
 		<< endl;
+
+	string sp_drop_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_select_")
+					+ tableInfo_->tableName_ 
+					+ string("_drop_postgres.sql"))); 
+	std::ofstream drop_sp(sp_drop_fname.c_str(), ios_base::out|ios_base::trunc);
+	if (!drop_sp) {
+		string err_msg="unable to open " + sp_drop_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	drop_sp << "drop function " << sp_decl.str() << ";"
+		<< endl;
+
 }
 
 
