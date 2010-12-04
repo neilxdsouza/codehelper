@@ -783,7 +783,6 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 	while (v_ptr) {
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if (v_ptr->options.session) {
-				// skip this field
 				p_sp_select_fields_with_type << "/*31*/ "
 					<< v_ptr->print_sql_var_decl_for_select_return_table();
 				print_comma = true;
