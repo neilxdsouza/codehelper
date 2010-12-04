@@ -1094,7 +1094,7 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 			if (v_ptr1->options.session) {
 				func_body << boost::format("$%1%::%2%")
 					% ++count2 % print_sp_types(v_ptr1->var_type);
-				if (count2 < tableInfo_->nSessionParams +2 + count1){
+				if (count2 < tableInfo_->nSessionParams +2 + tableInfo_->has_search_key){
 					func_body << " /*4*/ , ";
 				} else {
 					break;
