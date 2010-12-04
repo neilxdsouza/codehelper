@@ -206,7 +206,7 @@ string WtUIGenerator::PrintHeaders()
 	h_files << "#include <boost/shared_ptr.hpp>\n";
 	h_files << "#include <boost/scoped_ptr.hpp>\n";
 	h_files << "#include <boost/date_time/gregorian/gregorian.hpp>\n";
-	h_files << "#include \"LoginWidget.h\"\n";
+	//h_files << "#include \"LoginWidget.h\"\n";
 	h_files << "\n";
 	h_files << "#include <iostream>\n";
 	h_files << "\n";
@@ -797,7 +797,7 @@ void WtUIGenerator::GenerateMakefile()
 {
 	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
-	makefile_objs << " TimesheetCalendar.o CalendarCell.o LoginWidget.o";
+	makefile_objs << " TimesheetCalendar.o CalendarCell.o ";
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
 		<< makefile_objs.str() << endl;
