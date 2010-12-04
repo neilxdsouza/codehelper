@@ -566,7 +566,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		string err_msg="unable to open " + sp_drop_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	drop_sp << "drop function " << sp_decl.str() << ";"
+	drop_sp << "drop " << sp_decl.str() << ";"
 		<< endl;
 
 }
@@ -2343,7 +2343,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSingleRecordSP()
 {
 	// search key params
 	stringstream sp_decl;
-	sp_decl << boost::format("create or replace function sp_%1%_select_single_%1%(\n")
+	sp_decl << boost::format("function sp_%1%_select_single_%1%(\n")
 		% tableInfo_->tableName_;
 	sp_decl << "\tp_pkey  int\n";
 
@@ -2366,6 +2366,7 @@ void PostgreSQLCodeGenerator::GenerateSelectSingleRecordSP()
 	sp_body << boost::format ( "\t) sp_select_%s;\n") 
 		% tableInfo_->tableName_;
 	sp_body << "END\n$$ LANGUAGE plpgsql;\n";
+
 	/* output the sp to a file */
 	string sp_select_fname (string(outputDirPrefix_.c_str()
 					+ string("/sp_")
@@ -2376,13 +2377,27 @@ void PostgreSQLCodeGenerator::GenerateSelectSingleRecordSP()
 		string err_msg="unable to open " + sp_select_fname + "for writing";
 		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
 	}
-	select_sp << sp_decl.str() 
+	select_sp << "create or replace " << sp_decl.str() 
 		<< "\nRETURNS TABLE (\n"
 		<< sp_select_fields_with_type.str() 
 		<< "\n)"
 		<< sp_body.str()
 		<< endl
 		<< endl;
+
+	/* output the sp to a file */
+	string sp_drop_select_fname (string(outputDirPrefix_.c_str()
+					+ string("/sp_")
+					+ tableInfo_->tableName_ 
+					+ string("_drop_select_single_postgres.sql"))); 
+	std::ofstream drop_select_sp(sp_drop_select_fname.c_str(), ios_base::out|ios_base::trunc);
+	if (!drop_select_sp) {
+		string err_msg="unable to open " + sp_drop_select_fname + "for writing";
+		error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg);
+	}
+	drop_select_sp << "DROP " << sp_decl.str() << ";"
+		<< endl;
+
 }
 
 

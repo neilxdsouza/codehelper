@@ -258,6 +258,12 @@ void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_Verti
 			<< "_random_data_postgres.sql >> unified_load_rdg_data.sql" << endl;
 		create_func_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
 			<< "_select_postgres.sql >> unified_create_func.sql" << endl;
+		create_func_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
+			<< "_select_single_postgres.sql >> unified_create_func.sql" << endl;
+		create_func_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
+			<< "_select_single_postgres.sql >> unified_create_func.sql" << endl;
+		create_func_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
+			<< "_insert_postgres.sql >> unified_create_func.sql" << endl;
 
 		GraphNodeType * gn_drop = p_graph.graphNodes_[graph_node_drop_index];
 		//std::cout << gn->tiPtr_->tableName_ << endl;
@@ -267,6 +273,8 @@ void PrintSqlScriptInTopologicalOrder(GraphType & p_graph, vector<int> & p_Verti
 			<< "_drop_insert_postgres.sql >> unified_drop_func.sql" << endl;
 		drop_functions_sql_sh << "cat " << "../sp_select_" << gn->tiPtr_->tableName_ 
 			<< "_drop_postgres.sql >> unified_drop_func.sql" << endl;
+		drop_functions_sql_sh << "cat " << "../sp_" << gn->tiPtr_->tableName_ 
+			<< "_drop_select_single_postgres.sql >> unified_drop_func.sql" << endl;
 
 
 
