@@ -113,7 +113,7 @@ CREATE TABLE DesignationGroup : UI_GROUP (Employee) (
 	);
 
 CREATE TABLE TimeCost : UI_GROUP (Timesheet_Admin) (
-	TimeCost_Code int: primary_key,
+	TimeCost_Code int: primary_key UI_VIEW UI_SELECT,
 	DesignationGroup_Code int: references DesignationGroup(DesignationGroup_Code),
 	Hourly_Rate double: not null
 	);
@@ -131,7 +131,7 @@ CREATE TABLE DesignationActivity : UI_GROUP (Timesheet_Admin) (
 	);
 
 create Table Currency : UI_GROUP (Exchange_Rates) (
-	Currency_Code int: primary_key,
+	Currency_Code int: primary_key UI_VIEW UI_SELECT,
 	Currency_Short_Name varchar(5): not null UI_VIEW UI_SELECT SEARCH_KEY,
 	Currency_Name varchar(200): null);
 
@@ -189,8 +189,8 @@ create table User_Login: UI_GROUP(Admin) IS_LOGIN_PAGE (
 	Employee_Code int: references Employee(Employee_Code)
 	);
 
-create table User_Role : UI_GROUP(Admin) (
-	User_Role_Code int: primary_key UI_VIEW UI_SELECT,
-	User_Login_Code int : references User_Login(User_Login_Code),
+create table User_Role : UI_GROUP(Admin) IS_USER_ROLES_TABLE (
+	User_Role_Code int: primary_key UI_VIEW UI_SELECT ,
+	User_Login_Code int : references User_Login(User_Login_Code) session,
 	Role_Code int: references Role(Role_Code)
 	);

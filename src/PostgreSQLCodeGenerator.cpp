@@ -726,10 +726,17 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 			if (v_ptr->options.session) {
 				// skip this field
 				//print_comma = false;
-				p_sp_select_fields << "\t\t\t/* skipping :" << v_ptr->var_name 
-					<< __LINE__ << ", " << __FILE__ << ", " << __PRETTY_FUNCTION__ 
-					<< " */" 
-					<< "\n";
+				//p_sp_select_fields << "\t\t\t/* skipping :" << v_ptr->var_name 
+				//	<< __LINE__ << ", " << __FILE__ << ", " << __PRETTY_FUNCTION__ 
+				//	<< " */" 
+				//	<< "\n";
+				p_sp_select_fields << "\t\t\t" << v_ptr->var_name;
+				if (v_ptr->prev) {
+					p_sp_select_fields << ",\n";
+				} else {
+					p_sp_select_fields << "\n";
+				}
+				fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, " Use print_comma here and fix this function");
 			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 			} else {
 				p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
@@ -777,7 +784,9 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
 			if (v_ptr->options.session) {
 				// skip this field
-				print_comma = false;
+				p_sp_select_fields_with_type << "/*31*/ "
+					<< v_ptr->print_sql_var_decl_for_select_return_table();
+				print_comma = true;
 			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				//v_ptr = v_ptr->prev;
 				//continue;

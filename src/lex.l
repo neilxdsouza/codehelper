@@ -142,6 +142,10 @@ IS_ROLE_TABLE {
 	return IS_ROLE_TABLE;
 }
 
+IS_USER_ROLES_TABLE {
+	return IS_USER_ROLES_TABLE;
+}
+
 
 ")"	{
 	return ')';

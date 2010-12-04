@@ -1743,6 +1743,17 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << format("#include \"%1%_Widget.h\"\n") % tableInfo_->tableName_;
 	login_widget_cpp_str << format("#include \"%1%_db_postgres.h\"\n") % tableInfo_->tableName_;
+
+	struct TableInfoType * ti_user_role_ptr = 0;
+	for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
+		if (TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tab_options.is_user_roles_table) {
+			ti_user_role_ptr = TableCollectionSingleton::Instance().Tables[i]->tableInfo_;
+			break;
+		}
+	}
+	login_widget_cpp_str << format("#include \"%1%_db_postgres.h\"\n") % ti_user_role_ptr->tableName_;
+	login_widget_cpp_str << format("#include \"%1%_bll.h\"\n") % ti_user_role_ptr->tableName_;
+
 	login_widget_cpp_str << "\n";
 	login_widget_cpp_str << format("%1%_Widget::%1%_Widget(WContainerWidget *parent)\n") % tableInfo_->tableName_;
 	login_widget_cpp_str << "	: Wt::WContainerWidget(parent)\n";
@@ -1827,9 +1838,15 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << format("	} else */ if (int r_%3%= %1%::db::%2%::%2%_Authenticate_User(\n")
 						% project_namespace % tn % tableInfo_->param_list->var_name
 			<< "\t\t\tutf8_username , utf8_passwd)	) {\n"
-			<< format("\t\t\tboost::shared_ptr<Biz%2%> l_%2% = %1%::db::%2%::GetSingle%2%(r_%3%);\n")
-						% project_namespace % tn % tableInfo_->param_list->var_name
-			<< format("\t\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\", l_%1%);\n")
+			<< format("\t\tboost::shared_ptr<Biz%2%> l_%2% = %1%::db::%2%::GetSingle%2%(r_%3%);\n")
+						% project_namespace % tn % tableInfo_->param_list->var_name;
+
+	login_widget_cpp_str << "\t\t/* " << ti_user_role_ptr->tableName_ << " */\n";
+	login_widget_cpp_str << format("\t\tstd::vector<boost::shared_ptr<Biz%1%> > l_%1% = %2%::db::%1%::Get%1%(0, 1000, r_%3%);\n") %
+					ti_user_role_ptr->tableName_ % project_namespace % tableInfo_->param_list->var_name;
+
+
+	login_widget_cpp_str <<  format("\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\", l_%1%);\n")
 						% tn
 			;
 	login_widget_cpp_str << "	} else {\n";

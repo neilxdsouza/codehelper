@@ -81,9 +81,10 @@
      IS_LOGIN_PAGE = 297,
      IS_MASTER_TABLES_LIST = 298,
      IS_ROLE_TABLE = 299,
-     TABLE = 300,
-     NAME = 301,
-     INUMBER = 302
+     IS_USER_ROLES_TABLE = 300,
+     TABLE = 301,
+     NAME = 302,
+     INUMBER = 303
    };
 #endif
 
@@ -106,7 +107,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 110 "src/integrated_sql_gram.hpp"
+#line 111 "src/integrated_sql_gram.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
