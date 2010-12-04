@@ -76,6 +76,7 @@ public:
 	void PrintSetupLogin(stringstream & func_defn, stringstream & func_decl);
 	void PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn);
 	void PrintLoginWidget();
+	void GenerateLoggedInUserInfo();
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

@@ -305,13 +305,11 @@ void WtUIGenerator::PrintSetupApplication(std::stringstream & func_decl, std::st
 	// is only invoked in the context of the Login table
 	using boost::format;
 	string tn(tableInfo_->tableName_ );
-	func_decl << format("\tvoid SetupApplication(boost::shared_ptr<Biz%1%> p_%1%);\n")
-			% tn;
-	func_defn << format("\tvoid good1::SetupApplication(boost::shared_ptr<Biz%1%> p_%1%)\n\{\n")
-			% tn;
+	func_decl << format("\tvoid SetupApplication(boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo);\n");
+	func_defn << format("\tvoid good1::SetupApplication(boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo)\n\{\n");
 
 	func_defn << "\tviewPort->clear();\n";
-	func_defn << format("	setTitle(std::string(\"Timesheet Application Program: \") + p_%1%->biz_Employee_->ForeName_);\n")
+	func_defn << format("	setTitle(std::string(\"Timesheet Application Program: \") + p_LoggedInUserInfo->ptr_%1%->biz_Employee_->ForeName_);\n")
 			% tn;
 	func_defn << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
 	func_defn << "\n";
@@ -629,6 +627,7 @@ void WtUIGenerator::FinalCleanUp()
 {
 	GenerateUIScaffolding();
 	GenerateMakefile();
+	GenerateLoggedInUserInfo();
 }
 
 
@@ -1686,14 +1685,14 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_h_str << "#include <Wt/WContainerWidget>\n";
 	login_widget_h_str << "#include <Wt/WText>\n";
 	login_widget_h_str << "#include <Wt/WLineEdit>\n\n";
-	login_widget_h_str << format("#include \"%1%_bll.h\"\n\n") % tableInfo_->tableName_;
+	login_widget_h_str << format("#include \"%1%_bll.h\"\n") % tn;
+	login_widget_h_str << format("#include \"LoggedInUserInfo.h\"\n\n") ;
 	login_widget_h_str << format("class %1%_Widget : public Wt::WContainerWidget\n") %
 				tn;	
 	login_widget_h_str << format("{\npublic:\n\t%1%_Widget(Wt::WContainerWidget *parent=0);\n") %
 				tn;
 	login_widget_h_str << format("\t//Wt::Signal<std::wstring> loginSuccessful;\n");
-	login_widget_h_str << format("\tWt::Signal<boost::shared_ptr<Biz%1%> > loginSuccessful;\n")
-				% tableInfo_->tableName_;
+	login_widget_h_str << format("\tWt::Signal<boost::shared_ptr<LoggedInUserInfo> > loginSuccessful;\n");
 	login_widget_h_str << "private:\n";
 
 	login_widget_h_str<< "\tWt::WText     *IntroText;\n";
@@ -1712,8 +1711,7 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_h_str << login_widget_h_str2.str();
 
 
-	login_widget_h_str << format("\tvoid confirmLogin(const std::wstring text, boost::shared_ptr<Biz%1%> p_%1%);\n")
-				% tn;
+	login_widget_h_str << format("\tvoid confirmLogin(const std::wstring text, boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo);\n");
 	login_widget_h_str << "\tvoid checkCredentials();\n";
 	login_widget_h_str << "};\n";
 
@@ -1842,12 +1840,13 @@ void WtUIGenerator::PrintLoginWidget()
 						% project_namespace % tn % tableInfo_->param_list->var_name;
 
 	login_widget_cpp_str << "\t\t/* " << ti_user_role_ptr->tableName_ << " */\n";
-	login_widget_cpp_str << format("\t\tstd::vector<boost::shared_ptr<Biz%1%> > l_%1% = %2%::db::%1%::Get%1%(0, 1000, r_%3%);\n") %
+	login_widget_cpp_str << format("\t\tstd::vector<boost::shared_ptr<Biz%1%> > l_vec_%1% = %2%::db::%1%::Get%1%(0, 1000, r_%3%);\n") %
 					ti_user_role_ptr->tableName_ % project_namespace % tableInfo_->param_list->var_name;
+	login_widget_cpp_str << format("\t\tboost::shared_ptr<LoggedInUserInfo> ptr_LoggedInUserInfo ( new LoggedInUserInfo(l_%1%, l_vec_%2%) );\n")
+				% tn % ti_user_role_ptr->tableName_;
 
 
-	login_widget_cpp_str <<  format("\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\", l_%1%);\n")
-						% tn
+	login_widget_cpp_str <<  format("\t\tconfirmLogin(L\"<p>Welcome, \" + userName_ + L\"</p>\", ptr_LoggedInUserInfo);\n")
 			;
 	login_widget_cpp_str << "	} else {\n";
 	login_widget_cpp_str << "		IntroText\n";
@@ -1879,12 +1878,11 @@ void WtUIGenerator::PrintLoginWidget()
 	login_widget_cpp_str << "\n";
 	//login_widget_cpp_str << format("void %1%_Widget::confirmLogin(const std::wstring text)\n") % tn;
 
-	login_widget_cpp_str << format("\tvoid %1%_Widget::confirmLogin(const std::wstring text, boost::shared_ptr<Biz%1%> p_%1%)\n")
+	login_widget_cpp_str << format("\tvoid %1%_Widget::confirmLogin(const std::wstring text, boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo)\n")
 				% tn;
 	login_widget_cpp_str << "{\n";
 	login_widget_cpp_str << "	clear();\n";
-	login_widget_cpp_str << format("	loginSuccessful.emit(p_%1%);\n") 
-				% tn;
+	login_widget_cpp_str << format("	loginSuccessful.emit(p_LoggedInUserInfo);\n") ;
 	login_widget_cpp_str << "}\n\n";
 	login_widget_cpp_str << "\n";
 	//login_widget_cpp_str << format("void %1%_Widget::startPlaying()\n") % tn; 
@@ -1901,4 +1899,55 @@ void WtUIGenerator::PrintLoginWidget()
 				+ string("_Widget.cpp"))); 
 	std::ofstream login_widget_cpp(login_widget_fname_cpp.c_str(), ios_base::out|ios_base::trunc);
 	login_widget_cpp << login_widget_cpp_str.str();
+}
+
+
+void WtUIGenerator::GenerateLoggedInUserInfo()
+{
+	std::stringstream logged_in_user_info_str;
+	using boost::format;
+
+	struct TableInfoType * ti_user_role_ptr = 0, *ti_user_login_ptr = 0 ;
+	for(int i=0; i<TableCollectionSingleton::Instance().Tables.size(); ++i) {
+		if (TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tab_options.is_user_roles_table) {
+			ti_user_role_ptr = TableCollectionSingleton::Instance().Tables[i]->tableInfo_;
+		}
+		if (TableCollectionSingleton::Instance().Tables[i]->tableInfo_->tab_options.is_login_page) {
+			ti_user_login_ptr = TableCollectionSingleton::Instance().Tables[i]->tableInfo_;
+		}
+		if (ti_user_role_ptr && ti_user_login_ptr) {
+			break;
+		}
+	}
+	if ( ! (ti_user_login_ptr && ti_user_role_ptr) ) {
+		// no need to setup session and login variables
+		return;
+	}
+
+	logged_in_user_info_str << "#ifndef LOGGED_IN_USER_INFO_H\n#define LOGGED_IN_USER_INFO_H\n\n"
+		<< boost::format("#include <vector>\n\n")
+		//<< boost::format("#include <string>\n\n")
+		//<< boost::format("#include <sstream>\n\n")
+		<< boost::format("#include <boost/shared_ptr.hpp>\n\n")
+		<< format("#include \"%1%_bll.h\"\n") % ti_user_login_ptr->tableName_
+		<< format("#include \"%1%_bll.h\"\n") % ti_user_role_ptr->tableName_
+		<< "\n\n";
+
+	logged_in_user_info_str << "struct LoggedInUserInfo\n{\n"
+		<< format("\tboost::shared_ptr<Biz%1%> ptr_%1%;\n") % ti_user_login_ptr->tableName_
+		<< format("\tstd::vector<boost::shared_ptr<Biz%1%> > vec_ptr_%1%;\n") % ti_user_role_ptr->tableName_
+		<< format("\t LoggedInUserInfo(boost::shared_ptr<Biz%1%> p_ptr_%1%,\n\t\tstd::vector<boost::shared_ptr<Biz%2%> > p_vec_ptr_%2%)\n") 
+			% ti_user_login_ptr->tableName_ % ti_user_role_ptr->tableName_
+		<< format("\t: ptr_%1%(p_ptr_%1%), vec_ptr_%2%(p_vec_ptr_%2%)\n\t{ }\n\n")
+			% ti_user_login_ptr->tableName_ % ti_user_role_ptr->tableName_
+		<< "};\n";
+
+	logged_in_user_info_str << "\n#endif /* LOGGED_IN_USER_INFO_H */\n";
+	
+
+	std::string logged_in_user_info_fname_h (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ string("LoggedInUserInfo.h"))); 
+	std::ofstream logged_in_user_info_h(logged_in_user_info_fname_h.c_str(), ios_base::out|ios_base::trunc);
+	logged_in_user_info_h << logged_in_user_info_str.str();
 }
