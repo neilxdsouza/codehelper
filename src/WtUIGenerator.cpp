@@ -688,6 +688,10 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 				% aTableInfo->tableName_;
 		defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
 				% aTableInfo->tableName_;
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % aTableInfo->tableName_
+			<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % aTableInfo->tableName_
+			<< "\t}\n";
+
 		defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
 				% aTableInfo->tableName_;
 
@@ -805,7 +809,7 @@ void WtUIGenerator::GenerateMakefile()
 {
 	// log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, " ENTER ");	
 	std::stringstream makefile_str;
-	makefile_objs << " TimesheetCalendar.o CalendarCell.o ";
+	makefile_objs << " TimesheetCalendar.o CalendarCell.o LoggedInUserInfo.o";
 	makefile_str << "CXX := $(CXX) -g " << endl;
 	makefile_str << "OBJS = "
 		<< makefile_objs.str() << endl;
@@ -1934,6 +1938,7 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 
 	logged_in_user_info_str << "#ifndef LOGGED_IN_USER_INFO_H\n#define LOGGED_IN_USER_INFO_H\n\n"
 		<< boost::format("#include <vector>\n\n")
+		<< boost::format("#include <string>\n\n")
 		//<< boost::format("#include <string>\n\n")
 		//<< boost::format("#include <sstream>\n\n")
 		<< boost::format("#include <boost/shared_ptr.hpp>\n\n")
@@ -1948,6 +1953,7 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 			% ti_user_login_ptr->tableName_ % ti_user_role_ptr->tableName_
 		<< format("\t: ptr_%1%(p_ptr_%1%), vec_ptr_%2%(p_vec_ptr_%2%)\n\t{ }\n\n")
 			% ti_user_login_ptr->tableName_ % ti_user_role_ptr->tableName_
+		<< format("\tbool UserHasViewPermission(std::string p_table_name);\n")
 		<< "};\n";
 
 	logged_in_user_info_str << "\n#endif /* LOGGED_IN_USER_INFO_H */\n";
@@ -1958,4 +1964,31 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 				+ string("LoggedInUserInfo.h"))); 
 	std::ofstream logged_in_user_info_h(logged_in_user_info_fname_h.c_str(), ios_base::out|ios_base::trunc);
 	logged_in_user_info_h << logged_in_user_info_str.str();
+
+
+	stringstream logged_in_user_info_cpp_str;
+	logged_in_user_info_cpp_str << "#include \"LoggedInUserInfo.h\"\n";
+	logged_in_user_info_cpp_str << "\n";
+	logged_in_user_info_cpp_str << "\n";
+	logged_in_user_info_cpp_str << "bool LoggedInUserInfo::UserHasViewPermission(std::string p_table_name)\n";
+	logged_in_user_info_cpp_str << "{\n";
+	logged_in_user_info_cpp_str << "	using std::string;\n";
+	logged_in_user_info_cpp_str << "	string search_key = p_table_name + \":View\";\n";
+	logged_in_user_info_cpp_str << "	for(int i=0; i<vec_ptr_User_Role.size(); ++i) {\n";
+	logged_in_user_info_cpp_str << "		if (vec_ptr_User_Role[i]->biz_Role_->Get_Role_Name()\n";
+	logged_in_user_info_cpp_str << "				== search_key) {\n";
+	logged_in_user_info_cpp_str << "			return true;\n";
+	logged_in_user_info_cpp_str << "		}\n";
+	logged_in_user_info_cpp_str << "	}\n";
+	logged_in_user_info_cpp_str << "	return false;\n";
+	logged_in_user_info_cpp_str << "}\n";
+	logged_in_user_info_cpp_str << "\n";
+
+
+	std::string logged_in_user_info_fname_cpp (string(outputDirPrefix_.c_str()
+				+ string("/")
+				+ string("LoggedInUserInfo.cpp"))); 
+	std::ofstream logged_in_user_info_cpp(logged_in_user_info_fname_cpp.c_str(), ios_base::out|ios_base::trunc);
+	logged_in_user_info_cpp << logged_in_user_info_cpp_str.str();
+
 }
