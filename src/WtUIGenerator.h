@@ -50,7 +50,8 @@ public:
 	std::string PrintProcessInsert();
 	std::string PrintUINavigation();
 	std::string PrintUIMenu();
-	void print_SearchFunction(stringstream & decl, stringstream & defn);
+	void print_SearchFunction(TableInfoType * p_ptrTableInfo, 
+			stringstream & decl, stringstream & defn, bool called_recursively);
 
 	void PrintListViewHeaders(stringstream  & p_load_table_view_str, 
 			vector<TableInfoType* > & p_vec_list_view_stack, 

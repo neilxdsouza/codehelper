@@ -82,9 +82,9 @@ CREATE TABLE Employee: UI_GROUP (Employee) (
 CREATE TABLE EmployeeStatus: UI_GROUP(Employee) (
       EmployeeStatus_Code int : primary_key UI_VIEW UI_SELECT,
       Employee_Code int : not null references Employee(Employee_Code) UI_VIEW UI_SELECT,
-      Position_Code int : not null,
+      Position_Code int : not null UI_VIEW UI_SELECT,
       Date_appointed_to_Position datetime : not null,
-      Division_Code int : not null,
+      Division_Code int : not null UI_VIEW UI_SELECT,
       Is_head_of_Division bit : not null,
       Comments varchar(200) : not null,
       isCurrent bit : not null

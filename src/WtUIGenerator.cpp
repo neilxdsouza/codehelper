@@ -559,9 +559,9 @@ string WtUIGenerator::GenerateUIInsertForm()
 					% tableInfo_->tableName_;
 	ui_class_decl << boost::format("\tint ValidateForInsert%1%();\n")
 					% tableInfo_->tableName_;
-	ui_class_decl << "\tvoid LoadForm(int32_t pkey);\n";
 	ui_class_defn << PrintProcessInsert();
 	ui_class_defn << PrintValidateForInsert();
+	ui_class_decl << "\tvoid LoadForm(int32_t pkey);\n";
 	ui_class_defn << PrintLoadForm();
 	// I should use some form of assert to check 
 	// that vec_handler_decls.size == vec_handler_defns.size
@@ -655,45 +655,53 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
 
+	if (called_recursively == true) {
+		headers << format("#include \"%1%_db_postgres.h\"\n")
+					% aTableInfo->tableName_;
+		headers << format("#include \"%1%_bll.h\"\n")
+					% aTableInfo->tableName_;
+	}
+
 	//if (called_recursively == false) {
-		decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
-				% aTableInfo->tableName_;
-		defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
-				% aTableInfo->tableName_;
-		decl << boost::format("\tWt::WTable *table_%1%;\n")
-				% aTableInfo->tableName_;
-		decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
-				% aTableInfo->tableName_;
+	
+	// 	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+	// 			% aTableInfo->tableName_;
+	// 	decl << boost::format("\tWt::WTable *table_%1%;\n")
+	// 			% aTableInfo->tableName_;
+	// 	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
+	// 			% aTableInfo->tableName_;
 
-		decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
-				% aTableInfo->tableName_;
-		decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
-				% aTableInfo->tableName_;
-		decl << format("\tWt::WText * wt_%1%_err_msg;\n")
-				% aTableInfo->tableName_;
-		decl << boost::format("\tWt::WTable *table_%1%_view;\n")
-				% aTableInfo->tableName_;
-		decl << boost::format("\tWt::WTable *table_%1%_search;\n")
-				% aTableInfo->tableName_;
-		defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
-				% aTableInfo->tableName_;
+	// 	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
+	// 			% aTableInfo->tableName_;
+	// 	decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
+	// 			% aTableInfo->tableName_;
+	// 	decl << format("\tWt::WText * wt_%1%_err_msg;\n")
+	// 			% aTableInfo->tableName_;
+	// 	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
+	// 			% aTableInfo->tableName_;
+	// 	decl << boost::format("\tWt::WTable *table_%1%_search;\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+	// 			% aTableInfo->tableName_;
 
-		defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
-				% aTableInfo->tableName_;
-		defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
-				% aTableInfo->tableName_;
-		defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
-				% aTableInfo->tableName_;
-		defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
-				% aTableInfo->tableName_;
-		defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
-				% aTableInfo->tableName_;
-		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % aTableInfo->tableName_
-			<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % aTableInfo->tableName_
-			<< "\t}\n";
+	// 	defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
+	// 			% aTableInfo->tableName_;
+	// 	defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % aTableInfo->tableName_
+	// 		<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % aTableInfo->tableName_
+	// 		<< "\t}\n";
 
-		defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
-				% aTableInfo->tableName_;
+	// 	defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
+	// 			% aTableInfo->tableName_;
 
 
 		// defn << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % aTableInfo->tableName_;
@@ -713,49 +721,102 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	// defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 	// 		% aTableInfo->tableName_;
 	int counter=0;
-	PrintForm(aTableInfo, decl, defn, 
+	stringstream setup_form_func_defn, setup_form_func_decl;
+	setup_form_func_decl << format("\tvoid SetupForm%1%();\n") % aTableInfo->tableName_;
+	setup_form_func_defn << format("\tvoid %1%_ui::SetupForm%2%()\n{\n")
+				% tableInfo_->tableName_ %  aTableInfo->tableName_;
+	//PrintForm(aTableInfo, decl, defn, 
+	PrintForm(aTableInfo, setup_form_func_decl, setup_form_func_defn, 
 			vec_handler_decls, vec_handler_defns, 
 			headers, called_recursively, p_vecTableInfo, counter);
+	setup_form_func_defn << "\n}\n";
+	vec_handler_decls.push_back(setup_form_func_decl.str());
+	vec_handler_defns.push_back(setup_form_func_defn.str());
+	defn << format("\tSetupForm%1%();\n") % aTableInfo->tableName_;
+
+
+	stringstream load_func_defn, load_func_decl;
+	PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
+		// vec_handler_decls, vec_handler_defns, 
+		headers
+		//, called_recursively, p_vecTableInfo, counter
+		);
+	vec_handler_decls.push_back(load_func_decl.str());
+	vec_handler_defns.push_back(load_func_defn.str());
+	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+			% aTableInfo->tableName_;
+
+
+	if (called_recursively == false) {
+		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % aTableInfo->tableName_;
+	} else {
+		defn << boost::format("\t/* std::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % aTableInfo->tableName_;
+	}
+
+	//string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
+	//if (search_key_args_str != "") {
+	if (aTableInfo->has_search_key >0) {
+		defn << ",\n";
+		defn << aTableInfo->print_cpp_search_key_args();
+	}
+	if (aTableInfo->nSessionParams>0) {
+		//if (tableInfo_->has_search_key >0) {
+			defn << ",\n";
+		//}
+		defn << aTableInfo->print_cpp_session_key_args();
+	}
+	defn << ");\n";
+	defn << format("\tLoad%1%SummaryTableView(page1_%1%);\n") 
+			% aTableInfo->tableName_;
+	if (called_recursively == false) {
+
+	} else {
+		defn << "\t*/\n";
+	}
 
 
 	if (called_recursively==false) {
-		decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
-			aTableInfo->tableName_ ;
-		defn << PrintUISearchPanel(aTableInfo, decl);
 
-		stringstream search_func_defn, search_func_decl;
-		print_SearchFunction(search_func_decl, search_func_defn);
-		vec_handler_decls.push_back(search_func_decl.str());
-		vec_handler_defns.push_back(search_func_defn.str());
+		// decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
+		// 	aTableInfo->tableName_ ;
+		// defn << PrintUISearchPanel(aTableInfo, decl);
 
-		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
-			project_namespace % aTableInfo->tableName_;
+		// stringstream search_func_defn, search_func_decl;
+		// print_SearchFunction(search_func_decl, search_func_defn);
+		// vec_handler_decls.push_back(search_func_decl.str());
+		// vec_handler_defns.push_back(search_func_defn.str());
 
-		//string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
-		//if (search_key_args_str != "") {
-		if (tableInfo_->has_search_key >0) {
-			defn << ",\n";
-			defn << tableInfo_->print_cpp_search_key_args();
-		}
-		if (tableInfo_->nSessionParams>0) {
-			//if (tableInfo_->has_search_key >0) {
-				defn << ",\n";
-			//}
-			defn << tableInfo_->print_cpp_session_key_args();
-		}
-		defn << ");\n";
+		// defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1 = %1%::db::%2%::Get%2%(0, 10") %
+		// 	project_namespace % aTableInfo->tableName_;
 
-		stringstream load_func_defn, load_func_decl;
-		PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
-			// vec_handler_decls, vec_handler_defns, 
-			headers
-			//, called_recursively, p_vecTableInfo, counter
-			);
-		vec_handler_decls.push_back(load_func_decl.str());
-		vec_handler_defns.push_back(load_func_defn.str());
-		defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
-				% aTableInfo->tableName_;
-		defn << "\tLoadSummaryTableView(page1);\n";
+		// //string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
+		// //if (search_key_args_str != "") {
+		// if (tableInfo_->has_search_key >0) {
+		// 	defn << ",\n";
+		// 	defn << tableInfo_->print_cpp_search_key_args();
+		// }
+		// if (tableInfo_->nSessionParams>0) {
+		// 	//if (tableInfo_->has_search_key >0) {
+		// 		defn << ",\n";
+		// 	//}
+		// 	defn << tableInfo_->print_cpp_session_key_args();
+		// }
+		// defn << ");\n";
+
+		// stringstream load_func_defn, load_func_decl;
+		// PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
+		// 	// vec_handler_decls, vec_handler_defns, 
+		// 	headers
+		// 	//, called_recursively, p_vecTableInfo, counter
+		// 	);
+		// vec_handler_decls.push_back(load_func_decl.str());
+		// vec_handler_defns.push_back(load_func_defn.str());
+		// defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
+		// 		% aTableInfo->tableName_;
+		// defn << format("\tLoad%1%SummaryTableView(page1);\n") 
+		// 		% aTableInfo->tableName_;
 
 
 	}
@@ -770,13 +831,13 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "I think the code below should go into the PrintForm - analyse this later ");
 	if (called_recursively==false) {
-		decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
-		defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
-				% counter% aTableInfo->tableName_% aTableInfo->tableName_;
-		defn << "\twpb_insert->setText(Wt::WString(\"Add\"));\n";
-		defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
-		defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
-						% tableInfo_->tableName_;
+		// decl << boost::format("\tWt::WPushButton * wpb_insert;\n");
+		// defn << boost::format("\twpb_insert = new Wt::WPushButton(Wt::WString(\"Add\"), table_%3%->elementAt(%1%, 0));\n")
+		// 		% counter% aTableInfo->tableName_% aTableInfo->tableName_;
+		// defn << "\twpb_insert->setText(Wt::WString(\"Add\"));\n";
+		// defn << boost::format("\twpb_insert->clicked().connect(wpb_insert, &Wt::WPushButton::disable);\n");
+		// defn << boost::format("\twpb_insert->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
+		// 				% tableInfo_->tableName_;
 		defn << "}\n";
 	}
 }
@@ -1182,7 +1243,7 @@ void WtUIGenerator::PrintListViewData(stringstream  & p_load_table_view_str, vec
 	while (v_ptr) {
 		if (v_ptr->options.ui_view && (!v_ptr->options.primary_key) ) {
 			if (v_ptr->options.ref_table_name == "") {
-				p_load_table_view_str << boost::format("\t\ttemp1 << page1[i]->biz_%1%_->%2%_;\n") %
+				p_load_table_view_str << boost::format("\t\t/*1*/ temp1 << page1[i]->biz_%1%_->%2%_;\n") %
 					aTableInfo->tableName_ % v_ptr->var_name;
 				p_load_table_view_str << format("\t\ttable_%1%_view->elementAt(i+1, %2%)->addWidget(new Wt::WText(temp1.str()));\n") %
 					tableInfo_->tableName_ % nColumns++;
@@ -1191,6 +1252,8 @@ void WtUIGenerator::PrintListViewData(stringstream  & p_load_table_view_str, vec
 		}
 		v_ptr = v_ptr->prev;
 	}
+
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "note we are not using max_recursion_level , recursion_level to terminate recursion");
 }
 
 
@@ -1233,7 +1296,8 @@ std::string WtUIGenerator::PrintValidateForInsert()
 	validate_for_insert_defn << format("\t\tpanel_%1%_err_msg->expand();\n") %
 			tableInfo_->tableName_;
 	validate_for_insert_defn << "\t}\n";
-	validate_for_insert_defn << boost::format("\twpb_insert->setEnabled(true);\n");
+	validate_for_insert_defn << boost::format("\twpb_insert_%1%->setEnabled(true);\n") %
+			tableInfo_->tableName_;
 	validate_for_insert_defn << "\treturn nErrors;\n";
 	validate_for_insert_defn << "}\n\n";
 	return validate_for_insert_defn.str();
@@ -1333,24 +1397,31 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 	search_panel_str << format("	btn_%1%_search = new Wt::Ext::Button(\"Search\", table_%1%_search->elementAt(%2%, %3%));\n") % 
 		p_ptrTableInfo->tableName_ % (counter+1) % 0;
 
-	search_panel_str << format("	btn_%1%_search->clicked().connect(this, &%1%_ui::SearchAndLoadView);\n") % 
-		p_ptrTableInfo->tableName_ ;
+	search_panel_str << format("	btn_%1%_search->clicked().connect(this, &%2%_ui::SearchAndLoad%1%View);\n") % 
+		p_ptrTableInfo->tableName_ % tableInfo_->tableName_ ;
 	search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
 	return search_panel_str.str();
 }
 
 
-void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & defn)
+void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
+		stringstream & decl, stringstream & defn, bool called_recursively)
 {
-	decl << "\tvoid SearchAndLoadView();\n";
-	defn << format("void %1%_ui::SearchAndLoadView()\n{\n") %
-		tableInfo_->tableName_ ;
-	struct var_list * v_ptr = tableInfo_->param_list;
 	using boost::format;
-	defn << format("\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
-		project_namespace % tableInfo_->tableName_;
+	decl << format("\tvoid SearchAndLoad%1%View();\n") % p_ptrTableInfo->tableName_ ;
+	defn << format("void %1%_ui::SearchAndLoad%2%View()\n{\n") %
+		tableInfo_->tableName_  % p_ptrTableInfo->tableName_ ;
+	struct var_list * v_ptr = p_ptrTableInfo->param_list;
+	using boost::format;
+	if (called_recursively) {
+		defn << format("\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % p_ptrTableInfo->tableName_;
+	} else {
+		defn << format("\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % p_ptrTableInfo->tableName_;
+	}
 	int count=0;
-	if (tableInfo_->has_search_key > 0) {
+	if (p_ptrTableInfo->has_search_key > 0) {
 		defn << ",\n";
 	}
 	bool print_comma = false;
@@ -1367,7 +1438,7 @@ void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & def
 			print_comma = true;
 			++count;
 		}
-		if (print_comma && (count < tableInfo_->has_search_key)) {
+		if (print_comma && (count < p_ptrTableInfo->has_search_key)) {
 			defn << ",\n";
 			print_comma = false;
 		}
@@ -1379,11 +1450,11 @@ void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & def
 	// 	defn << ",\n";
 	// 	defn << tableInfo_->print_cpp_search_key_args();
 	// }
-	if (tableInfo_->nSessionParams>0) {
+	if (p_ptrTableInfo->nSessionParams>0) {
 		//if (tableInfo_->has_search_key >0) {
 			defn << ",\n";
 		//}
-		defn << tableInfo_->print_cpp_session_key_args();
+		defn << p_ptrTableInfo->print_cpp_session_key_args();
 	}
 	defn << ");\n";
 
@@ -1394,7 +1465,12 @@ void WtUIGenerator::print_SearchFunction(stringstream & decl, stringstream & def
 	// 	defn << tableInfo_->print_cpp_session_key_args();
 	// }
 	// defn << ");\n";
-	defn << "\tLoadSummaryTableView(page);\n";
+	defn << format("\tLoad%1%SummaryTableView(page);\n")
+			% p_ptrTableInfo->tableName_;
+
+	if (called_recursively) {
+		defn << "\t*/\n";
+	}
 
 	defn << "}\n\n";
 }
@@ -1413,8 +1489,50 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 			vector<TableInfoType *> & p_vecTableInfo, int & counter
 			)
 {
+	using boost::format;
 	// defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 	// 		% p_ptrTableInfo->tableName_;
+	//
+
+	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+			% p_ptrTableInfo->tableName_;
+	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+			% p_ptrTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
+			% p_ptrTableInfo->tableName_;
+
+	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
+			% p_ptrTableInfo->tableName_;
+	decl << format("\tWt::WText * wt_%1%_err_msg;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%_search;\n")
+			% p_ptrTableInfo->tableName_;
+	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
+			% p_ptrTableInfo->tableName_;
+
+	defn << format("\tpanel_%1%_err_msg = new Wt::WPanel(wcw_%1%);\n")
+			% p_ptrTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setTitle(Wt::WString(\"Error Messages\"));\n")
+			% p_ptrTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setCollapsible(true);\n")
+			% p_ptrTableInfo->tableName_;
+	defn << format("\tpanel_%1%_err_msg->setCollapsed(true);\n")
+			% p_ptrTableInfo->tableName_;
+	defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
+			% p_ptrTableInfo->tableName_;
+	defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_
+		<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % p_ptrTableInfo->tableName_
+		<< "\t}\n";
+
+	defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
+			% p_ptrTableInfo->tableName_;
+
 	struct var_list* v_ptr=p_ptrTableInfo->param_list;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		// if (v_ptr->options.ref_table_name!="") {
@@ -1552,6 +1670,28 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
 		}
 	}
+
+	decl << boost::format("\tWt::WPushButton * wpb_insert_%1%;\n") % p_ptrTableInfo->tableName_;
+	defn << boost::format("\twpb_insert_%2% = new Wt::WPushButton(Wt::WString(\"Add\"), table_%2%->elementAt(%1%, 0));\n")
+			% counter % p_ptrTableInfo->tableName_;
+	defn << format("\twpb_insert_%1%->setText(Wt::WString(\"Add\"));\n") % p_ptrTableInfo->tableName_;
+	if (called_recursively==false) {
+		defn << boost::format("\twpb_insert_%1%->clicked().connect(wpb_insert_%1%, &Wt::WPushButton::disable);\n")
+			% tableInfo_->tableName_;
+		defn << boost::format("\twpb_insert_%1%->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
+			% tableInfo_->tableName_;
+	}
+
+
+	decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
+		p_ptrTableInfo->tableName_ ;
+	defn << PrintUISearchPanel(p_ptrTableInfo, decl);
+
+	stringstream search_func_defn, search_func_decl;
+	print_SearchFunction(p_ptrTableInfo, search_func_decl, search_func_defn, called_recursively);
+	vec_handler_decls.push_back(search_func_decl.str());
+	vec_handler_defns.push_back(search_func_defn.str());
+
 }
 
 
@@ -1562,11 +1702,11 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 			)
 {
 	using boost::format;
-	decl << format("\tvoid LoadSummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1);\n")
+	decl << format("\tvoid Load%1%SummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1);\n")
 			% p_ptrTableInfo->tableName_;
 	stringstream load_table_view_str;
-	load_table_view_str << format("void %1%_ui::LoadSummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1)\n\{\n")
-			% p_ptrTableInfo->tableName_;
+	load_table_view_str << format("void %1%_ui::Load%2%SummaryTableView(std::vector<boost::shared_ptr <Biz%2%> > & page1)\n\{\n")
+			% tableInfo_->tableName_ % p_ptrTableInfo->tableName_;
 	load_table_view_str << format("\ttable_%1%_view->clear();\n")
 			% p_ptrTableInfo->tableName_;
 	struct var_list* v_ptr = p_ptrTableInfo->param_list;
@@ -1582,7 +1722,9 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 				}
 			}
 			if (v_ptr->options.ref_table_name != "" 
-					&& v_ptr->options.many == false) {
+					&& v_ptr->options.many == false
+					&& ! ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name)
+					) {
 				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 							(TableCollectionSingleton::Instance()
 								.my_find_table(v_ptr->options.ref_table_name)));
@@ -1616,7 +1758,7 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 			}
 			if (v_ptr->options.ref_table_name != "" 
 					&& v_ptr->options.many == false
-					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+					&& (!ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name))
 					&& (!v_ptr->options.session)
 					) {
 				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
