@@ -207,6 +207,7 @@ string WtUIGenerator::PrintHeaders()
 	h_files << "#include <boost/scoped_ptr.hpp>\n";
 	h_files << "#include <boost/date_time/gregorian/gregorian.hpp>\n";
 	//h_files << "#include \"LoginWidget.h\"\n";
+	h_files << "#include \"LoggedInUserInfo.h\"\n";
 	h_files << "\n";
 	h_files << "#include <iostream>\n";
 	h_files << "\n";
@@ -238,6 +239,7 @@ string WtUIGenerator::PrintClassDecl()
 	class_decl << "	//Wt::WTable              *viewPort;\n";
 	class_decl << "	Wt::WContainerWidget              *viewPort;\n";
 	class_decl << "	//LoginWidget             *login_;\n";
+	class_decl << "	boost::shared_ptr<LoggedInUserInfo>             ptr_LoggedInUserInfo;\n";
 
 	class_decl << class_vars.str();
 
@@ -306,9 +308,10 @@ void WtUIGenerator::PrintSetupApplication(std::stringstream & func_decl, std::st
 	using boost::format;
 	string tn(tableInfo_->tableName_ );
 	func_decl << format("\tvoid SetupApplication(boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo);\n");
-	func_defn << format("\tvoid good1::SetupApplication(boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo)\n\{\n");
+	func_defn << format("\tvoid good1::SetupApplication(boost::shared_ptr<LoggedInUserInfo> p_LoggedInUserInfo)\n{\n");
 
 	func_defn << "\tviewPort->clear();\n";
+	func_defn << "\t ptr_LoggedInUserInfo = p_LoggedInUserInfo;\n";
 	func_defn << format("	setTitle(std::string(\"Timesheet Application Program: \") + p_LoggedInUserInfo->ptr_%1%->biz_Employee_->ForeName_);\n")
 			% tn;
 	func_defn << "	setLoadingIndicator(new WOverlayLoadingIndicator());\n";
@@ -446,6 +449,7 @@ std::string WtUIGenerator::PrintUIMenu()
 string WtUIGenerator::GenerateUIInsertForm()
 {
 	stringstream ui_class_headers, ui_class_decl, ui_class_defn;
+	using boost::format;
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <fstream>\n";
 	ui_class_headers << "\n";
@@ -482,6 +486,7 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 
 	ui_class_headers << "#include \"TimesheetCalendar.h\"\n";
+	ui_class_headers << "#include \"LoggedInUserInfo.h\"\n";
 	ui_class_headers << "\n";
 	ui_class_headers << "#include <Wt/Ext/Button>\n";
 	ui_class_headers << "#include <Wt/Ext/Calendar>\n";
@@ -508,8 +513,9 @@ string WtUIGenerator::GenerateUIInsertForm()
 
 	ui_class_decl << boost::format("class %1%_ui : public Wt::WContainerWidget\n{\npublic:\n")
 				% tableInfo_->tableName_;
-	ui_class_decl << boost::format("\t%1%_ui(Wt::WContainerWidget * parent);\n")
+	ui_class_decl << boost::format("\t%1%_ui(Wt::WContainerWidget * parent, boost::shared_ptr<LoggedInUserInfo> p_ptr_LoggedInUserInfo);\n")
 		% tableInfo_->tableName_ ;
+	ui_class_decl << "\tboost::shared_ptr<LoggedInUserInfo> ptr_LoggedInUserInfo;\n";
 	
 	
 	stringstream form_code;
@@ -521,12 +527,14 @@ string WtUIGenerator::GenerateUIInsertForm()
 	form_code << func_defn_signature.str() << "\n{\n";
 	class_functions_decl << "\t" << func_decl_signature.str() << ";\n";
 	
-	form_code << boost::format("\tWt::WContainerWidget *canvas = new %1%_ui(0);\n")
+	form_code << boost::format("\tWt::WContainerWidget *canvas = new %1%_ui(0, ptr_LoggedInUserInfo);\n")
 			% tableInfo_->tableName_;
 	//form_code << "\t/*\n";
 	ui_class_decl << "\tWt::Ext::TabWidget *tw;\n";
-	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent): WContainerWidget(parent)\n{\n")
+	ui_class_defn << boost::format("%1%_ui::%1%_ui(WContainerWidget * parent,\n\t\tboost::shared_ptr<LoggedInUserInfo> p_ptr_LoggedInUserInfo)\n\t: WContainerWidget(parent),\n")
 		% tableInfo_->tableName_ ;
+	ui_class_defn << "\t  ptr_LoggedInUserInfo(p_ptr_LoggedInUserInfo)\n";
+	ui_class_defn << "{\n";
 	//ui_class_decl << "\tWt::WText *title;\n";
 	//ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
 	//	<< tableInfo_->tableName_ << "\"), this);\n";
