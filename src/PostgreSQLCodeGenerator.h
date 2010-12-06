@@ -85,6 +85,12 @@ public:
 			std::stringstream& p_func_defn);
 	void AddFuncDecl(std::string func_decl);
 	std::stringstream db_function_decls;
+
+	void print_sp_search_key_params2(stringstream & p_search_key_params,
+			TableInfoType * ptr_tableInfo, bool & print_comma);
+
+	void print_sp_search_key_whereclause2(stringstream & p_search_key_where_clause_str,
+					TableInfoType * ptr_tableInfo, bool & print_and);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

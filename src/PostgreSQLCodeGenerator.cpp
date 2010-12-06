@@ -579,8 +579,10 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if (tableInfo_->has_search_key) {
 		int count=0;
+		bool print_comma = false;
 		while (v_ptr) {
 			if (v_ptr->options.search_key) {
+				/*
 				search_key_params <<  boost::format("\tp_%1% %2%") 
 					% v_ptr->var_name.c_str()
 					% print_sp_types(v_ptr->var_type);
@@ -590,13 +592,39 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
 					search_key_params << boost::format( "(%d)\n")
 						% v_ptr->arr_len;
 				}
+				*/
+				if (print_comma) {
+					search_key_params << ",\n";
+				}
+
+				search_key_params <<  boost::format("\tp_%1% %2%") 
+					% v_ptr->var_name.c_str()
+					% v_ptr->print_sql_var_type();
+				print_comma = true;
+				/*
 				++count;
-				if (count<tableInfo_->has_search_key) {
+				if (count < tableInfo_->has_search_key) {
 					search_key_params <<  ",\n";
 				} else {
 					//search_key_params << "";
 					break;
 				}
+				*/
+			}
+
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_sp_search_key_params2(search_key_params,
+							tbl_ptr->tableInfo_, print_comma);
+				} else {
+					search_key_params << format("referenced table: %1% not found in table list: ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
+				}
+				//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 			}
 			v_ptr=v_ptr->prev;
 		}
@@ -667,34 +695,91 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_fields()
 string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
 {
 	stringstream search_key_where_clause_str;
-	if(tableInfo_->has_search_key){
+	bool print_and = false;
+	if (tableInfo_->has_search_key) {
 		struct var_list* v_ptr = tableInfo_->param_list;
 		//search_key_where_clause_str << "\t\tWHERE ";
 		int count = 0;
-		while(v_ptr){
+		search_key_where_clause_str << "\n";
+		while (v_ptr) {
 			if(v_ptr->options.search_key){
+				if (print_and) {
+					search_key_where_clause_str << " AND \n";
+				}
 				boost::format("%s.%s ")
 					% tableInfo_->tableName_.c_str()
 					% v_ptr->var_name.c_str();
 				if(isOfStringType(v_ptr->var_type)){
 					search_key_where_clause_str << 
-						boost::format("%1% like p_%1%")
+						boost::format("\t\t%1% like p_%1%")
 						% v_ptr->var_name.c_str();
 				} else {
 					//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
 					search_key_where_clause_str << 
-						boost::format("%1% = p_%1%")
+						boost::format("\t\t%1% = p_%1%")
 						% v_ptr->var_name.c_str();
 				}
-				++count;
-				if(count<tableInfo_->has_search_key){
-					search_key_where_clause_str << " AND \n";
+				print_and = true;
+				//++count;
+				//if(count<tableInfo_->has_search_key){
+				//	search_key_where_clause_str << " AND \n";
+				//}
+			}
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_sp_search_key_whereclause2(search_key_where_clause_str,
+							tbl_ptr->tableInfo_, print_and);
+				} else {
+					search_key_where_clause_str << format("referenced table: %1% not found in table list: ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
 				}
 			}
 			v_ptr=v_ptr->prev;
 		}
 	}
 	return search_key_where_clause_str.str();
+}
+
+
+void PostgreSQLCodeGenerator::print_sp_search_key_whereclause2(stringstream & p_search_key_where_clause_str,
+				TableInfoType * ptr_tableInfo, bool & print_and)
+{
+	stringstream search_key_where_clause_str;
+	if(tableInfo_->has_search_key){
+		struct var_list* v_ptr = tableInfo_->param_list;
+		//int count = 0;
+		while(v_ptr){
+			if (v_ptr->options.search_key) {
+				if (print_and) {
+					p_search_key_where_clause_str << " AND \n";
+				}
+				boost::format("%s.%s ")
+					% tableInfo_->tableName_.c_str()
+					% v_ptr->var_name.c_str();
+				if(isOfStringType(v_ptr->var_type)){
+					p_search_key_where_clause_str << 
+						boost::format("\t\t%1% like p_%1%")
+						% v_ptr->var_name.c_str();
+				} else {
+					//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
+					p_search_key_where_clause_str << 
+						boost::format("\t\t%1% = p_%1%")
+						% v_ptr->var_name.c_str();
+				}
+				print_and = true;
+				// ++count;
+				// if(count<tableInfo_->has_search_key){
+				// 	search_key_where_clause_str << " AND \n";
+				// }
+			}
+			v_ptr=v_ptr->prev;
+		}
+	}
+	//return p_search_key_where_clause_str.str();
 }
 
 void PostgreSQLCodeGenerator::GenerateCreateSQL()
@@ -2671,4 +2756,45 @@ std::string PostgreSQLCodeGenerator::print_sp_session_key_whereclause()
 		}
 	}
 	return session_key_where_clause_str.str();
+}
+
+// we follow only one level of references for search keys: If something else
+// is needed you have to modify this function to allow for recursion 
+void PostgreSQLCodeGenerator::print_sp_search_key_params2(stringstream & p_search_key_params,
+				TableInfoType * ptr_tableInfo, bool & print_comma)
+{
+	struct var_list* v_ptr = ptr_tableInfo->param_list;
+	//bool print_comma = false;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			/*
+			p_search_key_params <<  boost::format("\tp_%1% %2%") 
+				% v_ptr->var_name.c_str()
+				% print_sp_types(v_ptr->var_type);
+			if (v_ptr->var_type==NVARCHAR_TYPE
+				|| v_ptr->var_type==VARCHAR_TYPE 
+				|| v_ptr->var_type==NCHAR_TYPE) {
+				search_key_params << boost::format( "(%d)\n")
+					% v_ptr->arr_len;
+			}
+			*/
+			if (print_comma) {
+				p_search_key_params << ",\n";
+			}
+			p_search_key_params << boost::format("\tp_%1% %2%") 
+				% v_ptr->var_name.c_str()
+				% v_ptr->print_sql_var_type();
+			print_comma = true;
+			/*
+			++count;
+			if (count<ptr_tableInfo->has_search_key) {
+				p_search_key_params <<  ",\n";
+			} else {
+				//search_key_params << "";
+				break;
+			}
+			*/
+		}
+		v_ptr = v_ptr->prev;
+	}
 }
