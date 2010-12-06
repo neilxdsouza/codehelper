@@ -1125,11 +1125,11 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 		bool print_comma2 = false;
 		while (v_ptr2) {
 			if (v_ptr2->options.ui_dialog_select_xfer) {
-				func_defn << format("\t%1% %2%_") 
+				func_defn << format("\t%1% p_%2%") 
 					% v_ptr2->print_cpp_var_type()
 					% v_ptr2->var_name
 					;
-				p_prototype << format("\t\t%1% %2%_") 
+				p_prototype << format("\t\t%1% p_%2%") 
 					% v_ptr2->print_cpp_var_type()
 					% v_ptr2->var_name
 					;
@@ -1157,12 +1157,21 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 	func_defn << ")\n{\n";
 
 
-	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
 	// should check for null here and exit
 	func_defn << "\tstd::stringstream temp;\n";
 	func_defn << format("\ttemp <<  p_%1%;\n") % p_vptr->var_name;
 	func_defn << format("\twt_%1%_value->setText(Wt::WString(temp.str()));\n") %
 		p_vptr->var_name;
+	struct var_list * v_ptr3 = ref_table_ptr->tableInfo_->param_list; 
+	v_ptr3 = v_ptr3->prev; // skip primary key
+	while (v_ptr3) {
+		if (v_ptr3->options.ui_dialog_select_xfer) {
+			func_defn << format("\twt_%1%_text->setText(p_%2%);\n") 
+				% p_vptr->var_name % v_ptr3->var_name
+				;
+		}
+		v_ptr3 = v_ptr3->prev;
+	}
 	//func_defn << boost::format("\twpb_choose_%1%->clicked().connect(wpb_choose_%1%, &Wt::WPushButton::enable);\n")
 	//	% p_vptr->var_name;
 	func_defn << boost::format("\twpb_choose_%1%->enable();\n")
@@ -1608,12 +1617,17 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 				 ) {
 			decl <<  boost::format("\tWt::WLabel * wt_%1%_value;\n")
 						% v_ptr->var_name;
+			decl <<  boost::format("\tWt::WLabel * wt_%1%_text;\n")
+						% v_ptr->var_name;
 			decl <<  boost::format("\tWt::WPushButton * wpb_choose_%1%;\n")
 						% v_ptr->var_name;
 			decl << format("\tWt::WTable *table_%1%_view;\n") %
 						v_ptr->options.ref_table_name;
 			defn << 
-				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
+				boost::format("\twt_%2%_value = new Wt::WLabel(Wt::WString(\"<not selected>\"));")
+						% counter % v_ptr->var_name ;
+			defn << 
+				boost::format("\twt_%2%_text = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
 						% counter % v_ptr->var_name % p_ptrTableInfo->tableName_;
 			defn << 
