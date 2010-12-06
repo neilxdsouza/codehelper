@@ -426,8 +426,9 @@ std::string WtUIGenerator::PrintUIMenu()
 	for (int i=0; i<v.size(); ++i) {
 		//menu_str << format("\tWTreeNode * tn_%1% = new WTreeNode(\"%1%\", mapIcon, rootNode);\n") %
 		//	v[i];
-		menu_str << format("\tWt::Ext::Menu *menu_%1% = new Wt::Ext::Menu();\n") %
-				v[i];
+		menu_str << format("\tWt::Ext::Menu *menu_%1% = new Wt::Ext::Menu();\n") % v[i]
+			<< format("\tint count_menu_%1% = 0;\n") % v[i]
+				;
 		pair<I,I> nav_nodes = mm.equal_range(v[i]);
 		for (I iter= nav_nodes.first; iter!=nav_nodes.second; ++iter) {
 			TableInfoType * const & ti_ptr = iter->second;
@@ -435,12 +436,28 @@ std::string WtUIGenerator::PrintUIMenu()
 				// menu_str << "\t/* : " << iter->second->tableName_ << " */\n";
 				// menu_str << format("\tcreateNavigationNode(\"%2%\", tn_%1%, &good1::formInsert%2%);\n" ) %
 				// 		v[i] % ti_ptr->tableName_;
-				menu_str << format("\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"),\n\t\t\t this, &good1::formInsert%2%);\n") %
+				menu_str << format("\tif(ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\")) {\n") 
+					% ti_ptr->tableName_;
+				menu_str << format("\t\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"),\n\t\t\t this, &good1::formInsert%2%);\n") %
 					v[i] % ti_ptr->tableName_;
+				menu_str << format("\t\t++count_menu_%1%;\n") % v[i];
+				menu_str << format("\t} else if(ptr_LoggedInUserInfo->UserHasEditPermission(\"%1%\")) {\n")
+					 % ti_ptr->tableName_;
+				menu_str << format("\t\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"),\n\t\t\t this, &good1::formInsert%2%);\n") %
+					v[i] % ti_ptr->tableName_;
+				menu_str << format("\t\t++count_menu_%1%;\n") % v[i];
+				menu_str << format("\t} else if(ptr_LoggedInUserInfo->UserHasAddPermission(\"%1%\")) {\n") 
+					% ti_ptr->tableName_;
+				menu_str << format("\t\titem = menu_%1%->addItem (Wt::WString::tr(\"%2%\"),\n\t\t\t this, &good1::formInsert%2%);\n") %
+					v[i] % ti_ptr->tableName_;
+				menu_str << format("\t\t++count_menu_%1%;\n") % v[i];
+				menu_str << "\t}\n";
 			}
 		}
-		menu_str << format("\tb = toolBar->addButton(Wt::WString::tr(\"%1%\"), menu_%1%);\n") %
+		menu_str << format("\tif (count_menu_%1% > 0 ) {\n") % v[i];
+		menu_str << format("\t\tb = toolBar->addButton(Wt::WString::tr(\"%1%\"), menu_%1%);\n") %
 				v[i];
+		menu_str << format("\t} else {\n\t\tdelete menu_%1%;\n\t}\n") % v[i];
 	}
 	menu_str << "\tnorth->setTopToolBar(toolBar);\n";
 	return menu_str.str();
