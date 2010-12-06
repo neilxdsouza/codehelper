@@ -1703,15 +1703,17 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	}
 
 	decl << boost::format("\tWt::WPushButton * wpb_insert_%1%;\n") % p_ptrTableInfo->tableName_;
-	defn << boost::format("\twpb_insert_%2% = new Wt::WPushButton(Wt::WString(\"Add\"), table_%2%->elementAt(%1%, 0));\n")
+	defn << format("\tif (ptr_LoggedInUserInfo->UserHasAddPermission(\"%1%\")) {\n") % p_ptrTableInfo->tableName_;
+	defn << boost::format("\t\twpb_insert_%2% = new Wt::WPushButton(Wt::WString(\"Add\"), table_%2%->elementAt(%1%, 0));\n")
 			% counter % p_ptrTableInfo->tableName_;
-	defn << format("\twpb_insert_%1%->setText(Wt::WString(\"Add\"));\n") % p_ptrTableInfo->tableName_;
+	defn << format("\t\twpb_insert_%1%->setText(Wt::WString(\"Add\"));\n") % p_ptrTableInfo->tableName_;
 	if (called_recursively==false) {
-		defn << boost::format("\twpb_insert_%1%->clicked().connect(wpb_insert_%1%, &Wt::WPushButton::disable);\n")
+		defn << boost::format("\t\twpb_insert_%1%->clicked().connect(wpb_insert_%1%, &Wt::WPushButton::disable);\n")
 			% tableInfo_->tableName_;
-		defn << boost::format("\twpb_insert_%1%->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
+		defn << boost::format("\t\twpb_insert_%1%->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
 			% tableInfo_->tableName_;
 	}
+	defn << format("\t}\n");
 
 
 	decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
