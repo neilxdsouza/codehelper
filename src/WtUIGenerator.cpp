@@ -726,13 +726,19 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	setup_form_func_defn << format("\tvoid %1%_ui::SetupForm%2%()\n{\n")
 				% tableInfo_->tableName_ %  aTableInfo->tableName_;
 	//PrintForm(aTableInfo, decl, defn, 
+	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+			% aTableInfo->tableName_;
+	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+			% aTableInfo->tableName_;
 	PrintForm(aTableInfo, setup_form_func_decl, setup_form_func_defn, 
 			vec_handler_decls, vec_handler_defns, 
 			headers, called_recursively, p_vecTableInfo, counter);
 	setup_form_func_defn << "\n}\n";
 	vec_handler_decls.push_back(setup_form_func_decl.str());
 	vec_handler_defns.push_back(setup_form_func_defn.str());
-	defn << format("\tSetupForm%1%();\n") % aTableInfo->tableName_;
+	defn << format("\tif (ptr_LoggedInUserInfo->UserHasAddPermission(\"%1%\") ||\n\t\t\tptr_LoggedInUserInfo->UserHasEditPermission(\"%1%\") ) {\n") % aTableInfo->tableName_;
+	defn << format("\t\tSetupForm%1%();\n") % aTableInfo->tableName_;
+	defn << "\t}\n";
 
 
 	stringstream load_func_defn, load_func_decl;
@@ -748,9 +754,11 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 
 
 	if (called_recursively == false) {
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % aTableInfo->tableName_;
 		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % aTableInfo->tableName_;
 	} else {
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % aTableInfo->tableName_;
 		defn << boost::format("\t/* std::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % aTableInfo->tableName_;
 	}
@@ -768,12 +776,13 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 		defn << aTableInfo->print_cpp_session_key_args();
 	}
 	defn << ");\n";
-	defn << format("\tLoad%1%SummaryTableView(page1_%1%);\n") 
+	defn << format("\t\tLoad%1%SummaryTableView(page1_%1%);\n") 
 			% aTableInfo->tableName_;
 	if (called_recursively == false) {
-
+		defn << "\t}\n";
 	} else {
-		defn << "\t*/\n";
+		defn << "\t */\n";
+		defn << "\t}\n";
 	}
 
 
@@ -1414,10 +1423,12 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	struct var_list * v_ptr = p_ptrTableInfo->param_list;
 	using boost::format;
 	if (called_recursively) {
-		defn << format("\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	} else {
-		defn << format("\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	}
 	int count=0;
@@ -1428,13 +1439,13 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	while (v_ptr) {
 		if (v_ptr->options.search_key &&
 				v_ptr->var_type == VARCHAR_TYPE) {
-			defn << format("\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
+			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
 					v_ptr->var_name;
 			print_comma = true;
 			++count;
 		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
 			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
-			defn << "\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+			defn << "\t\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
 			print_comma = true;
 			++count;
 		}
@@ -1465,11 +1476,14 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	// 	defn << tableInfo_->print_cpp_session_key_args();
 	// }
 	// defn << ");\n";
-	defn << format("\tLoad%1%SummaryTableView(page);\n")
+	defn << format("\t\tLoad%1%SummaryTableView(page);\n")
 			% p_ptrTableInfo->tableName_;
 
 	if (called_recursively) {
 		defn << "\t*/\n";
+		defn << "\t}\n";
+	} else {
+		defn << "\t}\n";
 	}
 
 	defn << "}\n\n";
@@ -1494,10 +1508,10 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	// 		% p_ptrTableInfo->tableName_;
 	//
 
-	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
-			% p_ptrTableInfo->tableName_;
-	defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
-			% p_ptrTableInfo->tableName_;
+	// decl << boost::format("\tWt::WContainerWidget  *wcw_%1%;\n")
+	// 		% p_ptrTableInfo->tableName_;
+	// defn << boost::format("\twcw_%1% = new Wt::WContainerWidget();\n")
+	// 		% p_ptrTableInfo->tableName_;
 	decl << boost::format("\tWt::WTable *table_%1%;\n")
 			% p_ptrTableInfo->tableName_;
 	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
@@ -1526,9 +1540,9 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 			% p_ptrTableInfo->tableName_;
 	defn << format("\twt_%1%_err_msg = new Wt::WText(\"Error Messages will appear here\");\n")
 			% p_ptrTableInfo->tableName_;
-	defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_
-		<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % p_ptrTableInfo->tableName_
-		<< "\t}\n";
+	// defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_
+	// 	<< format("\t\twt_%1%_err_msg->setText(\"User has view permission\");\n") % p_ptrTableInfo->tableName_
+	// 	<< "\t}\n";
 
 	defn << format("\tpanel_%1%_err_msg->setCentralWidget(wt_%1%_err_msg);\n")
 			% p_ptrTableInfo->tableName_;
@@ -2096,6 +2110,8 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 		<< format("\t: ptr_%1%(p_ptr_%1%), vec_ptr_%2%(p_vec_ptr_%2%)\n\t{ }\n\n")
 			% ti_user_login_ptr->tableName_ % ti_user_role_ptr->tableName_
 		<< format("\tbool UserHasViewPermission(std::string p_table_name);\n")
+		<< format("\tbool UserHasAddPermission(std::string p_table_name);\n")
+		<< format("\tbool UserHasEditPermission(std::string p_table_name);\n")
 		<< "};\n";
 
 	logged_in_user_info_str << "\n#endif /* LOGGED_IN_USER_INFO_H */\n";
@@ -2116,6 +2132,36 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 	logged_in_user_info_cpp_str << "{\n";
 	logged_in_user_info_cpp_str << "	using std::string;\n";
 	logged_in_user_info_cpp_str << "	string search_key = p_table_name + \":View\";\n";
+	logged_in_user_info_cpp_str << "	for(int i=0; i<vec_ptr_User_Role.size(); ++i) {\n";
+	logged_in_user_info_cpp_str << "		if (vec_ptr_User_Role[i]->biz_Role_->Get_Role_Name()\n";
+	logged_in_user_info_cpp_str << "				== search_key) {\n";
+	logged_in_user_info_cpp_str << "			return true;\n";
+	logged_in_user_info_cpp_str << "		}\n";
+	logged_in_user_info_cpp_str << "	}\n";
+	logged_in_user_info_cpp_str << "	return false;\n";
+	logged_in_user_info_cpp_str << "}\n";
+	logged_in_user_info_cpp_str << "\n";
+
+	// I think you would write a closure or a macro for this in Lisp
+
+	logged_in_user_info_cpp_str << "bool LoggedInUserInfo::UserHasAddPermission(std::string p_table_name)\n";
+	logged_in_user_info_cpp_str << "{\n";
+	logged_in_user_info_cpp_str << "	using std::string;\n";
+	logged_in_user_info_cpp_str << "	string search_key = p_table_name + \":Add\";\n";
+	logged_in_user_info_cpp_str << "	for(int i=0; i<vec_ptr_User_Role.size(); ++i) {\n";
+	logged_in_user_info_cpp_str << "		if (vec_ptr_User_Role[i]->biz_Role_->Get_Role_Name()\n";
+	logged_in_user_info_cpp_str << "				== search_key) {\n";
+	logged_in_user_info_cpp_str << "			return true;\n";
+	logged_in_user_info_cpp_str << "		}\n";
+	logged_in_user_info_cpp_str << "	}\n";
+	logged_in_user_info_cpp_str << "	return false;\n";
+	logged_in_user_info_cpp_str << "}\n";
+	logged_in_user_info_cpp_str << "\n";
+
+	logged_in_user_info_cpp_str << "bool LoggedInUserInfo::UserHasEditPermission(std::string p_table_name)\n";
+	logged_in_user_info_cpp_str << "{\n";
+	logged_in_user_info_cpp_str << "	using std::string;\n";
+	logged_in_user_info_cpp_str << "	string search_key = p_table_name + \":Edit\";\n";
 	logged_in_user_info_cpp_str << "	for(int i=0; i<vec_ptr_User_Role.size(); ++i) {\n";
 	logged_in_user_info_cpp_str << "		if (vec_ptr_User_Role[i]->biz_Role_->Get_Role_Name()\n";
 	logged_in_user_info_cpp_str << "				== search_key) {\n";
