@@ -93,6 +93,8 @@ public:
 					TableInfoType * ptr_tableInfo, bool & print_and);
 	void print_cpp_search_key_params2(stringstream & p_search_key_params,
 				TableInfoType * ptr_tableInfo, bool & print_comma);
+	void print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);

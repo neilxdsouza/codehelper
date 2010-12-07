@@ -2408,6 +2408,8 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys(int & nActua
 {
 	struct var_list* v_ptr=tableInfo_->param_list;
 	stringstream search_key_param_setup_str;
+	bool print_comma = false;
+
 	while (v_ptr) {
 		if (v_ptr->options.search_key) {
 			search_key_param_setup_str << boost::format("\tss_param_values[%1%] << p_%2%;\n")
@@ -2417,6 +2419,20 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys(int & nActua
 			search_key_param_setup_str << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
 			search_key_param_setup_str << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
 						% nActualParams++;
+		}
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_cpp_sp_invoc_search_keys2(search_key_param_setup_str,
+						tbl_ptr->tableInfo_, print_comma, nActualParams);
+			} else {
+				search_key_param_setup_str << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		}
 		v_ptr=v_ptr->prev;
 	}
@@ -2839,5 +2855,23 @@ void PostgreSQLCodeGenerator::print_cpp_search_key_params2(stringstream & p_sear
 			print_comma = true;
 		}
 		v_ptr = v_ptr->prev;
+	}
+}
+
+void PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams)
+{
+	struct var_list* v_ptr=ptr_tableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			p_search_key_param << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+				% nActualParams % v_ptr->var_name;
+			p_search_key_param << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+				% nActualParams;
+			p_search_key_param << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+			p_search_key_param << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+						% nActualParams++;
+		}
+		v_ptr=v_ptr->prev;
 	}
 }
