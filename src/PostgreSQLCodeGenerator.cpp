@@ -1259,20 +1259,39 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params()
 	struct var_list* v_ptr=tableInfo_->param_list;
 	if(tableInfo_->has_search_key){
 		int count=0;
+		bool print_comma = false;
 		while(v_ptr){
 			// other complicated cases to be handled later - this is just a top level scan
 			if (v_ptr->options.search_key && v_ptr->options.ref_table_name=="") {
+				if (print_comma) {
+					search_key_fields_str << ",\n";
+				}
 				search_key_fields_str <<  boost::format("\t\t");
 				search_key_fields_str << print_cpp_types(v_ptr->var_type);
 				search_key_fields_str <<  boost::format(" p_%1%") 
 					% v_ptr->var_name;
-				++count;
-				if(count<tableInfo_->has_search_key){
-					search_key_fields_str <<  "/*11*/ ,\n";
+				print_comma = true;
+				//++count;
+				//if(count<tableInfo_->has_search_key){
+				//	search_key_fields_str <<  "/*11*/ ,\n";
+				//} else {
+				//	//search_key_fields_str << "\n";
+				//	break;
+				//}
+			}
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_cpp_search_key_params2(search_key_fields_str,
+							tbl_ptr->tableInfo_, print_comma);
 				} else {
-					//search_key_fields_str << "\n";
-					break;
+					search_key_fields_str << format("referenced table: %1% not found in table list: ... exiting")
+						% v_ptr->options.ref_table_name;
+					exit(1);
 				}
+				//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 			}
 			v_ptr=v_ptr->prev;
 		}
@@ -2794,6 +2813,30 @@ void PostgreSQLCodeGenerator::print_sp_search_key_params2(stringstream & p_searc
 				break;
 			}
 			*/
+		}
+		v_ptr = v_ptr->prev;
+	}
+}
+
+
+// we follow only one level of references for search keys: If something else
+// is needed you have to modify this function to allow for recursion 
+void PostgreSQLCodeGenerator::print_cpp_search_key_params2(stringstream & p_search_key_params,
+				TableInfoType * ptr_tableInfo, bool & print_comma)
+{
+	struct var_list* v_ptr = ptr_tableInfo->param_list;
+	//bool print_comma = false;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			if (print_comma) {
+				p_search_key_params << ",\n";
+			}
+
+			p_search_key_params <<  boost::format("\t\t");
+			p_search_key_params << print_cpp_types(v_ptr->var_type);
+			p_search_key_params <<  boost::format(" p_%1%") 
+				% v_ptr->var_name;
+			print_comma = true;
 		}
 		v_ptr = v_ptr->prev;
 	}
