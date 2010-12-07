@@ -82,6 +82,10 @@ public:
 	void PrintUISearchPanel2(TableInfoType* p_ptrOrigTable, 
 			TableInfoType * p_ptrTableInfo, std::stringstream & decl, 
 			std::stringstream & search_panel_str, int & counter, int & modulus_counter);
+	void print_SearchFunction1(TableInfoType* p_ptrTableInfo,
+			stringstream & decl, stringstream & defn, bool called_recursively);
+	void print_SearchFunction2(TableInfoType* p_ptrTableInfo,
+			stringstream & decl, stringstream & defn, bool & print_comma);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

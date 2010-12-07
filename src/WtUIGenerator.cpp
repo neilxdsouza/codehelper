@@ -769,7 +769,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 
-
+#if 0
 	if (called_recursively == false) {
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % aTableInfo->tableName_;
 		defn << boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
@@ -780,19 +780,22 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			project_namespace % aTableInfo->tableName_;
 	}
 
-	//string search_key_args_str =  tableInfo_->print_cpp_search_key_args() ;
-	//if (search_key_args_str != "") {
 	if (aTableInfo->has_search_key >0) {
 		defn << ",\n";
 		defn << aTableInfo->print_cpp_search_key_args();
 	}
-	if (aTableInfo->nSessionParams>0) {
-		//if (tableInfo_->has_search_key >0) {
-			defn << ",\n";
-		//}
-		defn << aTableInfo->print_cpp_session_key_args();
-	}
-	defn << ");\n";
+#endif /* 0 */
+
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, " we could cause a core dump here i think as the search is setup inside the form - the invocation to the Table => search ui fields are setup causing a core dump here");
+
+	print_SearchFunction1(aTableInfo,
+		decl, defn, called_recursively);
+	// if (aTableInfo->nSessionParams>0) {
+	// 	defn << ",\n";
+	// 	defn << aTableInfo->print_cpp_session_key_args();
+	// }
+	// defn << ");\n";
+
 	defn << format("\t\tLoad%1%SummaryTableView(page1_%1%);\n") 
 			% aTableInfo->tableName_;
 	if (called_recursively == false) {
@@ -941,14 +944,17 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	decl << inc_file.str();
 	func_defn << boost::format("/* file: %1%, line: %2%: func: %3% added include files */\n") %
 		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
-	func_defn<< boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
-			project_namespace % aTableInfo->tableName_;
-	string search_key_args_str =  aTableInfo->print_cpp_search_key_args() ;
-	if (search_key_args_str != "") {
-		func_defn << ",\n";
-		func_defn << search_key_args_str;
-	}
-	func_defn << ");\n";
+	// func_defn<< boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
+	// 		project_namespace % aTableInfo->tableName_;
+	// string search_key_args_str =  aTableInfo->print_cpp_search_key_args() ;
+	// if (search_key_args_str != "") {
+	// 	func_defn << ",\n";
+	// 	func_defn << search_key_args_str;
+	// }
+	// func_defn << ");\n";
+	//
+	print_SearchFunction1(aTableInfo,
+		decl, func_defn, false);
 
 	func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
 		p_vptr->options.ref_table_name % p_vptr->var_name;
@@ -1476,8 +1482,12 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	decl << format("\tvoid SearchAndLoad%1%View();\n") % p_ptrTableInfo->tableName_ ;
 	defn << format("void %1%_ui::SearchAndLoad%2%View()\n{\n") %
 		tableInfo_->tableName_  % p_ptrTableInfo->tableName_ ;
-	struct var_list * v_ptr = p_ptrTableInfo->param_list;
 	using boost::format;
+
+	print_SearchFunction1(p_ptrTableInfo,
+		decl, defn, called_recursively);
+
+#if 0
 	if (called_recursively) {
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
 		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
@@ -1487,43 +1497,50 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	}
-	int count=0;
 	if (p_ptrTableInfo->has_search_key > 0) {
 		defn << ",\n";
 	}
 	bool print_comma = false;
+	struct var_list * v_ptr = p_ptrTableInfo->param_list;
 	while (v_ptr) {
 		if (v_ptr->options.search_key &&
 				v_ptr->var_type == VARCHAR_TYPE) {
+			if (print_comma)
+				defn << ",\n";
 			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
 					v_ptr->var_name;
 			print_comma = true;
-			++count;
 		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
 			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
+			if (print_comma)
+				defn << ",\n";
 			defn << "\t\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
 			print_comma = true;
-			++count;
 		}
-		if (print_comma && (count < p_ptrTableInfo->has_search_key)) {
-			defn << ",\n";
-			print_comma = false;
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				//tbl_ptr->dbCodeGenerator_->print_cpp_sp_invoc_search_keys2(search_key_param_setup_str,
+				//		tbl_ptr->tableInfo_, print_comma, nActualParams);
+				print_SearchFunction2(tbl_ptr->tableInfo_, decl, defn, print_comma);
+			} else {
+				defn << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		}
 		v_ptr = v_ptr->prev;
 	}
+#endif /* 0 */
 
 
 	// if (tableInfo_->has_search_key >0) {
 	// 	defn << ",\n";
 	// 	defn << tableInfo_->print_cpp_search_key_args();
 	// }
-	if (p_ptrTableInfo->nSessionParams>0) {
-		//if (tableInfo_->has_search_key >0) {
-			defn << ",\n";
-		//}
-		defn << p_ptrTableInfo->print_cpp_session_key_args();
-	}
-	defn << ");\n";
 
 	// if (tableInfo_->nSessionParams>0) {
 	// 	if (tableInfo_->has_search_key >0) {
@@ -1545,6 +1562,88 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	defn << "}\n\n";
 }
 
+void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
+		stringstream & decl, stringstream & defn, bool called_recursively)
+{
+
+	if (called_recursively) {
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % p_ptrTableInfo->tableName_;
+	} else {
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+			project_namespace % p_ptrTableInfo->tableName_;
+	}
+	if (p_ptrTableInfo->has_search_key > 0) {
+		defn << ",\n";
+	}
+	bool print_comma = false;
+	struct var_list * v_ptr = p_ptrTableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.search_key &&
+				v_ptr->var_type == VARCHAR_TYPE) {
+			if (print_comma)
+				defn << ",\n";
+			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
+					v_ptr->var_name;
+			print_comma = true;
+		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
+			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
+			if (print_comma)
+				defn << ",\n";
+			defn << "\t\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+			print_comma = true;
+		}
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				//tbl_ptr->dbCodeGenerator_->print_cpp_sp_invoc_search_keys2(search_key_param_setup_str,
+				//		tbl_ptr->tableInfo_, print_comma, nActualParams);
+				print_SearchFunction2(tbl_ptr->tableInfo_, decl, defn, print_comma);
+			} else {
+				defn << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
+		}
+		v_ptr = v_ptr->prev;
+	}
+
+	if (p_ptrTableInfo->nSessionParams>0) {
+		defn << ",\n";
+		defn << p_ptrTableInfo->print_cpp_session_key_args();
+	}
+	defn << ");\n";
+}
+
+void WtUIGenerator::print_SearchFunction2(TableInfoType* p_ptrTableInfo,
+		stringstream & decl, stringstream & defn, bool & print_comma
+		)
+{
+
+	struct var_list * v_ptr = p_ptrTableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.search_key &&
+				v_ptr->var_type == VARCHAR_TYPE) {
+			if (print_comma)
+				defn << ",\n";
+			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
+					v_ptr->var_name;
+			print_comma = true;
+		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
+			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
+			if (print_comma)
+				defn << ",\n";
+			defn << "\t\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
+			print_comma = true;
+		}
+		v_ptr = v_ptr->prev;
+	}
+}
 
 // void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo, 
 // 			std::stringstream & decl, std::stringstream & defn,
