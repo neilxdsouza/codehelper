@@ -751,11 +751,13 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 			vec_handler_decls, vec_handler_defns, 
 			headers, called_recursively, p_vecTableInfo, counter);
 	setup_form_func_defn << "\n}\n";
+
 	vec_handler_decls.push_back(setup_form_func_decl.str());
 	vec_handler_defns.push_back(setup_form_func_defn.str());
 	defn << format("\tif (ptr_LoggedInUserInfo->UserHasAddPermission(\"%1%\") ||\n\t\t\tptr_LoggedInUserInfo->UserHasEditPermission(\"%1%\") ) {\n") % aTableInfo->tableName_;
 	defn << format("\t\tSetupForm%1%();\n") % aTableInfo->tableName_;
 	defn << "\t}\n";
+	defn << PrintUISearchPanel(aTableInfo, decl);
 
 
 	stringstream load_func_defn, load_func_decl;
@@ -920,13 +922,14 @@ void WtUIGenerator::GenerateMakefile()
 }
 
 
-string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl)
+string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & headers, std::stringstream & decl)
 {
 	stringstream func_defn;
 	func_defn << boost::format("void %2%_ui::HandleChoose%1%()\n{\n")
 		% p_vptr->var_name % tableInfo_->tableName_;
 	func_defn << boost::format("\twd_choose_%1% = new Wt::Ext::Dialog(\"Choose %1%\");\n")
 		% p_vptr->var_name;
+
 	func_defn << boost::format("\tWt::WPushButton*  ok= new Wt::WPushButton(\"Ok\", wd_choose_%1%->contents());\n")
 		% p_vptr->var_name;
 	func_defn << boost::format("\tok->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
@@ -935,13 +938,14 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 
 	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
 	// should check for null here and exit
+	func_defn << PrintUISearchPanel(aTableInfo, decl);
 
 	stringstream inc_file;
 	inc_file << boost::format("#include \"%1%_bll.h\"\n")
 				% aTableInfo->tableName_;
 	inc_file << boost::format("#include \"%1%_db_postgres.h\"\n")
 				% aTableInfo->tableName_;
-	decl << inc_file.str();
+	headers << inc_file.str();
 	func_defn << boost::format("/* file: %1%, line: %2%: func: %3% added include files */\n") %
 		__FILE__ % __LINE__ % __PRETTY_FUNCTION__ ;
 	// func_defn<< boost::format("\tstd::vector<boost::shared_ptr <Biz%2%> > page1_%2% = %1%::db::%2%::Get%2%(0, 10") %
@@ -1400,6 +1404,15 @@ std::string WtUIGenerator::PrintLoadForm()
 std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl)
 {
 	stringstream search_panel_str;
+
+	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
+			% p_ptrTableInfo->tableName_;
+	decl << boost::format("\tWt::WTable *table_%1%_search;\n")
+			% p_ptrTableInfo->tableName_;
+	decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
+		p_ptrTableInfo->tableName_ ;
 	search_panel_str << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%);\n") % p_ptrTableInfo->tableName_;
 	search_panel_str << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % p_ptrTableInfo->tableName_;
 	search_panel_str << format("	panel_%1%_search->setCollapsible(true);\n") % p_ptrTableInfo->tableName_;
@@ -1549,15 +1562,6 @@ void WtUIGenerator::print_SearchFunction(TableInfoType* p_ptrTableInfo,
 	// 	defn << tableInfo_->print_cpp_session_key_args();
 	// }
 	// defn << ");\n";
-	defn << format("\t\tLoad%1%SummaryTableView(page);\n")
-			% p_ptrTableInfo->tableName_;
-
-	if (called_recursively) {
-		defn << "\t*/\n";
-		defn << "\t}\n";
-	} else {
-		defn << "\t}\n";
-	}
 
 	defn << "}\n\n";
 }
@@ -1618,6 +1622,15 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 		defn << p_ptrTableInfo->print_cpp_session_key_args();
 	}
 	defn << ");\n";
+
+	defn << format("\t\tLoad%1%SummaryTableView(page);\n")
+			% p_ptrTableInfo->tableName_;
+	if (called_recursively) {
+		defn << "\t*/\n";
+		defn << "\t}\n";
+	} else {
+		defn << "\t}\n";
+	}
 }
 
 void WtUIGenerator::print_SearchFunction2(TableInfoType* p_ptrTableInfo,
@@ -1672,16 +1685,12 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	decl << format("\tWt::WPanel * panel_%1%_err_msg;\n") 
 			% p_ptrTableInfo->tableName_;
 
-	decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
-			% p_ptrTableInfo->tableName_;
-	decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
-			% p_ptrTableInfo->tableName_;
 	decl << format("\tWt::WText * wt_%1%_err_msg;\n")
 			% p_ptrTableInfo->tableName_;
 	decl << boost::format("\tWt::WTable *table_%1%_view;\n")
 			% p_ptrTableInfo->tableName_;
-	decl << boost::format("\tWt::WTable *table_%1%_search;\n")
-			% p_ptrTableInfo->tableName_;
+
+
 	defn << boost::format("\ttable_%1% = new Wt::WTable(wcw_%1%);\n")
 			% p_ptrTableInfo->tableName_;
 
@@ -1773,7 +1782,7 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 			vec_handler_decls.push_back(handle_func_decl.str());
 			
 			stringstream handle_func_defn;
-			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */);
+			handle_func_defn << print_ChoiceHandler(v_ptr, headers  /* required for header files of composite objects */, decl);
 			vec_handler_defns.push_back(handle_func_defn.str());
 			stringstream xfer_func_decl;
 			// xfer_func_decl << boost::format("\tvoid XferChoice%1%(int p_%1%);\n") %
@@ -1854,9 +1863,16 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	defn << format("\t}\n");
 
 
-	decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
-		p_ptrTableInfo->tableName_ ;
-	defn << PrintUISearchPanel(p_ptrTableInfo, decl);
+
+	// decl << boost::format("\tWt::WContainerWidget  *wcw_%1%_search;\n")
+	// 		% p_ptrTableInfo->tableName_;
+	// decl << format("\tWt::Ext::Panel * panel_%1%_search;\n") 
+	// 		% p_ptrTableInfo->tableName_;
+	// decl << boost::format("\tWt::WTable *table_%1%_search;\n")
+	// 		% p_ptrTableInfo->tableName_;
+	// decl << format("\tWt::Ext::Button * btn_%1%_search;\n") % 
+	// 	p_ptrTableInfo->tableName_ ;
+	// defn << PrintUISearchPanel(p_ptrTableInfo, decl);
 
 	stringstream search_func_defn, search_func_decl;
 	print_SearchFunction(p_ptrTableInfo, search_func_decl, search_func_defn, called_recursively);
