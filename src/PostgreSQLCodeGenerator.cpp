@@ -1152,54 +1152,56 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__,
 	   "Move session variables printing outside has_search_key if condition");
 
-	int count1=2;
-	if (tableInfo_->has_search_key) {
-		struct var_list* v_ptr1=tableInfo_->param_list;
-		func_body << "\t\t\t /*1*/ \",";
-		while (v_ptr1) {
-			if (v_ptr1->options.search_key) {
-				func_body << boost::format("$%1%::%2%")
-					% ++count1 % print_sp_types(v_ptr1->var_type);
-				if (count1 < tableInfo_->has_search_key + 2 ){
-					func_body << " /*2*/ , ";
-				} else {
-					break;
-				}
-			}
-			v_ptr1=v_ptr1->prev;
-		}
-		func_body << "\"\n";
-	}
+	func_body << print_cpp_sp_invoc(nActualParams);
 
-	int count2 = count1;
-	if (tableInfo_->nSessionParams) {
-		struct var_list * v_ptr1=tableInfo_->param_list;
-		func_body << "\t\t\t /*3*/ \",";
-		while (v_ptr1) {
-			if (v_ptr1->options.session) {
-				func_body << boost::format("$%1%::%2%")
-					% ++count2 % print_sp_types(v_ptr1->var_type);
-				if (count2 < tableInfo_->nSessionParams +2 + tableInfo_->has_search_key){
-					func_body << " /*4*/ , ";
-				} else {
-					break;
-				}
-			}
-			v_ptr1=v_ptr1->prev;
-		}
-		//func_body << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
-		//		nActualParams;
-		func_body << "\"\n";
-	} 
-	//else {
-	//if (tableInfo_->has_search_key || tableInfo_->nSessionParams) {
-	//	func_body << boost::format("\t\t\t)\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
-	//			nActualParams;
-	//} else {
-		func_body << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
-				nActualParams;
-	//}
-	//}
+	// int count1=2;
+	// if (tableInfo_->has_search_key) {
+	// 	struct var_list* v_ptr1=tableInfo_->param_list;
+	// 	func_body << "\t\t\t /*1*/ \",";
+	// 	while (v_ptr1) {
+	// 		if (v_ptr1->options.search_key) {
+	// 			func_body << boost::format("$%1%::%2%")
+	// 				% ++count1 % print_sp_types(v_ptr1->var_type);
+	// 			if (count1 < tableInfo_->has_search_key + 2 ){
+	// 				func_body << " /*2*/ , ";
+	// 			} else {
+	// 				break;
+	// 			}
+	// 		}
+	// 		v_ptr1=v_ptr1->prev;
+	// 	}
+	// 	func_body << "\"\n";
+	// }
+
+	// int count2 = count1;
+	// if (tableInfo_->nSessionParams) {
+	// 	struct var_list * v_ptr1=tableInfo_->param_list;
+	// 	func_body << "\t\t\t /*3*/ \",";
+	// 	while (v_ptr1) {
+	// 		if (v_ptr1->options.session) {
+	// 			func_body << boost::format("$%1%::%2%")
+	// 				% ++count2 % print_sp_types(v_ptr1->var_type);
+	// 			if (count2 < tableInfo_->nSessionParams +2 + tableInfo_->has_search_key){
+	// 				func_body << " /*4*/ , ";
+	// 			} else {
+	// 				break;
+	// 			}
+	// 		}
+	// 		v_ptr1=v_ptr1->prev;
+	// 	}
+	// 	//func_body << boost::format(")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+	// 	//		nActualParams;
+	// 	func_body << "\"\n";
+	// } 
+	// //else {
+	// //if (tableInfo_->has_search_key || tableInfo_->nSessionParams) {
+	// //	func_body << boost::format("\t\t\t)\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+	// //			nActualParams;
+	// //} else {
+	// 	func_body << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+	// 			nActualParams;
+	// //}
+	// //}
 
 	func_body << "\tif (PQresultStatus(res) != PGRES_TUPLES_OK){\n";
 	func_body << "\t\tint res_status = PQresultStatus(res);\n";
@@ -2873,5 +2875,86 @@ void PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys2(stringstream & p_s
 						% nActualParams++;
 		}
 		v_ptr=v_ptr->prev;
+	}
+}
+
+std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc(int nActualParams)
+{
+	stringstream sp_invoc_str;
+	int count1=2;
+	if (tableInfo_->has_search_key) {
+		struct var_list* v_ptr1=tableInfo_->param_list;
+		sp_invoc_str << "\t\t\t /*1*/ \",";
+		bool print_comma = false;
+		while (v_ptr1) {
+			if (v_ptr1->options.search_key) {
+				if (print_comma) {
+					sp_invoc_str << ", ";
+				}
+				sp_invoc_str << boost::format("$%1%::%2%")
+					% ++count1 % print_sp_types(v_ptr1->var_type);
+				// if (count1 < tableInfo_->has_search_key + 2 ){
+				// 	sp_invoc_str << " /*2*/ , ";
+				// } else {
+				// 	break;
+				// }
+				print_comma  = true;
+			}
+			if (v_ptr1->options.ref_table_name!="" && v_ptr1->options.many==false) {
+				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr1->options.ref_table_name)));
+				if(tbl_ptr){
+					tbl_ptr->dbCodeGenerator_->print_cpp_sp_search_invoc2(sp_invoc_str,
+							tbl_ptr->tableInfo_, print_comma, count1);
+				} else {
+					sp_invoc_str << format("referenced table: %1% not found in table list: ... exiting")
+						% v_ptr1->options.ref_table_name;
+					exit(1);
+				}
+				//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
+			}
+			v_ptr1=v_ptr1->prev;
+		}
+		sp_invoc_str << "\"\n";
+	}
+
+	int count2 = count1;
+	if (tableInfo_->nSessionParams) {
+		struct var_list * v_ptr1=tableInfo_->param_list;
+		sp_invoc_str << "\t\t\t /*3*/ \",";
+		while (v_ptr1) {
+			if (v_ptr1->options.session) {
+				sp_invoc_str << boost::format("$%1%::%2%")
+					% ++count2 % print_sp_types(v_ptr1->var_type);
+				if (count2 < tableInfo_->nSessionParams +2 + tableInfo_->has_search_key){
+					sp_invoc_str << " /*4*/ , ";
+				} else {
+					break;
+				}
+			}
+			v_ptr1=v_ptr1->prev;
+		}
+		sp_invoc_str << "\"\n";
+	} 
+	sp_invoc_str << boost::format("\t\t\t\")\", %1%, NULL, paramValues, NULL, NULL,0);\n") %
+			nActualParams;
+	return sp_invoc_str.str();
+}
+
+void PostgreSQLCodeGenerator::print_cpp_sp_search_invoc2(stringstream & sp_invoc_str,
+	TableInfoType *	ptr_tableInfo, bool & print_comma, int & count1)
+{
+	struct var_list* v_ptr1=tableInfo_->param_list;
+	while (v_ptr1) {
+		if (v_ptr1->options.search_key) {
+			if (print_comma) {
+				sp_invoc_str << ", ";
+			}
+			sp_invoc_str << boost::format("$%1%::%2%")
+				% ++count1 % print_sp_types(v_ptr1->var_type);
+			print_comma  = true;
+		}
+		v_ptr1=v_ptr1->prev;
 	}
 }

@@ -95,6 +95,9 @@ public:
 				TableInfoType * ptr_tableInfo, bool & print_comma);
 	void print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
 				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams);
+	std::string print_cpp_sp_invoc(int nActualParams);
+	void print_cpp_sp_search_invoc2(stringstream & sp_invoc_str,
+		TableInfoType *	ptr_tableInfo, bool & print_comma, int & count1);
 private:
 	PostgreSQLCodeGenerator(const PostgreSQLCodeGenerator &);
 	PostgreSQLCodeGenerator& operator= (const PostgreSQLCodeGenerator &);
