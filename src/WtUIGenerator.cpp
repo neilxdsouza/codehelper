@@ -1418,6 +1418,22 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 				modulus_counter = 0; counter++;
 			}
 		}
+
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				//tbl_ptr->dbCodeGenerator_->print_cpp_sp_invoc_search_keys2(search_key_param_setup_str,
+				//		tbl_ptr->tableInfo_, print_comma, nActualParams);
+				PrintUISearchPanel2(p_ptrTableInfo, tbl_ptr->tableInfo_, decl, search_panel_str, counter, modulus_counter);
+			} else {
+				search_panel_str << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
+		}
 		v_ptr = v_ptr->prev;
 	}
 	search_panel_str << format("	btn_%1%_search = new Wt::Ext::Button(\"Search\", table_%1%_search->elementAt(%2%, %3%));\n") % 
@@ -1427,6 +1443,29 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 		p_ptrTableInfo->tableName_ % tableInfo_->tableName_ ;
 	search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
 	return search_panel_str.str();
+}
+
+void WtUIGenerator::PrintUISearchPanel2(TableInfoType* p_ptrOrigTable, 
+		TableInfoType * p_ptrTableInfo, std::stringstream & decl, 
+		std::stringstream & search_panel_str, int & counter, int & modulus_counter)
+{
+	struct var_list* v_ptr = p_ptrTableInfo->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.search_key) {
+			decl << format("\tWt::Ext::LineEdit * le_%1%_search;\n") % 
+					v_ptr->var_name;
+			search_panel_str << format("\tWt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrOrigTable->tableName_ %
+					counter % modulus_counter % v_ptr->var_name;
+			search_panel_str << format("\tle_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrOrigTable->tableName_ %
+					counter % (modulus_counter + 1) % v_ptr->var_name;
+			if (modulus_counter == 0) {
+				modulus_counter += 2;
+			} else /*if (modulus_counter == 2) */ {
+				modulus_counter = 0; counter++;
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
 }
 
 

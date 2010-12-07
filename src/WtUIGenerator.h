@@ -78,6 +78,10 @@ public:
 	void PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn);
 	void PrintLoginWidget();
 	void GenerateLoggedInUserInfo();
+
+	void PrintUISearchPanel2(TableInfoType* p_ptrOrigTable, 
+			TableInfoType * p_ptrTableInfo, std::stringstream & decl, 
+			std::stringstream & search_panel_str, int & counter, int & modulus_counter);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);
