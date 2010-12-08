@@ -7,6 +7,8 @@
 
 struct TableInfoType;
 
+enum SearchPanelContext { MAIN_FORM, DIALOG };
+
 struct WtUIGenerator : public AbstractUIGenerator
 {
 public:
@@ -64,7 +66,8 @@ public:
 			int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
-	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl );
+	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl,
+			SearchPanelContext spc);
 	void PrintForm(TableInfoType * p_ptrTableInfo, 
 			std::stringstream & decl, std::stringstream & defn,
 			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
