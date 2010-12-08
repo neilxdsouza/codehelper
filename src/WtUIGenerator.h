@@ -7,6 +7,8 @@
 
 struct TableInfoType;
 
+enum SearchPanelContext { MAIN_FORM, DIALOG };
+
 struct WtUIGenerator : public AbstractUIGenerator
 {
 public:
@@ -33,7 +35,9 @@ public:
 				vector<TableInfoType *> p_vecTableInfo);
 	void GenerateForms();
 	void GenerateMakefile();
-	string print_ChoiceHandler(struct var_list * p_vptr, std::stringstream & decl);
+	string print_ChoiceHandler(struct var_list * p_vptr, 
+			std::stringstream & headers,
+			std::stringstream & decl);
 	string print_XferFunction(struct var_list * p_vptr, 
 			std::stringstream & decl, std::stringstream & p_prototype);
 
@@ -62,7 +66,8 @@ public:
 			int max_recursion_level, int recursion_level, int & nColumns);
 	std::string PrintValidateForInsert();
 	std::string PrintLoadForm();
-	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl );
+	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl,
+			SearchPanelContext spc);
 	void PrintForm(TableInfoType * p_ptrTableInfo, 
 			std::stringstream & decl, std::stringstream & defn,
 			std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
@@ -74,10 +79,24 @@ public:
 			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
 			std::stringstream & headers
 			);
+
+	void PrintLoadSummaryTableViewDialog(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers
+			);
 	void PrintSetupLogin(stringstream & func_defn, stringstream & func_decl);
 	void PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn);
 	void PrintLoginWidget();
 	void GenerateLoggedInUserInfo();
+
+	void PrintUISearchPanel2(TableInfoType* p_ptrOrigTable, 
+			TableInfoType * p_ptrTableInfo, std::stringstream & decl, 
+			std::stringstream & search_panel_str, int & counter, int & modulus_counter);
+	void print_SearchFunction1(TableInfoType* p_ptrTableInfo,
+			stringstream & decl, stringstream & defn, bool called_recursively);
+	void print_SearchFunction2(TableInfoType * p_ptrOrigTable, TableInfoType* p_ptrTableInfo,
+			stringstream & decl, stringstream & defn, bool & print_comma);
 };
 
 	//bool ReferencedTableContainsUs(TableInfoType *me, std::string ref_table_name);

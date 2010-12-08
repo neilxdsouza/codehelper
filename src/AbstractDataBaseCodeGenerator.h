@@ -45,6 +45,18 @@ public:
 	virtual void print_sp_select_inner_joins2(stringstream & p_inner_join_str,
 		bool with_pkey, bool rename_vars, string inner_join_tabname, int recursion_level)=0;
 
+	virtual void print_sp_search_key_params2(stringstream & p_search_key_params,
+			TableInfoType * ptr_tableInfo, bool & print_comma)=0;
+	virtual void print_sp_search_key_whereclause2(stringstream & p_search_key_where_clause_str,
+					TableInfoType * ptr_tableInfo, bool & print_and)=0;
+	virtual void print_cpp_search_key_params2(stringstream & p_search_key_params,
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & p_nSearchKeys)=0;
+	virtual void print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams)=0;
+
+	virtual void print_cpp_sp_search_invoc2(stringstream & sp_invoc_str,
+		TableInfoType *	ptr_tableInfo, bool & print_comma, int & count1)=0;
+
 	//virtual void SetOutputDirectory();
 	//virtual void SetTableInfo();
 protected:
