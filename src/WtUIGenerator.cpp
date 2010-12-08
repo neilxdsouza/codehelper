@@ -790,8 +790,8 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, " we could cause a core dump here i think as the search is setup inside the form - the invocation to the Table => search ui fields are setup causing a core dump here");
 
-	print_SearchFunction1(aTableInfo,
-		decl, defn, called_recursively);
+	// print_SearchFunction1(aTableInfo,
+	// 	decl, defn, called_recursively);
 	// if (aTableInfo->nSessionParams>0) {
 	// 	defn << ",\n";
 	// 	defn << aTableInfo->print_cpp_session_key_args();
@@ -962,6 +962,18 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 		p_vptr->options.ref_table_name % p_vptr->var_name;
 	print_SearchFunction1(aTableInfo,
 		decl, func_defn, false);
+
+
+	stringstream load_func_defn, load_func_decl;
+	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
+	load_func_decl << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
+	PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
+		// vec_handler_decls, vec_handler_defns, 
+		headers
+		//, called_recursively, p_vecTableInfo, counter
+		);
+	vec_handler_decls.push_back(load_func_decl.str());
+	vec_handler_defns.push_back(load_func_defn.str());
 
 	struct var_list* v_ptr=aTableInfo->param_list;
 	{
@@ -1586,11 +1598,11 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	defn <<  "/* " << __FILE__ << ", " <<  __LINE__ << ", " <<  __PRETTY_FUNCTION__ <<  ", ENTER */" << endl;
 
 	if (called_recursively) {
-		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
 		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	} else {
-		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
+		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
 		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	}
@@ -1637,8 +1649,9 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 		defn << p_ptrTableInfo->print_cpp_session_key_args();
 	}
 	defn << ");\n";
+
+#if 0
 	stringstream load_func_defn, load_func_decl, headers;
-	
 	//if (p_ptrTableInfo!=tableInfo_) {
 	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
 	load_func_decl << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
@@ -1650,6 +1663,7 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 		vec_handler_decls.push_back(load_func_decl.str());
 		vec_handler_defns.push_back(load_func_defn.str());
 	//}
+#endif /* 0 */
 
 	defn << format("\t\tLoad%1%SummaryTableView(page, table_%1%_view);\n")
 			% p_ptrTableInfo->tableName_;
