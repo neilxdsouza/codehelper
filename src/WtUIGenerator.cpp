@@ -760,14 +760,14 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	defn << PrintUISearchPanel(aTableInfo, decl, MAIN_FORM);
 
 
-	stringstream load_func_defn, load_func_decl;
-	PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
-		// vec_handler_decls, vec_handler_defns, 
-		headers
-		//, called_recursively, p_vecTableInfo, counter
-		);
-	vec_handler_decls.push_back(load_func_decl.str());
-	vec_handler_defns.push_back(load_func_defn.str());
+	// stringstream load_func_defn, load_func_decl;
+	// PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
+	// 	// vec_handler_decls, vec_handler_defns, 
+	// 	headers
+	// 	//, called_recursively, p_vecTableInfo, counter
+	// 	);
+	// vec_handler_decls.push_back(load_func_decl.str());
+	// vec_handler_defns.push_back(load_func_defn.str());
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 
@@ -958,11 +958,11 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	// }
 	// func_defn << ");\n";
 	//
+	func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
+		p_vptr->options.ref_table_name % p_vptr->var_name;
 	print_SearchFunction1(aTableInfo,
 		decl, func_defn, false);
 
-	func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
-		p_vptr->options.ref_table_name % p_vptr->var_name;
 	struct var_list* v_ptr=aTableInfo->param_list;
 	{
 		int counter =0;
@@ -981,6 +981,7 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 			(TableCollectionSingleton::Instance()
 				.my_find_table(p_vptr->options.ref_table_name)));
 
+#if 0
 	func_defn << format("\tfor (int i=0; i<page1_%1%.size(); ++i) {\n") %
 		p_vptr->options.ref_table_name;
 	v_ptr=aTableInfo->param_list;
@@ -1044,6 +1045,7 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 		}
 	}
 	func_defn << "\t}\n";
+#endif /* 0 */
 	func_defn << boost::format("\twd_choose_%1%->exec();\n")
 		% p_vptr->var_name;
 
@@ -1431,11 +1433,11 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 	int modulus_counter = 0;
 	while (v_ptr) {
 		if (v_ptr->options.search_key) {
-			decl << format("\tWt::Ext::LineEdit * le_%1%_search;\n") % 
-					v_ptr->var_name;
+			decl << format("\tWt::Ext::LineEdit * le_%2%_%1%_search;\n") % 
+					v_ptr->var_name % p_ptrTableInfo->tableName_;
 			search_panel_str << format("\tWt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
 					counter % modulus_counter % v_ptr->var_name;
-			search_panel_str << format("\tle_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
+			search_panel_str << format("\tle_%1%_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrTableInfo->tableName_ %
 					counter % (modulus_counter + 1) % v_ptr->var_name;
 			if (modulus_counter == 0) {
 				modulus_counter += 2;
@@ -1463,6 +1465,11 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 	}
 	search_panel_str << format("	btn_%1%_search = new Wt::Ext::Button(\"Search\", table_%1%_search->elementAt(%2%, %3%));\n") % 
 		p_ptrTableInfo->tableName_ % (counter+1) % 0;
+	stringstream search_func_defn, search_func_decl;
+	bool called_recursively = true;
+	print_SearchFunction(p_ptrTableInfo, search_func_decl, search_func_defn, called_recursively);
+	vec_handler_decls.push_back(search_func_decl.str());
+	vec_handler_defns.push_back(search_func_defn.str());
 
 	search_panel_str << format("	btn_%1%_search->clicked().connect(this, &%2%_ui::SearchAndLoad%1%View);\n") % 
 		p_ptrTableInfo->tableName_ % tableInfo_->tableName_ ;
@@ -1477,11 +1484,11 @@ void WtUIGenerator::PrintUISearchPanel2(TableInfoType* p_ptrOrigTable,
 	struct var_list* v_ptr = p_ptrTableInfo->param_list;
 	while (v_ptr) {
 		if (v_ptr->options.search_key) {
-			decl << format("\tWt::Ext::LineEdit * le_%1%_search;\n") % 
-					v_ptr->var_name;
+			decl << format("\tWt::Ext::LineEdit * le_%2%_%1%_search;\n") % 
+					v_ptr->var_name % p_ptrOrigTable->tableName_;
 			search_panel_str << format("\tWt::WLabel * lbl_%4%_search = new Wt::WLabel(\"%4%\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrOrigTable->tableName_ %
 					counter % modulus_counter % v_ptr->var_name;
-			search_panel_str << format("\tle_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrOrigTable->tableName_ %
+			search_panel_str << format("\tle_%1%_%4%_search = new Wt::Ext::LineEdit(\"\", table_%1%_search->elementAt(%2%, %3%));\n") % p_ptrOrigTable->tableName_ %
 					counter % (modulus_counter + 1) % v_ptr->var_name;
 			if (modulus_counter == 0) {
 				modulus_counter += 2;
@@ -1576,6 +1583,8 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 		stringstream & decl, stringstream & defn, bool called_recursively)
 {
 
+	defn <<  "/* " << __FILE__ << ", " <<  __LINE__ << ", " <<  __PRETTY_FUNCTION__ <<  ", ENTER */" << endl;
+
 	if (called_recursively) {
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ){\n") % p_ptrTableInfo->tableName_;
 		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
@@ -1595,8 +1604,8 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 				v_ptr->var_type == VARCHAR_TYPE) {
 			if (print_comma)
 				defn << ",\n";
-			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
-					v_ptr->var_name;
+			defn << format("\t\t\tstd::string(\"%%\") + le_%2%_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
+					v_ptr->var_name % p_ptrTableInfo->tableName_ ;
 			print_comma = true;
 		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
 			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
@@ -1612,7 +1621,7 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 			if(tbl_ptr){
 				//tbl_ptr->dbCodeGenerator_->print_cpp_sp_invoc_search_keys2(search_key_param_setup_str,
 				//		tbl_ptr->tableInfo_, print_comma, nActualParams);
-				print_SearchFunction2(tbl_ptr->tableInfo_, decl, defn, print_comma);
+				print_SearchFunction2(p_ptrTableInfo, tbl_ptr->tableInfo_, decl, defn, print_comma);
 			} else {
 				defn << format("referenced table: %1% not found in table list: ... exiting")
 					% v_ptr->options.ref_table_name;
@@ -1628,8 +1637,21 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 		defn << p_ptrTableInfo->print_cpp_session_key_args();
 	}
 	defn << ");\n";
+	stringstream load_func_defn, load_func_decl, headers;
+	
+	//if (p_ptrTableInfo!=tableInfo_) {
+	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
+	load_func_decl << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
+		PrintLoadSummaryTableView(p_ptrTableInfo, load_func_decl, load_func_defn, 
+			// vec_handler_decls, vec_handler_defns, 
+			headers
+			//, called_recursively, p_vecTableInfo, counter
+			);
+		vec_handler_decls.push_back(load_func_decl.str());
+		vec_handler_defns.push_back(load_func_defn.str());
+	//}
 
-	defn << format("\t\tLoad%1%SummaryTableView(page);\n")
+	defn << format("\t\tLoad%1%SummaryTableView(page, table_%1%_view);\n")
 			% p_ptrTableInfo->tableName_;
 	if (called_recursively) {
 		defn << "\t*/\n";
@@ -1639,7 +1661,7 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	}
 }
 
-void WtUIGenerator::print_SearchFunction2(TableInfoType* p_ptrTableInfo,
+void WtUIGenerator::print_SearchFunction2(TableInfoType * p_ptrOrigTable, TableInfoType* p_ptrTableInfo,
 		stringstream & decl, stringstream & defn, bool & print_comma
 		)
 {
@@ -1650,8 +1672,8 @@ void WtUIGenerator::print_SearchFunction2(TableInfoType* p_ptrTableInfo,
 				v_ptr->var_type == VARCHAR_TYPE) {
 			if (print_comma)
 				defn << ",\n";
-			defn << format("\t\t\tstd::string(\"%%\") + le_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
-					v_ptr->var_name;
+			defn << format("\t\t\tstd::string(\"%%\") + le_%2%_%1%_search->text().toUTF8() + std::string(\"%%\")") % 
+					v_ptr->var_name % p_ptrOrigTable->tableName_;
 			print_comma = true;
 		} else if(v_ptr->options.search_key && v_ptr->var_type == DATETIME_TYPE) {
 			fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "session date should be 2 params: start and end");
@@ -1880,14 +1902,15 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	// 	p_ptrTableInfo->tableName_ ;
 	// defn << PrintUISearchPanel(p_ptrTableInfo, decl);
 
-	stringstream search_func_defn, search_func_decl;
-	print_SearchFunction(p_ptrTableInfo, search_func_decl, search_func_defn, called_recursively);
-	vec_handler_decls.push_back(search_func_decl.str());
-	vec_handler_defns.push_back(search_func_defn.str());
+	// stringstream search_func_defn, search_func_decl;
+	// print_SearchFunction(p_ptrTableInfo, search_func_decl, search_func_defn, called_recursively);
+	// vec_handler_decls.push_back(search_func_decl.str());
+	// vec_handler_defns.push_back(search_func_defn.str());
 
 }
 
 // 8-dec-2010 - add another param - the table view in which this retrieved page will be loaded
+// start from here 
 void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo, 
 			std::stringstream & decl, std::stringstream & defn,
 			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
@@ -1898,10 +1921,9 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 	decl << format("\tvoid Load%1%SummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1, Wt::WTable * & ptr_Table);\n")
 			% p_ptrTableInfo->tableName_;
 	stringstream load_table_view_str;
-	load_table_view_str << format("void %1%_ui::Load%1%SummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1, Wt::WTable * & ptr_Table)\n\{\n")
-			% p_ptrTableInfo->tableName_;
+	load_table_view_str << format("void %1%_ui::Load%2%SummaryTableView(std::vector<boost::shared_ptr <Biz%2%> > & page1, Wt::WTable * & ptr_Table)\n\{\n")
+				% tableInfo_->tableName_ % p_ptrTableInfo->tableName_;
 	load_table_view_str << format("\tptr_Table->clear();\n");
-#if 1
 	struct var_list* v_ptr = p_ptrTableInfo->param_list;
 	{
 		int counter =0;
@@ -1929,6 +1951,8 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 			}
 		}
 	}
+
+#if 1
 	load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
 	v_ptr=p_ptrTableInfo->param_list;
 	load_table_view_str << "\t\tstd::stringstream temp1;\n";
