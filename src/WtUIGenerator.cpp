@@ -931,10 +931,10 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	func_defn << boost::format("\twd_choose_%1% = new Wt::Ext::Dialog(\"Choose %1%\");\n")
 		% p_vptr->var_name;
 
-	// func_defn << boost::format("\tWt::WPushButton*  ok= new Wt::WPushButton(\"Ok\", wd_choose_%1%->contents());\n")
-	// 	% p_vptr->var_name;
-	// func_defn << boost::format("\tok->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
-	// 	% p_vptr->var_name;
+	func_defn << boost::format("\tWt::WPushButton*  ok= new Wt::WPushButton(\"Ok\", wd_choose_%1%->contents());\n")
+		% p_vptr->var_name;
+	func_defn << boost::format("\tok->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
+		% p_vptr->var_name;
 
 
 	TableInfoType * aTableInfo = find_TableInfo(p_vptr->options.ref_table_name);
@@ -959,8 +959,10 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	// }
 	// func_defn << ");\n";
 	//
-	func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
-		p_vptr->options.ref_table_name % p_vptr->var_name;
+	//func_defn << format("\ttable_%1%_view = new Wt::WTable(wd_choose_%2%->contents());\n") %
+	//	p_vptr->options.ref_table_name % p_vptr->var_name;
+	func_defn << format("\ttable_%1%_view = new Wt::WTable(wcw_%1%_search);\n") %
+		p_vptr->options.ref_table_name ;
 	print_SearchFunction1(aTableInfo,
 		decl, func_defn, false);
 
@@ -968,6 +970,9 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 	stringstream load_func_defn, load_func_decl;
 	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
 	load_func_decl << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << "*/" << endl;
+
+	// start from here 8-dec-2010
+	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "PrintLoadSummaryTableView should take a context parameter - if its the main constructor then we load the form , otherwise we transfer a value to the field in the form");
 	PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
 		// vec_handler_decls, vec_handler_defns, 
 		headers
@@ -1439,7 +1444,9 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 		search_panel_str << format("	table_%1%_search = new Wt::WTable(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
 		search_panel_str << format("	panel_%1%_search->setLayout(new Wt::WFitLayout());\n") % p_ptrTableInfo->tableName_;
 	} else if (spc == DIALOG) {
-		search_panel_str << format("	wcw_%1%_search = new Wt::WContainerWidget();\n") % p_ptrTableInfo->tableName_;
+		//search_panel_str << format("	wcw_%1%_search = new Wt::WContainerWidget();\n") % p_ptrTableInfo->tableName_;
+		search_panel_str << format("	wcw_%1%_search = wd_choose_%2%->contents();\n") % p_ptrTableInfo->tableName_  
+						% p_ptrTableInfo->param_list->var_name;
 		search_panel_str << format("	panel_%1%_search = new Wt::Ext::Panel(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_ ;
 		search_panel_str << format("	panel_%1%_search->setTitle(Wt::WString(\"Search\"));\n") % p_ptrTableInfo->tableName_;
 		search_panel_str << format("	panel_%1%_search->setCollapsible(true);\n") % p_ptrTableInfo->tableName_;
@@ -1504,7 +1511,11 @@ std::string WtUIGenerator::PrintUISearchPanel(TableInfoType * p_ptrTableInfo, st
 
 	search_panel_str << format("	btn_%1%_search->clicked().connect(this, &%2%_ui::SearchAndLoad%1%View);\n") % 
 		p_ptrTableInfo->tableName_ % tableInfo_->tableName_ ;
-	search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
+	if (spc == MAIN_FORM) {
+		search_panel_str << format("	panel_%1%_search->layout()->addWidget(wcw_%1%_search);\n") % p_ptrTableInfo->tableName_;
+	} else if (spc == DIALOG) {
+		//search_panel_str << format("	panel_%1%_search->layout()->addWidget(table_%1%_search);\n") % p_ptrTableInfo->tableName_;
+	}
 	return search_panel_str.str();
 }
 
