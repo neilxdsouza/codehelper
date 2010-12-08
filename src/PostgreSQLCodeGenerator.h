@@ -40,7 +40,7 @@ public:
 	void PrintMallocDeleter(ofstream & cpp_db_impl);
 	void print_exit_nicely(ofstream & cpp_db_impl);
 	std::string print_sp_search_key_params();
-	std::string print_cpp_search_key_params();
+	std::string print_cpp_search_key_params(int & p_nSearchKeys);
 	std::string print_sp_search_key_fields();
 	std::string print_sp_search_key_whereclause();
 	std::string print_sp_session_key_whereclause();
@@ -92,7 +92,7 @@ public:
 	void print_sp_search_key_whereclause2(stringstream & p_search_key_where_clause_str,
 					TableInfoType * ptr_tableInfo, bool & print_and);
 	void print_cpp_search_key_params2(stringstream & p_search_key_params,
-				TableInfoType * ptr_tableInfo, bool & print_comma);
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & p_nSearchKeys);
 	void print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
 				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams);
 	std::string print_cpp_sp_invoc(int nActualParams);

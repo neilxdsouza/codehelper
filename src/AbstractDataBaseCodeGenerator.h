@@ -50,7 +50,7 @@ public:
 	virtual void print_sp_search_key_whereclause2(stringstream & p_search_key_where_clause_str,
 					TableInfoType * ptr_tableInfo, bool & print_and)=0;
 	virtual void print_cpp_search_key_params2(stringstream & p_search_key_params,
-				TableInfoType * ptr_tableInfo, bool & print_comma)=0;
+				TableInfoType * ptr_tableInfo, bool & print_comma, int & p_nSearchKeys)=0;
 	virtual void print_cpp_sp_invoc_search_keys2(stringstream & p_search_key_param,
 				TableInfoType * ptr_tableInfo, bool & print_comma, int & nActualParams)=0;
 
