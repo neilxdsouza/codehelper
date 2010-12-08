@@ -686,7 +686,7 @@ string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
 	//if (tableInfo_->has_search_key) {
 		struct var_list* v_ptr = tableInfo_->param_list;
 		//search_key_where_clause_str << "\t\tWHERE ";
-		search_key_where_clause_str << "\n";
+		// search_key_where_clause_str << "\n";
 		while (v_ptr) {
 			if(v_ptr->options.search_key){
 				if (print_and) {
