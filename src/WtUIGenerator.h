@@ -79,6 +79,12 @@ public:
 			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
 			std::stringstream & headers
 			);
+
+	void PrintLoadSummaryTableViewDialog(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers
+			);
 	void PrintSetupLogin(stringstream & func_defn, stringstream & func_decl);
 	void PrintSetupApplication(std::stringstream & func_decl, std::stringstream & func_defn);
 	void PrintLoginWidget();

@@ -973,14 +973,18 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 
 	// start from here 8-dec-2010
 	fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, "PrintLoadSummaryTableView should take a context parameter - if its the main constructor then we load the form , otherwise we transfer a value to the field in the form");
-	PrintLoadSummaryTableView(aTableInfo, load_func_decl, load_func_defn, 
+	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << " before PrintLoadSummaryTableViewDialog */" << endl;
+
+	PrintLoadSummaryTableViewDialog(aTableInfo, load_func_decl, load_func_defn, 
 		// vec_handler_decls, vec_handler_defns, 
 		headers
 		//, called_recursively, p_vecTableInfo, counter
 		);
+	load_func_defn << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << " */" << endl;
 	vec_handler_decls.push_back(load_func_decl.str());
 	vec_handler_defns.push_back(load_func_defn.str());
 
+#if 0
 	struct var_list* v_ptr=aTableInfo->param_list;
 	{
 		int counter =0;
@@ -999,7 +1003,6 @@ string WtUIGenerator::print_ChoiceHandler(struct var_list * p_vptr, std::strings
 			(TableCollectionSingleton::Instance()
 				.my_find_table(p_vptr->options.ref_table_name)));
 
-#if 0
 	func_defn << format("\tfor (int i=0; i<page1_%1%.size(); ++i) {\n") %
 		p_vptr->options.ref_table_name;
 	v_ptr=aTableInfo->param_list;
@@ -1629,7 +1632,7 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 
 	if (called_recursively) {
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
-		defn << format("\t\t/*std::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
+		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	} else {
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
@@ -1699,7 +1702,7 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	defn << format("\t\tLoad%1%SummaryTableView(page, table_%1%_view);\n")
 			% p_ptrTableInfo->tableName_;
 	if (called_recursively) {
-		defn << "\t*/\n";
+		defn << "\t\n";
 		defn << "\t}\n";
 	} else {
 		defn << "\t}\n";
@@ -2418,4 +2421,151 @@ void WtUIGenerator::GenerateLoggedInUserInfo()
 	std::ofstream logged_in_user_info_cpp(logged_in_user_info_fname_cpp.c_str(), ios_base::out|ios_base::trunc);
 	logged_in_user_info_cpp << logged_in_user_info_cpp_str.str();
 
+}
+
+
+void WtUIGenerator::PrintLoadSummaryTableViewDialog(TableInfoType * p_ptrTableInfo, 
+			std::stringstream & decl, std::stringstream & defn,
+			// std::vector<std::string> & vec_handler_decls, std::vector<std::string> &vec_handler_defns,
+			std::stringstream & headers
+			)
+{
+	using boost::format;
+	decl << format("\tvoid Load%1%SummaryTableView(std::vector<boost::shared_ptr <Biz%1%> > & page1, Wt::WTable * & ptr_Table);\n")
+			% p_ptrTableInfo->tableName_;
+	stringstream load_table_view_str;
+	load_table_view_str << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ << " */" << endl;
+	load_table_view_str << format("void %1%_ui::Load%2%SummaryTableView(std::vector<boost::shared_ptr <Biz%2%> > & page1, Wt::WTable * & ptr_Table)\n\{\n")
+				% tableInfo_->tableName_ % p_ptrTableInfo->tableName_;
+	load_table_view_str << format("\tptr_Table->clear();\n");
+	struct var_list* v_ptr = p_ptrTableInfo->param_list;
+	{
+		int counter =0;
+		for (; v_ptr; v_ptr=v_ptr->prev) {
+			// I need to fix this - like add a function which states "simple_variable" - 
+			// functional programming style - as mentioned in the LISP books
+			if (v_ptr->options.ui_select) {
+				if (v_ptr->options.ref_table_name == "") {
+					load_table_view_str << format("\tptr_Table->elementAt(0, %1%)->addWidget(new Wt::WText(Wt::WString::tr(\"%2%\")));\n") %
+						 counter++ % v_ptr->var_name;
+				}
+			}
+			if (v_ptr->options.ref_table_name != "" 
+					&& v_ptr->options.many == false
+					&& ! ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name)
+					) {
+				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+							(TableCollectionSingleton::Instance()
+								.my_find_table(v_ptr->options.ref_table_name)));
+				vector<TableInfoType *> vec_list_view_stack;
+				vec_list_view_stack.push_back(tbl_ptr->tableInfo_);
+				int max_recursion_level=2;
+				int recursion_level = 1;
+				PrintListViewHeaders(load_table_view_str, vec_list_view_stack, max_recursion_level, recursion_level, counter);
+			}
+		}
+	}
+
+#if 1
+	load_table_view_str << "\tfor (int i=0; i<page1.size(); ++i) {\n";
+	v_ptr=p_ptrTableInfo->param_list;
+	load_table_view_str << "\t\tstd::stringstream temp1;\n";
+	{
+		int counter =0; // start at row 2 - titles in row 1
+		for (; v_ptr; v_ptr=v_ptr->prev) {
+			if (v_ptr->options.ui_select) {
+				if (v_ptr->options.primary_key/* v_ptr == p_ptrTableInfo->param_list*/) {
+					load_table_view_str << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", ptr_Table->elementAt(i+1, %1%));\n") %
+						counter++;
+					load_table_view_str << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::XferChoice%2%, this, page1[i]->%2%_") %
+						tableInfo_->tableName_ % v_ptr->var_name;
+
+
+					struct var_list * v_ptr2 = p_ptrTableInfo->param_list;
+					if (p_ptrTableInfo->nUIDialogSelectXfer) {
+						load_table_view_str << ",\n";
+						int count_sel_xfer = 0;
+						bool print_comma2 = false;
+						while (v_ptr2) {
+							if (v_ptr2->options.ui_dialog_select_xfer) {
+								load_table_view_str << format("\t\t\tpage1[i]->%1%_") % v_ptr2->var_name
+									;
+								print_comma2 = true;
+								++count_sel_xfer;
+							}
+							// load_table_view_str << "/* looping count_sel_xfer:" << count_sel_xfer << " */";
+							v_ptr2 = v_ptr2->prev;
+							if (count_sel_xfer < p_ptrTableInfo->nUIDialogSelectXfer) {
+								// load_table_view_str << "\t\t\t/* count_sel_xfer < nUIDialogSelectXfer */\n";
+								if (print_comma2) {
+									load_table_view_str << ", ";
+									print_comma2 = false;
+								}
+							} else {
+								//load_table_view_str << "\t\t\t/* breaking out count_sel_xfer: " 
+								//	<< count_sel_xfer << " */\n";
+								break;
+							}
+						}
+					}
+					load_table_view_str << "));\n";
+					load_table_view_str << boost::format("\t\tb->clicked().connect(wd_choose_%1%, &Wt::Ext::Dialog::accept);\n")
+						% p_ptrTableInfo->param_list->var_name;
+
+				} else if (v_ptr->options.ref_table_name == "") {
+					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %
+						v_ptr->var_name ;
+					load_table_view_str << format("\t\tptr_Table->elementAt(i+1, %1%)->addWidget(new Wt::WText(temp1.str()));\n") 
+						% counter++ ;
+					load_table_view_str << "\t\ttemp1.str(\"\");\n";
+				}
+			}
+
+		}
+
+		load_table_view_str << "\t\tif ( (i+1)%10 == 0 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_0\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 1 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_1\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 2 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_2\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 3 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_3\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 4 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_4\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 5 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_5\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 6 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_6\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 7 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_7\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 8 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_8\");\n") ;
+		load_table_view_str << "\t\t}\n";
+		
+		load_table_view_str << "\t\tif ( (i+1)%10 == 9 ) {\n";
+		load_table_view_str << format("\t\t\tptr_Table->rowAt(i+1)->setStyleClass(\"alt_row_9\");\n") ;
+		load_table_view_str << "\t\t}\n";
+	}
+#endif /*0 */
+	load_table_view_str << "\t}\n";
+	load_table_view_str << format("\tptr_Table->setHeaderCount(1);\n") ;
+	load_table_view_str << "}\n\n";
+	defn << load_table_view_str.str();
 }
