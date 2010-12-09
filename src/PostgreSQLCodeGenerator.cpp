@@ -498,6 +498,13 @@ void PostgreSQLCodeGenerator::GenerateSelectSP()
 		% tableInfo_->tableName_;
 	sp_decl << "\tp_PageIndex  int,\n";
 	sp_decl << "\tp_PageSize   int";
+	//sp_decl << "/* " << __FILE__ << ", " << __LINE__ << ", " << __PRETTY_FUNCTION__ 
+	//	<< tableInfo_->tableName_ 
+	//	<< " */" << endl;
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		//sp_decl << " /* " << master_table->tableName_ << " */\n";
+		sp_decl << ",\n\tp_" << master_table->param_list->var_name << "	int";
+	}
 	//if(tableInfo_->has_search_key){
 	//	sp_decl << ",\n";
 		sp_decl << print_sp_search_key_params();
@@ -599,7 +606,9 @@ std::string PostgreSQLCodeGenerator::print_sp_search_key_params()
 				print_comma = true;
 			}
 
-			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+					) {
 				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 							(TableCollectionSingleton::Instance()
 								.my_find_table(v_ptr->options.ref_table_name)));
@@ -687,42 +696,47 @@ string PostgreSQLCodeGenerator::print_sp_search_key_whereclause()
 		struct var_list* v_ptr = tableInfo_->param_list;
 		//search_key_where_clause_str << "\t\tWHERE ";
 		// search_key_where_clause_str << "\n";
-		while (v_ptr) {
-			if(v_ptr->options.search_key){
-				if (print_and) {
-					search_key_where_clause_str << " AND \n";
-				}
-				boost::format("%s.%s ")
-					% tableInfo_->tableName_.c_str()
-					% v_ptr->var_name.c_str();
-				if(isOfStringType(v_ptr->var_type)){
-					search_key_where_clause_str << 
-						boost::format("\t\t%2%.%1% like p_%1%")
-						% v_ptr->var_name % tableInfo_->tableName_;
-				} else {
-					//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
-					search_key_where_clause_str << 
-						boost::format("\t\t%2%.%1% = p_%1%")
-						% v_ptr->var_name % tableInfo_->tableName_;
-				}
-				print_and = true;
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		search_key_where_clause_str <<  format("%1% =  p_%1% ") % master_table->param_list->var_name ;
+		print_and = true;
+	}
+	while (v_ptr) {
+		if(v_ptr->options.search_key){
+			if (print_and) {
+				search_key_where_clause_str << " AND \n";
 			}
-			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
-				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
-							(TableCollectionSingleton::Instance()
-								.my_find_table(v_ptr->options.ref_table_name)));
-				if(tbl_ptr){
-					tbl_ptr->dbCodeGenerator_->print_sp_search_key_whereclause2(search_key_where_clause_str,
-							tbl_ptr->tableInfo_, print_and);
-				} else {
-					search_key_where_clause_str << format("referenced table: %1% not found in table list: ... exiting")
-						% v_ptr->options.ref_table_name;
-					exit(1);
-				}
+			boost::format("%s.%s ")
+				% tableInfo_->tableName_.c_str()
+				% v_ptr->var_name.c_str();
+			if(isOfStringType(v_ptr->var_type)){
+				search_key_where_clause_str << 
+					boost::format("\t\t%2%.%1% like p_%1%")
+					% v_ptr->var_name % tableInfo_->tableName_;
+			} else {
+				//fprintf(fptr, "= @%s", v_ptr->var_name.c_str());
+				search_key_where_clause_str << 
+					boost::format("\t\t%2%.%1% = p_%1%")
+					% v_ptr->var_name % tableInfo_->tableName_;
 			}
-			v_ptr=v_ptr->prev;
+			print_and = true;
 		}
-	//}
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+				) {
+			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
+						(TableCollectionSingleton::Instance()
+							.my_find_table(v_ptr->options.ref_table_name)));
+			if(tbl_ptr){
+				tbl_ptr->dbCodeGenerator_->print_sp_search_key_whereclause2(search_key_where_clause_str,
+						tbl_ptr->tableInfo_, print_and);
+			} else {
+				search_key_where_clause_str << format("referenced table: %1% not found in table list: ... exiting")
+					% v_ptr->options.ref_table_name;
+				exit(1);
+			}
+		}
+		v_ptr=v_ptr->prev;
+	}
 	return search_key_where_clause_str.str();
 }
 
@@ -840,6 +854,12 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				}
 				fixme(__FILE__, __LINE__, __PRETTY_FUNCTION__, " Use print_comma here and fix this function");
 			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				p_sp_select_fields << "\t\t\t" << v_ptr->var_name ;
+				if (v_ptr->prev) {
+					p_sp_select_fields << ",\n";
+				} else {
+					p_sp_select_fields << "\n";
+				}
 			} else {
 				p_sp_select_fields << boost::format("\t\t\t%1%.%2%") 
 					% tableInfo_->tableName_
@@ -891,8 +911,10 @@ void PostgreSQLCodeGenerator::print_sp_return_table_fields(std::stringstream & p
 			} else if ( ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
 				//v_ptr = v_ptr->prev;
 				//continue;
-				p_sp_select_fields_with_type << "/* print_comma = false */ ";
-				print_comma = false;
+				//p_sp_select_fields_with_type << "/* print_comma = false */ ";
+				p_sp_select_fields_with_type << "/*31*/ "
+					<< v_ptr->print_sql_var_decl_for_select_return_table();
+				print_comma = true;
 			} else {
 				p_sp_select_fields_with_type << v_ptr->print_sql_var_decl_for_select_return_table();
 				//if (v_ptr->prev) {
@@ -975,7 +997,8 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 			}
 			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
 		}  else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
-			print_comma = false; // we want to skip this field
+			p_sp_select_fields << "\t\t\t" << v_ptr->var_name;
+			print_comma = true; // we want to skip this field
 		} else {
 			if(rename_vars){
 				string orig_varname = inner_join_tabname;
@@ -1069,6 +1092,10 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	stringstream func_params;
 	func_params << "(";
 	func_params << "int p_PageIndex, int p_PageSize";
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		//sp_decl << " /* " << master_table->tableName_ << " */\n";
+		func_params << ",\n\t\tint p_" << master_table->param_list->var_name;
+	}
 	int nSearchKeys = 0;
 	string search_key_params = print_cpp_search_key_params( nSearchKeys);
 	if (search_key_params.length() > 0 /* nSearchKeys >0 : will also work I guess*/ ) {
@@ -1263,7 +1290,9 @@ std::string PostgreSQLCodeGenerator::print_cpp_search_key_params(int & p_nSearch
 				print_comma = true;
 				++p_nSearchKeys;
 			}
-			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+			if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+					) {
 				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 							(TableCollectionSingleton::Instance()
 								.my_find_table(v_ptr->options.ref_table_name)));

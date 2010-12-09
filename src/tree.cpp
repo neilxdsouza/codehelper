@@ -653,3 +653,32 @@ std::string var_list::print_improved_ui_display_var_name()
 	}
 	return improved_name1;
 }
+
+TableInfoType * TableInfoType::isDetailsTable()
+{	
+	struct var_list* v_ptr=param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name!="") {
+			TableInfoType * ti_ptr = find_TableInfo(v_ptr->options.ref_table_name);
+			if (!ti_ptr) {
+				stringstream err_msg ;
+				err_msg << " Referenced table: " << v_ptr->options.ref_table_name << " not found ... exiting";
+				error(__FILE__, __LINE__, __PRETTY_FUNCTION__, err_msg.str());
+				exit(1);
+			} else {
+				struct var_list* v_ptr2=ti_ptr->param_list;
+				while (v_ptr2) {
+					if (v_ptr2->options.ref_table_name == tableName_
+							&& v_ptr2->var_type == COMPOSITE_TYPE
+							) {
+						// ti_ptr refers back to us - so it is the master table
+						return ti_ptr;
+					}
+					v_ptr2 = v_ptr2->prev;
+				}
+			}
+		}
+		v_ptr = v_ptr->prev;
+	}
+	return 0;
+}

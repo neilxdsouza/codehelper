@@ -279,6 +279,12 @@ struct TableInfoType
 			, std::multimap<std::string, std::vector<var_list*> > & p_field_groups
 			, UiFieldOrderType & p_ui_field_order
 			); 
+	// Master / Details table (one to many relationship) 
+	// - we assume (and maybe we are wrong) that a Details table will have
+	// only 1 master table - else the design is bad and should be re-done
+	// someone is going to see this comment and flame me
+	// returns the Master TableInfoType
+	TableInfoType * isDetailsTable();
 
 	// I need to move this function to CppCodeGenerator
 	std::string print_cpp_search_key_args();
