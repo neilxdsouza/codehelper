@@ -1,5 +1,6 @@
 body {
     font-family:arial,sans-serif;
+    font-size:10pt;
 }
 
 p.p {
@@ -75,7 +76,7 @@ table   { border-collapse:separate;
 	font-size: 11pt;
 }
 
-td   { text-align:left; padding:2px; border: none; }
+td   { text-align:left; padding:2px; border: none; font-size: 10pt; }
 th   { text-align:center; padding:2px; border: none; font-size: 12pt; background: rgb(200,200,200); color: white; }
 
 tr.alt_row_0 { background: rgb(253,210,210); }
@@ -88,3 +89,81 @@ tr.alt_row_6 { background: rgb(204,255,204); }
 tr.alt_row_7 { background: rgb(204,204,153); }
 tr.alt_row_8 { background: rgb(171,153,242); }
 tr.alt_row_9 { background: rgb(255,223,117); }
+
+div.logo_image {
+width:140px;
+height:60px;
+float:left;
+}
+
+div.north_container {
+position:relative;
+left:auto;
+float:left;
+}
+
+div.center_canvas {
+width:100%;
+float:left;
+height:auto;
+}
+
+input.number_form_field {
+color: blue;
+       font-size:10pt;
+}
+
+input.double_form_field {
+color: green;
+font-size:10pt;
+}
+
+
+input.date_form_field {
+color: orange;
+font-size:10pt;
+}
+
+
+input.text_form_field {
+color: violet;
+font-size:10pt;
+}
+
+
+span.number_form_label {
+/*background: rgb(179,191,242);*/
+color: blue;
+       font-size:10pt;
+}
+
+span.double_form_label {
+/* background: rgb(179,242,191); */
+color: green;
+font-size:10pt;
+}
+
+
+span.date_form_label {
+/*background: rgb(242,221,179);*/
+color: orange;
+font-size:10pt;
+}
+
+
+span.text_form_label {
+/*background: rgb(235,179,242);*/
+color: violet;
+font-size:10pt;
+}
+
+span.selected_item_form_text {
+color: olive;
+font-size:10pt;
+}
+
+
+span.selected_item_form_label {
+color: olive;
+font-size:10pt;
+}

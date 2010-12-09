@@ -28,7 +28,7 @@ CREATE TABLE Project : UI_GROUP (Project_Admin) (
 
 CREATE TABLE ClientContactPerson: UI_GROUP (Client) (
 	ClientContactPerson_Code int:  PRIMARY_KEY UI_VIEW UI_SELECT,
-	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY UI_VIEW UI_SELECT,
+	ClientContactPerson_Name varchar(250): NOT NULL SEARCH_KEY UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER,
 	Client_Code int: REFERENCES Client(Client_Code) ,
 	Designation varchar(150): NULL,
 	Email1 varchar(250): not null,
@@ -57,7 +57,7 @@ CREATE TABLE Client: UI_GROUP (Client) (
 
 create table Country :UI_GROUP (Client) (
 	Country_Code int: PRIMARY_KEY UI_VIEW UI_SELECT,
-	Country_Short_Name varchar(5): UNIQUE UI_VIEW UI_SELECT SEARCH_KEY,
+	Country_Short_Name varchar(5): UNIQUE UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
 	Country_Name varchar(250): UNIQUE);
 
 CREATE TABLE ClientGroup: UI_GROUP(Client) (
@@ -67,7 +67,7 @@ CREATE TABLE ClientGroup: UI_GROUP(Client) (
 
 CREATE TABLE Employee: UI_GROUP (Employee) (
       Employee_Code int: primary_key UI_VIEW UI_SELECT,
-      ForeName varchar(250) : not null UI_VIEW UI_SELECT SEARCH_KEY,
+      ForeName varchar(250) : not null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
       MiddleName varchar(250) : not null UI_VIEW UI_SELECT,
       LastName varchar(250) : not null UI_VIEW UI_SELECT SEARCH_KEY,
       EmployeeStatus composite:	references many EmployeeStatus(Employee_Code),
@@ -152,12 +152,12 @@ create table Exchange_Details: UI_GROUP (Exchange_Rates) (
 
 create Table Project_Type : UI_GROUP (Project_Admin) (
 	Project_Type_Code int: primary_key UI_VIEW UI_SELECT,
-	Project_Type_Short_Description varchar(100): not null UI_VIEW UI_SELECT SEARCH_KEY,
+	Project_Type_Short_Description varchar(100): not null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
 	Project_Type_Description varchar(1000): not null);
 
 create Table Project_Status: UI_GROUP (Project_Admin) (
 	Project_Status_Code int: primary_key UI_VIEW UI_SELECT,
-	Project_Status_Description varchar(250): not null UI_VIEW UI_SELECT
+	Project_Status_Description varchar(250): not null UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER
 	);
 
 create Table Timesheet: UI_GROUP (Project_Admin) (
