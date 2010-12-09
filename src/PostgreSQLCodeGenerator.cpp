@@ -2422,6 +2422,16 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys(int & nActua
 	struct var_list* v_ptr=tableInfo_->param_list;
 	stringstream search_key_param_setup_str;
 	bool print_comma = false;
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		// func_params << ",\n\t\tint p_" << master_table->param_list->var_name;
+		search_key_param_setup_str << boost::format("\tss_param_values[%1%] << p_%2%;\n")
+			% nActualParams % master_table->param_list->var_name;
+		search_key_param_setup_str << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
+			% nActualParams;
+		search_key_param_setup_str << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
+		search_key_param_setup_str << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
+					% nActualParams++;
+	}
 
 	while (v_ptr) {
 		if (v_ptr->options.search_key) {
@@ -2433,7 +2443,9 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc_search_keys(int & nActua
 			search_key_param_setup_str << boost::format("\tparamValues[%1%]=s_ptr%1%.get();\n")
 						% nActualParams++;
 		}
-		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name))
+				) {
 			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 						(TableCollectionSingleton::Instance()
 							.my_find_table(v_ptr->options.ref_table_name)));
@@ -2894,6 +2906,10 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc(int nActualParams)
 {
 	stringstream sp_invoc_str;
 	int count1=2;
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		sp_invoc_str << boost::format(", \"$%1%::int\" ")
+					% ++count1;
+	}
 	//if (tableInfo_->has_search_key) {
 		struct var_list* v_ptr1=tableInfo_->param_list;
 		//sp_invoc_str << "\t\t\t /*1*/ \",";
@@ -2912,7 +2928,9 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc(int nActualParams)
 				// }
 				print_comma  = true;
 			}
-			if (v_ptr1->options.ref_table_name!="" && v_ptr1->options.many==false) {
+			if (v_ptr1->options.ref_table_name!="" && v_ptr1->options.many==false
+					&& (!ReferencedTableContainsUs(tableInfo_, v_ptr1->options.ref_table_name))
+					) {
 				struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 							(TableCollectionSingleton::Instance()
 								.my_find_table(v_ptr1->options.ref_table_name)));
