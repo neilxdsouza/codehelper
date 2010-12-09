@@ -3,7 +3,7 @@ CREATE TABLE Project : UI_GROUP (Project_Admin) (
 	Project_Admin -> 
 		Project_Code int: primary_key UI_VIEW UI_SELECT,
 		Project_Number varchar(20): unique UI_VIEW UI_SELECT,
-		Project_Name varchar(250): unique UI_VIEW UI_SELECT SEARCH_KEY
+		Project_Name varchar(250): unique UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER 
 	Project_Description ->
 		Project_Short_Description varchar(2000): not null
 	Project_Dates ->
@@ -93,7 +93,7 @@ CREATE TABLE EmployeeStatus: UI_GROUP(Employee) (
 
 CREATE TABLE Division: UI_GROUP(Employee) (
       Division_Code int : primary_key UI_VIEW UI_SELECT,
-      Division_Name varchar(150) : not  null UI_VIEW UI_SELECT SEARCH_KEY,
+      Division_Name varchar(150) : not  null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
       Division_Head int : not null,
       Part_of_Division int : not null,
       Lft int : not null invisible,
@@ -103,7 +103,7 @@ CREATE TABLE Division: UI_GROUP(Employee) (
 
 CREATE TABLE Designation : UI_GROUP (Employee) (
 	Designation_Code int : primary_key UI_VIEW UI_SELECT,
-	Designation_Title varchar(150): not null UI_VIEW UI_SELECT SEARCH_KEY,
+	Designation_Title varchar(150): not null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
 	DesignationGroup_Code int: not null references DesignationGroup(DesignationGroup_Code)
 	);
 
@@ -120,7 +120,7 @@ CREATE TABLE TimeCost : UI_GROUP (Timesheet_Admin) (
 
 CREATE TABLE Activity : UI_GROUP (Timesheet_Admin) (
 	Activity_Code int: primary_key UI_VIEW UI_SELECT,
-	Activity_Name varchar(150): not null UI_VIEW UI_SELECT SEARCH_KEY,
+	Activity_Name varchar(150): not null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
 	Activity_Description varchar(2000): not null
 	);
 
@@ -132,7 +132,7 @@ CREATE TABLE DesignationActivity : UI_GROUP (Timesheet_Admin) (
 
 create Table Currency : UI_GROUP (Exchange_Rates) (
 	Currency_Code int: primary_key UI_VIEW UI_SELECT,
-	Currency_Short_Name varchar(5): not null UI_VIEW UI_SELECT SEARCH_KEY,
+	Currency_Short_Name varchar(5): not null UI_VIEW UI_SELECT SEARCH_KEY UI_DIALOG_SELECT_XFER,
 	Currency_Name varchar(200): null);
 
 create Table Exchange_Master: UI_GROUP (Exchange_Rates) (
@@ -170,11 +170,11 @@ create Table Timesheet: UI_GROUP (Project_Admin) (
 
 create table Timesheet_Tables: UI_GROUP(Admin) is_master_tables_list (
 	Timesheet_Tables_Code int: primary_key UI_VIEW UI_SELECT,
-	Table_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
+	Table_Name varchar(250): UNIQUE UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER);
 
 create table Role: UI_GROUP(Admin) IS_ROLE_TABLE (
 	Role_Code int: primary_key UI_VIEW UI_SELECT,
-	Role_Name varchar(250): UNIQUE UI_VIEW UI_SELECT);
+	Role_Name varchar(250): UNIQUE UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER);
 
 create table Table_Security: UI_GROUP(Admin) (
 	Table_Security_Code int: primary_key UI_VIEW UI_SELECT,
@@ -184,7 +184,7 @@ create table Table_Security: UI_GROUP(Admin) (
 
 create table User_Login: UI_GROUP(Admin) IS_LOGIN_PAGE (
 	User_Login_Code int: primary_key UI_VIEW UI_SELECT,
-	User_Login_Name varchar(20): unique IS_LOGIN_USERNAME_FIELD UI_VIEW UI_SELECT,
+	User_Login_Name varchar(20): unique IS_LOGIN_USERNAME_FIELD UI_VIEW UI_SELECT UI_DIALOG_SELECT_XFER,
 	User_Password varchar(250): password IS_LOGIN_PASSWORD_FIELD,
 	Employee_Code int: references Employee(Employee_Code)
 	);

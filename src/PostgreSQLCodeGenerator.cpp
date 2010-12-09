@@ -882,6 +882,9 @@ void PostgreSQLCodeGenerator::print_sp_select_fields(std::stringstream & p_sp_se
 				//log_mesg(__FILE__, __LINE__, __PRETTY_FUNCTION__, "there is definitely a bug here since i am not looking out if there is a comma needed");
 			}
 		} else if (v_ptr->var_type == COMPOSITE_TYPE) {
+			p_sp_select_fields << format("\t/* we want to skip this field: %1%*/\n")
+					% v_ptr->var_name
+				;
 		} else {
 			p_sp_select_fields <<  format("\t\t\t%1%")
 				% v_ptr->var_name;
@@ -996,10 +999,22 @@ void PostgreSQLCodeGenerator::print_sp_select_params(std::stringstream & p_sp_se
 				exit(1);
 			}
 			//print_sp_select_params(fptr, with_pkey, rename_vars, v_ptr->var_name.c_str());
-		}  else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true) {
-			p_sp_select_fields << "\t\t\t" << v_ptr->var_name;
-			print_comma = true; // we want to skip this field
-		} else {
+		}  else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==true
+				&& v_ptr->var_type == COMPOSITE_TYPE
+				) {
+		 	// we want to skip this field
+			//p_sp_select_fields << "\t\t\t" << v_ptr->var_name;
+		 	p_sp_select_fields << format("\t/* we want to skip this field: %1%*/\n")
+		 			% v_ptr->var_name;
+			print_comma = false; 
+		} 
+		// else if (v_ptr->var_type == COMPOSITE_TYPE) {
+		// 	// we want to skip this field
+		// 	p_sp_select_fields << format("\t/* we want to skip this field: %1%*/\n")
+		// 			% v_ptr->var_name
+		// 		;
+		// } 
+		else {
 			if(rename_vars){
 				string orig_varname = inner_join_tabname;
 				int pos = orig_varname.find("_Code");
@@ -2907,7 +2922,7 @@ std::string PostgreSQLCodeGenerator::print_cpp_sp_invoc(int nActualParams)
 	stringstream sp_invoc_str;
 	int count1=2;
 	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
-		sp_invoc_str << boost::format(", \"$%1%::int\" ")
+		sp_invoc_str << boost::format(" \", $%1%::int\" ")
 					% ++count1;
 	}
 	//if (tableInfo_->has_search_key) {

@@ -569,6 +569,9 @@ string WtUIGenerator::GenerateUIInsertForm()
 		% tableInfo_->tableName_ ;
 	ui_class_defn << "\t  ptr_LoggedInUserInfo(p_ptr_LoggedInUserInfo)\n";
 	ui_class_defn << "{\n";
+	ui_class_decl << "\tint " << tableInfo_->param_list->var_name << "_;\n";
+	ui_class_defn << "\t" << tableInfo_->param_list->var_name << "_ = -1;\n";
+	
 	//ui_class_decl << "\tWt::WText *title;\n";
 	//ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
 	//	<< tableInfo_->tableName_ << "\"), this);\n";
@@ -816,14 +819,14 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	// }
 	// defn << ");\n";
 
-	defn << format("\t\t//Load%1%SummaryTableView(page1_%1%);\n") 
-			% aTableInfo->tableName_;
-	if (called_recursively == false) {
-		defn << "\t//}\n";
-	} else {
-		defn << "\t// */\n";
-		defn << "\t//}\n";
-	}
+	// defn << format("\t\t//Load%1%SummaryTableView(page1_%1%);\n") 
+	// 		% aTableInfo->tableName_;
+	// if (called_recursively == false) {
+	// 	defn << "\t//}\n";
+	// } else {
+	// 	defn << "\t// */\n";
+	// 	defn << "\t//}\n";
+	// }
 
 
 	if (called_recursively==false) {
@@ -1406,6 +1409,8 @@ std::string WtUIGenerator::PrintLoadForm()
 			
 		if (v_ptr->options.primary_key) {
 			// need to save this later into some variable in ui
+			load_form_func << format("\t%1%_ = l_biz_%2%->Get_%1%();\n") 
+						% v_ptr->var_name % tableInfo_->tableName_;
 			continue;
 		}
 		if (v_ptr->var_type==COMPOSITE_TYPE) {
@@ -1657,10 +1662,15 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	defn <<  "/* " << __FILE__ << ", " <<  __LINE__ << ", " <<  __PRETTY_FUNCTION__ <<  ", ENTER */" << endl;
 
 	if (called_recursively) {
+		//defn << format("\t/*\n");
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
+		if (TableInfoType * master_table = p_ptrTableInfo->isDetailsTable()) {
+			defn << "\t\tif (" << master_table->param_list->var_name << "_ != -1) {\n\t";
+		}
 		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
 	} else {
+		// cannot be a details table
 		defn << format("\tif (ptr_LoggedInUserInfo->UserHasViewPermission(\"%1%\") ) {\n") % p_ptrTableInfo->tableName_;
 		defn << format("\t\tstd::vector<boost::shared_ptr <Biz%2%> > page = %1%::db::%2%::Get%2%(0, 10") %
 			project_namespace % p_ptrTableInfo->tableName_;
@@ -1669,6 +1679,10 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	// 	defn << ",\n";
 	// }
 	//defn << ",\n";
+	if (TableInfoType * master_table=p_ptrTableInfo->isDetailsTable()) {
+		defn << ",\n\t\t\t" << master_table->param_list->var_name << "_";
+	}
+	
 	bool print_comma = true;
 	struct var_list * v_ptr = p_ptrTableInfo->param_list;
 	while (v_ptr) {
@@ -1686,7 +1700,9 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 			defn << "\t\t\tboost::gregorian::date(boost::gregorian::from_simple_string(\"2001-10-14\"))";
 			print_comma = true;
 		}
-		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false) {
+		if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (!ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name))
+				) {
 			struct CppCodeGenerator * tbl_ptr = (dynamic_cast<CppCodeGenerator *>
 						(TableCollectionSingleton::Instance()
 							.my_find_table(v_ptr->options.ref_table_name)));
@@ -1725,11 +1741,14 @@ void WtUIGenerator::print_SearchFunction1(TableInfoType* p_ptrTableInfo,
 	//}
 #endif /* 0 */
 
-	defn << format("\t\tLoad%1%SummaryTableView(page, table_%1%_view);\n")
+	defn << format("\t\t\tLoad%1%SummaryTableView(page, table_%1%_view);\n")
 			% p_ptrTableInfo->tableName_;
 	if (called_recursively) {
 		defn << "\t\n";
-		defn << "\t}\n";
+		if (TableInfoType * master_table = p_ptrTableInfo->isDetailsTable()) {
+			defn << "\t\t}\n";
+		}
+		defn << "\t}\n\t\n";
 	} else {
 		defn << "\t}\n";
 	}
@@ -1928,12 +1947,12 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
 			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
-			defn << format("\twe_%1%->setStyleClass(\"double_form_field\");\n") % v_ptr->var_name;
 			defn << format("\twt_%1%->setStyleClass(\"double_form_label\");\n") % v_ptr->var_name;
 			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twe_%1%->setStyleClass(\"double_form_field\");\n") % v_ptr->var_name;
 			defn << format("\twv_%1% = new Wt::WDoubleValidator();\n")
 						% v_ptr->var_name;
 			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
