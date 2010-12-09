@@ -69,8 +69,25 @@ void WtUIGenerator::GenerateCode()
 		AddFunctionDecl(setup_app_func_decl.str());
 		AddFunctionDefn(setup_app_func_defn.str());
 	}
-	GenerateForms();
-	makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
+	bool has_a_table_referencing_back = false;
+	struct var_list* v_ptr = tableInfo_->param_list;
+	while (v_ptr) {
+		if (v_ptr->options.ref_table_name != "" 
+				&& v_ptr->options.many == false
+				&&  ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name)
+				) {
+			cout << "skipping form generation of table: " << tableInfo_->tableName_;
+			has_a_table_referencing_back = true;
+			break;
+		}
+		v_ptr = v_ptr->prev;
+	}
+	if (has_a_table_referencing_back == false) {
+		GenerateForms();
+		makefile_objs << boost::format("%1%_ui.o %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
+	} else {
+		makefile_objs << boost::format(" %1%_bll.o %1%_db_postgres.o ") % tableInfo_->tableName_;
+	}
 	if (tableInfo_->tab_options.is_login_page) {
 		makefile_objs << format("%1%_Widget.o ") % tableInfo_->tableName_;
 	}
@@ -1853,6 +1870,9 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 				boost::format("\twt_%2%_text = new Wt::WLabel(Wt::WString(\"<not selected>\"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 1));\n")
 						% counter % v_ptr->var_name % p_ptrTableInfo->tableName_;
+
+			defn << format("\twt_%1%_text->setStyleClass(\"selected_item_form_text\");\n") % v_ptr->var_name;
+			defn << format("\twt_%1%->setStyleClass(\"selected_item_form_label\");\n") % v_ptr->var_name;
 			defn << 
 				boost::format("\twpb_choose_%2%= new Wt::WPushButton(Wt::WString(\" ... \"),\n" 
 						"\t\t\ttable_%3%->elementAt(%1%, 2));\n")
@@ -1890,6 +1910,8 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::DateField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twe_%1%->setStyleClass(\"date_form_field\");\n") % v_ptr->var_name;
+			defn << format("\twt_%1%->setStyleClass(\"date_form_label\");\n") % v_ptr->var_name;
 			defn << format("\twdv_%1% = new Wt::WDateValidator();\n")
 						% v_ptr->var_name;
 			defn << format("\twe_%1%->setFormat(Wt::WString(\"dd-MMM-yyyy\"));\n") % v_ptr->var_name;
@@ -1906,6 +1928,8 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
 			decl <<  boost::format("\tWt::Ext::NumberField * we_%1%;\n")
 						% v_ptr->var_name;
+			defn << format("\twe_%1%->setStyleClass(\"double_form_field\");\n") % v_ptr->var_name;
+			defn << format("\twt_%1%->setStyleClass(\"double_form_label\");\n") % v_ptr->var_name;
 			decl << format("\tWt::WDoubleValidator * wv_%1%;\n")
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
@@ -1921,8 +1945,10 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 						% v_ptr->var_name;
 			decl << format("\tWt::WIntValidator * wv_%1%;\n")
 						% v_ptr->var_name;
-			defn << boost::format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
+			defn << format("\twe_%2% = new Wt::Ext::NumberField(table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twe_%1%->setStyleClass(\"number_form_field\");\n") % v_ptr->var_name;
+			defn << format("\twt_%1%->setStyleClass(\"number_form_label\");\n") % v_ptr->var_name;
 			defn << format("\twv_%1% = new Wt::WIntValidator();\n")
 						% v_ptr->var_name;
 			defn << format("\twe_%1%->setValidator(wv_%1%);\n") % v_ptr->var_name;
@@ -1935,6 +1961,8 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 						% v_ptr->var_name;
 			defn << boost::format("\twe_%2% = new Wt::Ext::LineEdit(\"\", table_%3%->elementAt(%1%, 1));\n")
 					% counter % v_ptr->var_name% p_ptrTableInfo->tableName_;
+			defn << format("\twe_%1%->setStyleClass(\"text_form_field\");\n") % v_ptr->var_name;
+			defn << format("\twt_%1%->setStyleClass(\"text_form_label\");\n") % v_ptr->var_name;
 			//defn << boost::format("\twta_%1%->setRows(1);\n") % v_ptr->var_name;
 		}
 	}
