@@ -448,6 +448,10 @@ void PostgreSQLCodeGenerator::GenerateDB_h()
 	stringstream get_func_params;
 	get_func_params << "(";
 	get_func_params << "int p_PageIndex, int p_PageSize";
+	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
+		//sp_decl << " /* " << master_table->tableName_ << " */\n";
+		get_func_params << ",\n\t\tint p_" << master_table->param_list->var_name;
+	}
 	int nSearchKeys = 0;
 	string search_key_params = print_cpp_search_key_params(nSearchKeys);
 	//if (search_key_params != "" ) {
@@ -1107,9 +1111,11 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	stringstream func_params;
 	func_params << "(";
 	func_params << "int p_PageIndex, int p_PageSize";
+	int nMasterKeys = 0;
 	if (TableInfoType * master_table=tableInfo_->isDetailsTable()) {
 		//sp_decl << " /* " << master_table->tableName_ << " */\n";
 		func_params << ",\n\t\tint p_" << master_table->param_list->var_name;
+		++ nMasterKeys;
 	}
 	int nSearchKeys = 0;
 	string search_key_params = print_cpp_search_key_params( nSearchKeys);
@@ -1132,15 +1138,17 @@ string PostgreSQLCodeGenerator::PrintCppSelectFunc()
 	func_signature << func_params.str();
 	stringstream func_body;
 	func_body << "{\n";
+	int nTotalParams = (nMasterKeys + nSearchKeys + tableInfo_->nSessionParams + 2);
 	func_body << "\tboost::shared_ptr<PGconn> conn(GetPGConn(), ConnCloser());\n";
 	func_body << boost::format("\tstd::vector<boost::shared_ptr<char> > char_ptr_vec(%1%);\n")
-		% (nSearchKeys + tableInfo_->nSessionParams + 2) /* int PageSize int PageIndex */ ;
+		% nTotalParams /* int PageSize int PageIndex */ ;
 	func_body << boost::format("\tconst char * paramValues[%1%];\n"
 			"\tstd::stringstream ss_param_values[%1%];\n") 
-		% (nSearchKeys + tableInfo_->nSessionParams + 2) /* int PageSize int PageIndex */ ;
+		% nTotalParams /* int PageSize int PageIndex */ ;
 	int nActualParams = 0;
 	func_body << format("\tss_param_values[%1%] << p_PageIndex;\n")
 		% nActualParams;
+
 	func_body << boost::format("\tboost::shared_ptr<char> s_ptr%1%(strdup(ss_param_values[%1%].str().c_str()), MallocDeleter());\n")
 		% nActualParams;
 	func_body << boost::format("\tchar_ptr_vec.push_back(s_ptr%1%);\n") % nActualParams;
