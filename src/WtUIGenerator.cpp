@@ -569,8 +569,8 @@ string WtUIGenerator::GenerateUIInsertForm()
 		% tableInfo_->tableName_ ;
 	ui_class_defn << "\t  ptr_LoggedInUserInfo(p_ptr_LoggedInUserInfo)\n";
 	ui_class_defn << "{\n";
-	ui_class_decl << "\tint " << tableInfo_->param_list->var_name << "_;\n";
-	ui_class_defn << "\t" << tableInfo_->param_list->var_name << "_ = -1;\n";
+	// ui_class_decl << "\tint " << tableInfo_->param_list->var_name << "_;\n";
+	// ui_class_defn << "\t" << tableInfo_->param_list->var_name << "_ = -1;\n";
 	
 	//ui_class_decl << "\tWt::WText *title;\n";
 	//ui_class_defn << "\ttitle = new Wt::WText( Wt::WString::tr(\""
@@ -592,14 +592,19 @@ string WtUIGenerator::GenerateUIInsertForm()
 	GenerateUITab(ui_class_headers, ui_class_decl, ui_class_defn, false, vecTableInfo);
 	
 
+	/*
 	ui_class_decl << boost::format("\tvoid ProcessInsert%1%();\n")
 					% tableInfo_->tableName_;
 	ui_class_decl << boost::format("\tint ValidateForInsert%1%();\n")
 					% tableInfo_->tableName_;
 	ui_class_defn << PrintProcessInsert();
 	ui_class_defn << PrintValidateForInsert();
+	*/
+
+	/*
 	ui_class_decl << "\tvoid LoadForm(int32_t pkey);\n";
 	ui_class_defn << PrintLoadForm();
+	*/
 	// I should use some form of assert to check 
 	// that vec_handler_decls.size == vec_handler_defns.size
 	for(int i=0; i<vec_handler_decls.size(); ++i) {
@@ -692,12 +697,41 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	p_vecTableInfo.pop_back();
 	struct var_list* v_ptr=aTableInfo->param_list;
 
+	decl << "\tint " << aTableInfo->param_list->var_name << "_;\n";
+	defn << "\t" << aTableInfo->param_list->var_name << "_ = -1;\n";
+
 	if (called_recursively == true) {
 		headers << format("#include \"%1%_db_postgres.h\"\n")
 					% aTableInfo->tableName_;
 		headers << format("#include \"%1%_bll.h\"\n")
 					% aTableInfo->tableName_;
 	}
+
+	//decl << boost::format("\tvoid ProcessInsert%1%();\n")
+	//				% aTableInfo->tableName_;
+	stringstream process_insert_decl;
+	process_insert_decl << boost::format("\tvoid ProcessInsert%1%();\n")
+					% aTableInfo->tableName_;
+	//AddFunctionDecl( process_insert_decl.str());
+	vec_handler_decls.push_back(process_insert_decl.str());
+	//decl << boost::format("\tint ValidateForInsert%1%();\n")
+	//				% aTableInfo->tableName_;
+	stringstream validate_insert_decl;
+	validate_insert_decl << boost::format("\tint ValidateForInsert%1%();\n")
+					% aTableInfo->tableName_;
+	vec_handler_decls.push_back(validate_insert_decl.str());
+	//AddFunctionDecl( validate_insert_decl.str());
+	
+	//AddFunctionDefn(PrintProcessInsert(aTableInfo));
+	vec_handler_defns.push_back(PrintProcessInsert(aTableInfo));
+	//AddFunctionDefn(PrintValidateForInsert());
+	vec_handler_defns.push_back(PrintValidateForInsert(aTableInfo));
+
+	stringstream load_form_func_decl, load_form_func_defn;
+	load_form_func_decl << format("\tvoid LoadForm%1%(int32_t pkey);\n") % aTableInfo->tableName_;
+	vec_handler_decls.push_back(load_form_func_decl.str());
+	load_form_func_defn << PrintLoadForm(aTableInfo);
+	vec_handler_defns.push_back(load_form_func_defn.str());
 
 	//if (called_recursively == false) {
 	
@@ -791,6 +825,7 @@ void WtUIGenerator::GenerateUITab( std::stringstream & headers,
 	defn << boost::format("\ttable_%1%_view = new Wt::WTable(wcw_%1%);\n")
 			% aTableInfo->tableName_;
 	print_SearchFunction1(aTableInfo, decl, defn, called_recursively);
+
 
 #if 0
 	if (called_recursively == false) {
@@ -1235,19 +1270,19 @@ string WtUIGenerator::print_XferFunction(struct var_list * p_vptr, std::stringst
 	return func_defn.str();
 }
 
-std::string WtUIGenerator::PrintProcessInsert()
+std::string WtUIGenerator::PrintProcessInsert(TableInfoType * ptr_tableInfo)
 {
 	std::stringstream process_insert_defn, dummy_defns, header;
 	
 	using boost::format;
-	header << format("void %1%_ui::ProcessInsert%1%()\n{\n")
-					% tableInfo_->tableName_;
+	header << format("void %1%_ui::ProcessInsert%2%()\n{\n")
+				% tableInfo_->tableName_ % ptr_tableInfo->tableName_;
 	process_insert_defn << format("\tif (ValidateForInsert%1%()!=0) {\n"
 		 "\t\treturn;\n"
-		 "\t}\n") % tableInfo_->tableName_;
-	struct var_list* v_ptr=tableInfo_->param_list;
+		 "\t}\n") % ptr_tableInfo->tableName_;
+	struct var_list* v_ptr=ptr_tableInfo->param_list;
 	process_insert_defn << format("\tboost::shared_ptr<Biz%1%> ptr_%1% (new Biz%1%(\n")
-			% tableInfo_->tableName_;
+			% ptr_tableInfo->tableName_;
 	bool print_comma = false;
 	while (v_ptr) {
 		if (v_ptr->options.primary_key) {
@@ -1278,9 +1313,18 @@ std::string WtUIGenerator::PrintProcessInsert()
 				// % v_ptr->print_cpp_var_type() % v_ptr->var_name;
 			print_comma = true;
 		} else if (v_ptr->options.ref_table_name != ""
-				&& v_ptr->options.many == false) {
+				&& v_ptr->options.many == false
+					&& (!ReferencedTableContainsUs(ptr_tableInfo, v_ptr->options.ref_table_name))
+				) {
 			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(wt_%2%_value->text())")
 				 % v_ptr->print_cpp_var_type() % v_ptr->var_name;
+			print_comma = true;
+		} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (ReferencedTableContainsUs(ptr_tableInfo, v_ptr->options.ref_table_name))
+					) {
+			process_insert_defn << "\t\t /* reached here */ ";
+			process_insert_defn << format("\t\t%1%_")
+				 % v_ptr->var_name;
 			print_comma = true;
 		} else {
 			process_insert_defn << format("\t\tboost::lexical_cast<%1%>(we_%2%->text())")
@@ -1296,8 +1340,8 @@ std::string WtUIGenerator::PrintProcessInsert()
 		}
 	}
 	process_insert_defn << format("\t\t) );\n");
-	process_insert_defn << format("\tLoadForm(ptr_%1%->Insert());\n")
-			% tableInfo_->tableName_;
+	process_insert_defn << format("\tLoadForm%1%(ptr_%1%->Insert());\n")
+			% ptr_tableInfo->tableName_;
 		
 	process_insert_defn << "}\n\n";
 
@@ -1346,22 +1390,33 @@ void WtUIGenerator::PrintListViewData(stringstream  & p_load_table_view_str, vec
 }
 
 
-std::string WtUIGenerator::PrintValidateForInsert()
+std::string WtUIGenerator::PrintValidateForInsert(TableInfoType * p_ptrTableInfo)
 {
 	std::stringstream validate_for_insert_defn;
 	using boost::format;
-	validate_for_insert_defn << format("int %1%_ui::ValidateForInsert%1%()\n{\n")
-					% tableInfo_->tableName_;
+	validate_for_insert_defn << format("int %1%_ui::ValidateForInsert%2%()\n{\n")
+			% tableInfo_->tableName_% p_ptrTableInfo->tableName_;
 	validate_for_insert_defn << "\tstd::stringstream ss_err_msgs;\n";
 	validate_for_insert_defn << "\tint nErrors = 0;\n";
 	validate_for_insert_defn << format("\tWt::WValidator::State validation_status;\n");
-	struct var_list* v_ptr=tableInfo_->param_list;
+	struct var_list* v_ptr=p_ptrTableInfo->param_list;
 	while (v_ptr) {
-		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false) {
+		if (v_ptr->options.ref_table_name != "" && v_ptr->options.many == false
+					&& (!ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name))
+				) {
 			validate_for_insert_defn << format("\tif (wt_%1%_value->text() == \"<not selected>\" ) {\n"
 				"\t\tss_err_msgs << \"Please select a value for %1%\";\n"
 				"\t\t++nErrors;\n"
 				"\t}\n") % v_ptr->var_name ;
+		} else if (v_ptr->options.ref_table_name!="" && v_ptr->options.many==false
+					&& (ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name))
+					) {
+			validate_for_insert_defn << "\t\t /* reached here */ ";
+			validate_for_insert_defn << format("\t\tif (%1%_ == -1) {\n"
+						"\t\tss_err_msgs << \"Please select a record from the Master table: %2%\";\n"
+						"\t\t++nErrors;\n"
+						"\t}\n") % v_ptr->var_name 
+							% v_ptr->options.ref_table_name;
 		} else if (v_ptr->var_type == DATETIME_TYPE && v_ptr->options.embedded == false) {
 			validate_for_insert_defn << format("\tvalidation_status = we_%1%->validate();\n")
 				% v_ptr->var_name;
@@ -1381,36 +1436,36 @@ std::string WtUIGenerator::PrintValidateForInsert()
 	}
 	validate_for_insert_defn << "\tif (nErrors>0) {\n";
 	validate_for_insert_defn << format("\t\twt_%1%_err_msg->setText(ss_err_msgs.str());\n") %
-			tableInfo_->tableName_;
+			p_ptrTableInfo->tableName_;
 	validate_for_insert_defn << format("\t\tpanel_%1%_err_msg->expand();\n") %
-			tableInfo_->tableName_;
+			p_ptrTableInfo->tableName_;
 	validate_for_insert_defn << "\t}\n";
 	validate_for_insert_defn << boost::format("\twpb_insert_%1%->setEnabled(true);\n") %
-			tableInfo_->tableName_;
+			p_ptrTableInfo->tableName_;
 	validate_for_insert_defn << "\treturn nErrors;\n";
 	validate_for_insert_defn << "}\n\n";
 	return validate_for_insert_defn.str();
 }
 
-std::string WtUIGenerator::PrintLoadForm()
+std::string WtUIGenerator::PrintLoadForm(TableInfoType * p_ptrTableInfo)
 {
 	stringstream load_form_func;
-	load_form_func << format("void %1%_ui::LoadForm(int32_t pkey)\n{\n")
-		% tableInfo_->tableName_;
+	load_form_func << format("void %1%_ui::LoadForm%2%(int32_t pkey)\n{\n")
+		% tableInfo_->tableName_% p_ptrTableInfo->tableName_;
 	load_form_func << format("\tboost::shared_ptr<Biz%2%> l_biz_%2%( %1%::db::%2%::GetSingle%2% (pkey));\n")
-		% project_namespace % tableInfo_->tableName_;
+		% project_namespace % p_ptrTableInfo->tableName_;
 	int counter=0;
-	struct var_list* v_ptr = tableInfo_->param_list;
+	struct var_list* v_ptr = p_ptrTableInfo->param_list;
 	for (; v_ptr; v_ptr=v_ptr->prev, ++counter) {
 		if (v_ptr->options.ref_table_name!=""
-				&& ReferencedTableContainsUs(tableInfo_, v_ptr->options.ref_table_name) ) {
+				&& ReferencedTableContainsUs(p_ptrTableInfo, v_ptr->options.ref_table_name) ) {
 			continue;
 		} 
 			
 		if (v_ptr->options.primary_key) {
 			// need to save this later into some variable in ui
 			load_form_func << format("\t%1%_ = l_biz_%2%->Get_%1%();\n") 
-						% v_ptr->var_name % tableInfo_->tableName_;
+						% v_ptr->var_name % p_ptrTableInfo->tableName_;
 			continue;
 		}
 		if (v_ptr->var_type==COMPOSITE_TYPE) {
@@ -1426,27 +1481,27 @@ std::string WtUIGenerator::PrintLoadForm()
 			if (! v_ptr->options.session ) {
 				load_form_func << 
 					boost::format("\twt_%1%_value->setText(boost::lexical_cast<std::string>(l_biz_%2%->biz_%3%_->%1%_));\n")
-							% v_ptr->var_name % tableInfo_->tableName_ % v_ptr->options.ref_table_name;
+							% v_ptr->var_name % p_ptrTableInfo->tableName_ % v_ptr->options.ref_table_name;
 			}
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == false) {
 			load_form_func << boost::format("\t/*we_%1%->setDate(l_biz_%2%->%1%_);*/\n")
-					% v_ptr->var_name % tableInfo_->tableName_;
+					% v_ptr->var_name % p_ptrTableInfo->tableName_;
 		} else if (v_ptr->var_type==DATETIME_TYPE && v_ptr->options.embedded == true) {
 			load_form_func << boost::format("\t/*\n ts_cal_%1% ->setDate(l_biz_%2%->%1%_);\n\t*/\n")
-					% v_ptr->var_name% tableInfo_->tableName_;
+					% v_ptr->var_name% p_ptrTableInfo->tableName_;
 		} else if (v_ptr->var_type==DOUBLE_TYPE || v_ptr->var_type==FLOAT_TYPE) {
 			load_form_func << boost::format("\twe_%1%->setText(boost::lexical_cast<std::string>(l_biz_%2%->%1%_));\n")
-					% v_ptr->var_name % tableInfo_->tableName_;
+					% v_ptr->var_name % p_ptrTableInfo->tableName_;
 		} else if(v_ptr->var_type==INT32_TYPE || v_ptr->var_type == BIGINT_TYPE) {
 			load_form_func << boost::format("\twe_%1%->setText(boost::lexical_cast<std::string>(l_biz_%2%->%1%_));\n")
-					% v_ptr->var_name % tableInfo_->tableName_;
+					% v_ptr->var_name % p_ptrTableInfo->tableName_;
 
 		} else if(v_ptr->var_type==BIT_TYPE ) {
 			load_form_func << boost::format("\twe_%1%->setText( (l_biz_%2%->%1%_ == true ? \"1\" : \"0\") );\n")
-					% v_ptr->var_name % tableInfo_->tableName_;
+					% v_ptr->var_name % p_ptrTableInfo->tableName_;
 		} else {
 			load_form_func << boost::format("\twe_%1%->setText(l_biz_%2%->%1%_);\n")
-					% v_ptr->var_name % tableInfo_->tableName_;
+					% v_ptr->var_name % p_ptrTableInfo->tableName_;
 		}
 	}
 
@@ -1991,12 +2046,12 @@ void WtUIGenerator::PrintForm(TableInfoType * p_ptrTableInfo,
 	defn << boost::format("\t\twpb_insert_%2% = new Wt::WPushButton(Wt::WString(\"Add\"), table_%2%->elementAt(%1%, 0));\n")
 			% counter % p_ptrTableInfo->tableName_;
 	defn << format("\t\twpb_insert_%1%->setText(Wt::WString(\"Add\"));\n") % p_ptrTableInfo->tableName_;
-	if (called_recursively==false) {
+	//if (called_recursively==false) {
 		defn << boost::format("\t\twpb_insert_%1%->clicked().connect(wpb_insert_%1%, &Wt::WPushButton::disable);\n")
-			% tableInfo_->tableName_;
-		defn << boost::format("\t\twpb_insert_%1%->clicked().connect(this, &%1%_ui::ProcessInsert%1%);\n")
-			% tableInfo_->tableName_;
-	}
+			% p_ptrTableInfo->tableName_;
+		defn << boost::format("\t\twpb_insert_%1%->clicked().connect(this, &%2%_ui::ProcessInsert%1%);\n")
+			% p_ptrTableInfo->tableName_ % tableInfo_->tableName_;
+	//}
 	defn << format("\t}\n");
 
 
@@ -2071,8 +2126,8 @@ void WtUIGenerator::PrintLoadSummaryTableView(TableInfoType * p_ptrTableInfo,
 			if (v_ptr->options.primary_key) {
 				load_table_view_str << boost::format("\t\tWt::WPushButton * b = new Wt::WPushButton(\"Select\", ptr_Table->elementAt(i+1, %1%));\n") %
 					counter++;
-				load_table_view_str << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::LoadForm, this, page1[i]->%2%_));\n") %
-					tableInfo_->tableName_ % v_ptr->var_name;
+				load_table_view_str << boost::format("\t\tb->clicked().connect(boost::bind(&%1%_ui::LoadForm%3%, this, page1[i]->%2%_));\n") %
+					tableInfo_->tableName_ % v_ptr->var_name % p_ptrTableInfo->tableName_;
 			} else if (v_ptr->options.ui_view) {
 				if (v_ptr->options.ref_table_name == "") {
 					load_table_view_str << boost::format("\t\ttemp1 << page1[i]->%1%_;\n") %

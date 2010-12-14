@@ -51,7 +51,7 @@ public:
 	std::vector<std::string> vec_handler_defns;
 	std::string print_cpp_search_key_args();
 
-	std::string PrintProcessInsert();
+	std::string PrintProcessInsert(TableInfoType * ptr_tableInfo);
 	std::string PrintUINavigation();
 	std::string PrintUIMenu();
 	void print_SearchFunction(TableInfoType * p_ptrTableInfo, 
@@ -64,8 +64,8 @@ public:
 	void PrintListViewData(stringstream  & p_load_table_view_str, 
 			vector<TableInfoType* > & p_vec_list_view_stack, 
 			int max_recursion_level, int recursion_level, int & nColumns);
-	std::string PrintValidateForInsert();
-	std::string PrintLoadForm();
+	std::string PrintValidateForInsert(TableInfoType * p_ptrTableInfo);
+	std::string PrintLoadForm(TableInfoType * p_ptrTableInfo);
 	std::string PrintUISearchPanel(TableInfoType * p_ptrTableInfo, std::stringstream & decl,
 			SearchPanelContext spc);
 	void PrintForm(TableInfoType * p_ptrTableInfo, 
